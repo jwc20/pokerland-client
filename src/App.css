@@ -1,3 +1,32 @@
 body {
     margin: 0 20px;
 }
+
+.interactive-hover {
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        color 0.15s ease,
+        background-color 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.interactive-hover:focus-visible {
+    outline: 2px solid var(--accent-8);
+    outline-offset: 2px;
+}
+
+@media (hover: hover) {
+    .interactive-hover:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px var(--black-a4);
+    }
+
+    .menu-link-hover:hover {
+        color: var(--accent-11) !important;
+    }
+
+    .card-hover:hover {
+        background-color: var(--accent-a3);
+    }
+}

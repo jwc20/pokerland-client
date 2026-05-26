@@ -21,7 +21,7 @@ export default function HomePage() {
 
         <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="4">
           {sections.map((section) => (
-            <Card key={section.path} asChild>
+            <Card key={section.path} className="interactive-hover card-hover" asChild>
               <Link to={section.path} style={{ textDecoration: "none" }}>
                 <Heading size="3" mb="1">{section.title}</Heading>
                 <Text size="2" color="gray">{section.description}</Text>

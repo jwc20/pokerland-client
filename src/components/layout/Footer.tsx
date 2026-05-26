@@ -17,10 +17,18 @@ export default function Footer() {
                     © {new Date().getFullYear()} MakeTheNut. All rights reserved.
                 </Text>
                 <Flex gap="4">
-                    <Link to="/about" style={{textDecoration: "none", color: "inherit"}}>
+                    <Link
+                        to="/about"
+                        className="interactive-hover menu-link-hover"
+                        style={{textDecoration: "none", color: "inherit"}}
+                    >
                         <Text size="2" color="gray">About</Text>
                     </Link>
-                    <Link to="/articles" style={{textDecoration: "none", color: "inherit"}}>
+                    <Link
+                        to="/articles"
+                        className="interactive-hover menu-link-hover"
+                        style={{textDecoration: "none", color: "inherit"}}
+                    >
                         <Text size="2" color="gray">Articles</Text>
                     </Link>
                 </Flex>
