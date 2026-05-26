@@ -2,14 +2,13 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Box, Container, Heading, Text, Button, Flex, TextField } from "@radix-ui/themes";
 import { useAuthStore } from "../stores/authStore";
-import { login } from "../api/client";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
@@ -18,11 +17,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await login(username, password);
-      setAuth(data.token, data.user);
+      await login(email, password);
       navigate("/home");
     } catch {
-      setError("Invalid username or password.");
+      setError("Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -37,11 +35,12 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit}>
             <Flex direction="column" gap="3">
               <label>
-                <Text size="2" weight="medium" mb="1">Username</Text>
+                <Text size="2" weight="medium" mb="1">Email</Text>
                 <TextField.Root
-                  placeholder="Enter username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </label>
