@@ -4,7 +4,6 @@ import {Flex, Text, Button, IconButton, Box} from "@radix-ui/themes";
 import {SunIcon, MoonIcon, HamburgerMenuIcon, Cross1Icon} from "@radix-ui/react-icons";
 import {useAuthStore} from "../../stores/authStore";
 import {useAppStore} from "../../stores/appStore";
-import {logout} from "../../api/client";
 
 const navLinks = [
     {label: "Home", path: "/home"},
@@ -20,12 +19,13 @@ const navLinks = [
 export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    const authLogout = useAuthStore((s) => s.logout);
     const toggleTheme = useAppStore((s) => s.toggleTheme);
     const theme = useAppStore((s) => s.theme);
     const navigate = useNavigate();
 
     async function handleLogout() {
-        await logout();
+        await authLogout();
         navigate("/");
     }
 

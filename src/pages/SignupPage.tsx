@@ -1,16 +1,17 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, Container, Heading, Text, Button, Flex, TextField } from "@radix-ui/themes";
+import { Box, Container, Heading, Text, Button, Flex, TextField, TextArea } from "@radix-ui/themes";
 import { useAuthStore } from "../stores/authStore";
-import { signup } from "../api/client";
 
 export default function SignupPage() {
   const [username, setUsername] = useState("");
+  const [profileName, setProfileName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [bio, setBio] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const signup = useAuthStore((s) => s.signup);
   const navigate = useNavigate();
 
   async function handleSubmit(e: FormEvent) {
@@ -19,8 +20,13 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const data = await signup(username, email, password);
-      setAuth(data.token, data.user);
+      await signup({
+        email,
+        password,
+        profile_name: profileName,
+        username,
+        bio,
+      });
       navigate("/home");
     } catch {
       setError("Signup failed. Please try again.");
@@ -38,6 +44,17 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit}>
             <Flex direction="column" gap="3">
               <label>
+                <Text size="2" weight="medium" mb="1">Email</Text>
+                <TextField.Root
+                  type="email"
+                  placeholder="Enter email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
+
+              <label>
                 <Text size="2" weight="medium" mb="1">Username</Text>
                 <TextField.Root
                   placeholder="Choose a username"
@@ -48,12 +65,11 @@ export default function SignupPage() {
               </label>
 
               <label>
-                <Text size="2" weight="medium" mb="1">Email</Text>
+                <Text size="2" weight="medium" mb="1">Profile Name</Text>
                 <TextField.Root
-                  type="email"
-                  placeholder="Enter email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Your display name"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
                   required
                 />
               </label>
@@ -66,6 +82,15 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
+                />
+              </label>
+
+              <label>
+                <Text size="2" weight="medium" mb="1">Bio</Text>
+                <TextArea
+                  placeholder="Tell us about yourself"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
                 />
               </label>
 
