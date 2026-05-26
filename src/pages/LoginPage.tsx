@@ -61,7 +61,7 @@ export default function LoginPage() {
                 <Text size="2" color="red">{error}</Text>
               )}
 
-              <Button type="submit" disabled={loading}>
+              <Button type="submit" className="interactive-hover" disabled={loading}>
                 {loading ? "Logging in…" : "Log In"}
               </Button>
             </Flex>
@@ -70,7 +70,7 @@ export default function LoginPage() {
 
         <Text size="2" color="gray">
           Don't have an account?{" "}
-          <Link to="/signup">Sign up</Link>
+          <Link to="/signup" className="interactive-hover menu-link-hover">Sign up</Link>
         </Text>
       </Flex>
     </Container>

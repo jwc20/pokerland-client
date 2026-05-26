@@ -13,10 +13,10 @@ export default function LandingPage() {
                     simulations, and more.
                 </Text>
                 <Flex gap="3" wrap="wrap" justify="center">
-                    <Button size="3" asChild>
+                    <Button size="3" className="interactive-hover" asChild>
                         <Link to="/signup">Get Started</Link>
                     </Button>
-                    <Button size="3" variant="outline" asChild>
+                    <Button size="3" variant="outline" className="interactive-hover" asChild>
                         <Link to="/login">Log In</Link>
                     </Button>
                 </Flex>
