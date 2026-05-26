@@ -50,8 +50,8 @@ export default function Navbar() {
                         ))}
                     </Flex>
 
-                    {/* Right: auth + theme toggle */}
-                    <Flex gap="2" align="center">
+                    {/* Right: auth + theme toggle (desktop) */}
+                    <Flex gap="2" align="center" display={{initial: "none", md: "flex"}}>
                         <IconButton
                             variant="ghost"
                             size="2"
@@ -61,7 +61,7 @@ export default function Navbar() {
                             {theme === "light" ? <MoonIcon/> : <SunIcon/>}
                         </IconButton>
 
-                        <Flex gap="2" display={{initial: "none", md: "flex"}}>
+                        <Flex gap="2">
                             {isAuthenticated ? (
                                 <Button size="2" variant="outline" onClick={handleLogout}>
                                     Log Out
@@ -78,17 +78,27 @@ export default function Navbar() {
                             )}
                         </Flex>
 
-                        {/* Hamburger (mobile only) */}
-                        <Box display={{initial: "block", md: "none"}}>
-                            <IconButton
-                                variant="ghost"
-                                size="2"
-                                onClick={() => setMenuOpen(!menuOpen)}
-                                aria-label="Toggle menu"
-                            >
-                                {menuOpen ? <Cross1Icon/> : <HamburgerMenuIcon/>}
-                            </IconButton>
-                        </Box>
+                    </Flex>
+
+                    {/* Right: theme + hamburger (mobile only) */}
+                    <Flex gap="2" align="center" display={{initial: "flex", md: "none"}}>
+                        <IconButton
+                            variant="ghost"
+                            size="2"
+                            onClick={toggleTheme}
+                            aria-label="Toggle theme"
+                        >
+                            {theme === "light" ? <MoonIcon/> : <SunIcon/>}
+                        </IconButton>
+
+                        <IconButton
+                            variant="ghost"
+                            size="2"
+                            onClick={() => setMenuOpen(!menuOpen)}
+                            aria-label="Toggle menu"
+                        >
+                            {menuOpen ? <Cross1Icon/> : <HamburgerMenuIcon/>}
+                        </IconButton>
                     </Flex>
                 </Flex>
 
