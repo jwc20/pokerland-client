@@ -4,7 +4,7 @@ import { userApi } from "../api/client";
 
 type AuthState = {
   token: string | null;
-  user: UserMyProfileResponse;
+  user: UserMyProfileResponse | null;
   isAuthenticated: boolean;
   loading: boolean;
   error: string | null;
