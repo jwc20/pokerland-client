@@ -7,7 +7,7 @@ export default function AboutPage() {
                 <Heading size="6">About MakeTheNut</Heading>
                 <Text size="3">
                     MakeTheNut is a platform for learning and improving your poker game.
-                    We offer courses, practice tools, hand simulations, and analytics to
+                    We offer courses, practice tools, hand simulations, and game history to
                     help players of all levels sharpen their skills.
                 </Text>
                 <Text size="3">

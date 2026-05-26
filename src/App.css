@@ -3,12 +3,11 @@ body {
 }
 
 .interactive-hover {
-    transition:
-        transform 0.15s ease,
-        box-shadow 0.15s ease,
-        color 0.15s ease,
-        background-color 0.15s ease,
-        opacity 0.15s ease;
+    transition: transform 0.15s ease,
+    filter 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .interactive-hover:focus-visible {
@@ -18,8 +17,9 @@ body {
 
 @media (hover: hover) {
     .interactive-hover:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 14px var(--black-a4);
+        border: none;
+        transform: translateY(-2px);
+        filter: brightness(1.08);
     }
 
     .menu-link-hover:hover {

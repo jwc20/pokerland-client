@@ -9,7 +9,7 @@ export default function LandingPage() {
                     Welcome to MakeTheNut
                 </Heading>
                 <Text size="4" color="gray" align="center" style={{maxWidth: 480}}>
-                    Learn, practice, and master poker with analytics, courses,
+                    Learn, practice, and master poker with game history, courses,
                     simulations, and more.
                 </Text>
                 <Flex gap="3" wrap="wrap" justify="center">

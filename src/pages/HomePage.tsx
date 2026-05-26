@@ -6,7 +6,7 @@ const sections = [
   { title: "Courses", description: "Structured learning paths", path: "/courses" },
   { title: "Practice", description: "Sharpen your skills", path: "/practice" },
   { title: "Simulations", description: "Run poker simulations", path: "/simulations" },
-  { title: "Analytics", description: "Analyze your play", path: "/analytics" },
+  { title: "Game History", description: "Review your past games", path: "/game-history" },
   { title: "My Data", description: "View your hand history", path: "/my-data" },
 ];
 

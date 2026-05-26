@@ -6,14 +6,8 @@ import {useAuthStore} from "../../stores/authStore";
 import {useAppStore} from "../../stores/appStore";
 
 const navLinks = [
-    {label: "Home", path: "/home"},
-    {label: "Articles", path: "/articles"},
-    {label: "Courses", path: "/courses"},
     {label: "Practice", path: "/practice"},
-    {label: "Simulations", path: "/simulations"},
-    {label: "Analytics", path: "/analytics"},
-    {label: "My Data", path: "/my-data"},
-    {label: "About", path: "/about"},
+    {label: "Game History", path: "/game-history"},
 ];
 
 export default function Navbar() {
@@ -35,7 +29,7 @@ export default function Navbar() {
                 {/* Desktop & mobile top bar */}
                 <Flex justify="between" align="center">
                     {/* Left: Logo + site name */}
-                    <Link to="/" className="interactive-hover menu-link-hover" style={{textDecoration: "none", color: "inherit"}}>
+                    <Link to={isAuthenticated ? "/home" : "/"} className="interactive-hover menu-link-hover" style={{textDecoration: "none", color: "inherit"}}>
                         <Flex align="center" gap="2">
                             <Text size="5" weight="bold">♠ MakeTheNut</Text>
                         </Flex>
