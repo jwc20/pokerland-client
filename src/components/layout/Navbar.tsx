@@ -29,7 +29,8 @@ export default function Navbar() {
                 {/* Desktop & mobile top bar */}
                 <Flex justify="between" align="center">
                     {/* Left: Logo + site name */}
-                    <Link to={isAuthenticated ? "/home" : "/"} className="interactive-hover menu-link-hover" style={{textDecoration: "none", color: "inherit"}}>
+                    <Link to={isAuthenticated ? "/home" : "/"} className="button-interactive-hover menu-link-hover"
+                          style={{textDecoration: "none", color: "inherit"}}>
                         <Flex align="center" gap="2">
                             <Text size="5" weight="bold">♠ MakeTheNut</Text>
                         </Flex>
@@ -54,7 +55,7 @@ export default function Navbar() {
                         <IconButton
                             variant="ghost"
                             size="2"
-                            className="interactive-hover"
+                            className="button-interactive-hover"
                             onClick={toggleTheme}
                             aria-label="Toggle theme"
                         >
@@ -63,15 +64,16 @@ export default function Navbar() {
 
                         <Flex gap="2">
                             {isAuthenticated ? (
-                                <Button size="2" variant="outline" className="interactive-hover" onClick={handleLogout}>
+                                <Button size="2" variant="outline" className="button-interactive-hover"
+                                        onClick={handleLogout}>
                                     Log Out
                                 </Button>
                             ) : (
                                 <>
-                                    <Button size="2" variant="outline" className="interactive-hover" asChild>
+                                    <Button size="2" variant="outline" className="button-interactive-hover" asChild>
                                         <Link to="/login">Log In</Link>
                                     </Button>
-                                    <Button size="2" className="interactive-hover" asChild>
+                                    <Button size="2" className="button-interactive-hover" asChild>
                                         <Link to="/signup">Sign Up</Link>
                                     </Button>
                                 </>
@@ -85,7 +87,7 @@ export default function Navbar() {
                         <IconButton
                             variant="ghost"
                             size="2"
-                            className="interactive-hover"
+                            className="button-interactive-hover"
                             onClick={toggleTheme}
                             aria-label="Toggle theme"
                         >
@@ -95,7 +97,7 @@ export default function Navbar() {
                         <IconButton
                             variant="ghost"
                             size="2"
-                            className="interactive-hover"
+                            className="button-interactive-hover"
                             onClick={() => setMenuOpen(!menuOpen)}
                             aria-label="Toggle menu"
                         >
@@ -117,7 +119,7 @@ export default function Navbar() {
                             <Link
                                 key={link.path}
                                 to={link.path}
-                                className="interactive-hover menu-link-hover"
+                                className="button-interactive-hover menu-link-hover"
                                 style={{textDecoration: "none", color: "inherit"}}
                                 onClick={() => setMenuOpen(false)}
                             >
@@ -129,7 +131,7 @@ export default function Navbar() {
                             <Button
                                 size="2"
                                 variant="outline"
-                                className="interactive-hover"
+                                className="button-interactive-hover"
                                 onClick={() => {
                                     handleLogout();
                                     setMenuOpen(false);
@@ -139,10 +141,10 @@ export default function Navbar() {
                             </Button>
                         ) : (
                             <Flex gap="2">
-                                <Button size="2" variant="outline" className="interactive-hover" asChild>
+                                <Button size="2" variant="outline" className="button-interactive-hover" asChild>
                                     <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
                                 </Button>
-                                <Button size="2" className="interactive-hover" asChild>
+                                <Button size="2" className="button-interactive-hover" asChild>
                                     <Link to="/signup" onClick={() => setMenuOpen(false)}>Sign Up</Link>
                                 </Button>
                             </Flex>

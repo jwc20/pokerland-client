@@ -21,6 +21,11 @@ function GuestOnlyRoute({children}: {children: React.ReactNode}) {
     return isAuthenticated ? <Navigate to="/home" replace/> : <>{children}</>;
 }
 
+function ProtectedRoute({children}: {children: React.ReactNode}) {
+    const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+    return isAuthenticated ? <>{children}</> : <Navigate to="/" replace/>;
+}
+
 export default function App() {
     return (
         <BrowserRouter>
@@ -29,16 +34,16 @@ export default function App() {
                 <Flex direction="column" flexGrow="1">
                     <Routes>
                         <Route path="/" element={<LandingPage/>}/>
-                        <Route path="/home" element={<HomePage/>}/>
                         <Route path="/login" element={<GuestOnlyRoute><LoginPage/></GuestOnlyRoute>}/>
                         <Route path="/signup" element={<GuestOnlyRoute><SignupPage/></GuestOnlyRoute>}/>
                         <Route path="/articles" element={<ArticlesPage/>}/>
                         <Route path="/about" element={<AboutPage/>}/>
-                        <Route path="/my-data" element={<MyDataPage/>}/>
-                        <Route path="/game-history" element={<GameHistoryPage/>}/>
-                        <Route path="/practice" element={<PracticePage/>}/>
-                        <Route path="/courses" element={<CoursesPage/>}/>
-                        <Route path="/simulations" element={<SimulationsPage/>}/>
+                        <Route path="/home" element={<ProtectedRoute><HomePage/></ProtectedRoute>}/>
+                        <Route path="/my-data" element={<ProtectedRoute><MyDataPage/></ProtectedRoute>}/>
+                        <Route path="/game-history" element={<ProtectedRoute><GameHistoryPage/></ProtectedRoute>}/>
+                        <Route path="/practice" element={<ProtectedRoute><PracticePage/></ProtectedRoute>}/>
+                        <Route path="/courses" element={<ProtectedRoute><CoursesPage/></ProtectedRoute>}/>
+                        <Route path="/simulations" element={<ProtectedRoute><SimulationsPage/></ProtectedRoute>}/>
                     </Routes>
                 </Flex>
                 <Footer/>
