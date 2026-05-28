@@ -1,4 +1,5 @@
 import { User } from "../apis/User";
+import { Log } from "../apis/Log";
 import { useAuthStore } from "../stores/authStore";
 
 const API_BASE_URL =
@@ -9,7 +10,18 @@ export const userApi = new User({
   securityWorker: () => {
     const token = useAuthStore.getState().token;
     if (token) {
-      return { headers: { Authorization: `Token ${token}` } };
+      return { headers: { TOKEN: token } };
+    }
+    return {};
+  },
+});
+
+export const logApi = new Log({
+  baseUrl: API_BASE_URL,
+  securityWorker: () => {
+    const token = useAuthStore.getState().token;
+    if (token) {
+      return { headers: { TOKEN: token } };
     }
     return {};
   },
