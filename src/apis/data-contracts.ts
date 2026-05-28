@@ -178,6 +178,11 @@ export type UserMyProfileResponse = {
    */
   profile_name: string;
   /**
+   * Client token hash
+   * @maxLength 64
+   */
+  client_token_hash?: string | null;
+  /**
    * Username
    * @minLength 1
    * @maxLength 100

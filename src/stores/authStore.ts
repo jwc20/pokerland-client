@@ -3,7 +3,12 @@ import {persist, type StorageValue} from "zustand/middleware";
 import type {UserMyProfileResponse} from "../apis/data-contracts";
 import {userApi} from "../api/client";
 
-type PersistedAuth = {token: string | null; user: UserMyProfileResponse | null; isAuthenticated: boolean};
+type PersistedAuth = {
+    token: string | null;
+    clientToken: string | null;
+    user: UserMyProfileResponse | null;
+    isAuthenticated: boolean
+};
 
 const cookieStorage = {
     getItem(name: string): StorageValue<PersistedAuth> | null {
@@ -27,12 +32,13 @@ const cookieStorage = {
 
 type AuthState = {
     token: string | null;
+    clientToken: string | null;
     user: UserMyProfileResponse | null;
     isAuthenticated: boolean;
     loading: boolean;
     error: string | null;
 
-    setAuth: (token: string, user: UserMyProfileResponse) => void;
+    setAuth: (token: string, clientToken: string | null, user: UserMyProfileResponse) => void;
     clearAuth: () => void;
 
     login: (email: string, password: string) => Promise<void>;
@@ -50,104 +56,113 @@ type AuthState = {
 export const useAuthStore = create<AuthState>()(
     persist(
         (set, get) => ({
-    token: null,
-    user: null,
-    isAuthenticated: false,
-    loading: false,
-    error: null,
-
-    setAuth: (token, user) =>
-        set({
-            token,
-            user,
-            isAuthenticated: true,
-            error: null,
-        }),
-
-    clearAuth: () =>
-        set({
             token: null,
+            clientToken: null,
             user: null,
             isAuthenticated: false,
+            loading: false,
             error: null,
-        }),
 
-    login: async (email, password) => {
-        set({loading: true, error: null});
-        try {
-            const response = await userApi.userEmailLogin({email, password});
-            const {user, token_info} = response.data;
-            if (token_info && user) {
+            setAuth: (token, clientToken, user) =>
                 set({
-                    token: token_info.token_value,
+                    token,
+                    clientToken,
                     user,
                     isAuthenticated: true,
-                    loading: false,
                     error: null,
-                });
-            } else {
-                throw new Error("Invalid response from server");
-            }
-        } catch (err) {
-            set({loading: false, error: "Invalid email or password."});
-            throw err;
-        }
-    },
+                }),
 
-    signup: async ({email, password, profile_name, username, bio}) => {
-        set({loading: true, error: null});
-        try {
-            const response = await userApi.userEmailSignup({
-                email,
-                password,
-                profile_name,
-                username,
-                bio,
-            });
-            const {user, token_info} = response.data;
-            console.log(response.data)
-            if (token_info && user) {
+            clearAuth: () =>
                 set({
-                    token: token_info.token_value,
-                    user,
-                    isAuthenticated: true,
-                    loading: false,
+                    token: null,
+                    clientToken: null,
+                    user: null,
+                    isAuthenticated: false,
                     error: null,
-                });
-            } else {
-                throw new Error("Invalid response from server");
-            }
-        } catch (err) {
-            set({loading: false, error: "Signup failed. Please try again."});
-            throw err;
-        }
-    },
+                }),
 
-    logout: async () => {
-        try {
-            await userApi.userLogout({});
-        } catch {
-            // Server logout failed, but we still clear client state
-        }
-        get().clearAuth();
-    },
+            login: async (email, password) => {
+                set({loading: true, error: null});
+                try {
+                    const response = await userApi.userEmailLogin({email, password});
+                    const {user, token_info} = response.data;
+                    if (token_info && user) {
+                        set({
+                            token: token_info.token_value,
+                            clientToken: user.client_token_hash ?? null,
+                            user,
+                            isAuthenticated: true,
+                            loading: false,
+                            error: null,
+                        });
+                    } else {
+                        throw new Error("Invalid response from server");
+                    }
+                } catch (err) {
+                    set({loading: false, error: "Invalid email or password."});
+                    throw err;
+                }
+            },
 
-    fetchProfile: async () => {
-        try {
-            const response = await userApi.userMyProfileGet({api_page: 1});
-            if (response.data) {
-                set({user: response.data});
-            }
-        } catch {
-            // If fetching profile fails, clear auth (token may be expired)
-            get().clearAuth();
-        }
-    },
+            signup: async ({email, password, profile_name, username, bio}) => {
+                set({loading: true, error: null});
+                try {
+                    const response = await userApi.userEmailSignup({
+                        email,
+                        password,
+                        profile_name,
+                        username,
+                        bio,
+                    });
+                    const {user, token_info, client_token} = response.data;
+                    if (token_info && user) {
+                        set({
+                            token: token_info.token_value,
+                            clientToken: client_token ?? null,
+                            user,
+                            isAuthenticated: true,
+                            loading: false,
+                            error: null,
+                        });
+                    } else {
+                        throw new Error("Invalid response from server");
+                    }
+                } catch (err) {
+                    set({loading: false, error: "Signup failed. Please try again."});
+                    throw err;
+                }
+            },
+
+            logout: async () => {
+                try {
+                    await userApi.userLogout({});
+                } catch {
+                    // Server logout failed, but we still clear client state
+                }
+                get().clearAuth();
+            },
+
+            fetchProfile: async () => {
+                try {
+                    const response = await userApi.userMyProfileGet({api_page: 1});
+                    if (response.data) {
+                        set({user: response.data});
+                    }
+                } catch {
+                    // If fetching profile fails, clear auth (token may be expired)
+                    get().clearAuth();
+                }
+            },
         }),
         {
             name: "auth-storage",
             storage: cookieStorage,
-            partialize: (state) => ({token: state.token, user: state.user, isAuthenticated: state.isAuthenticated}),
+            partialize: (state) => ({
+                token: state.token,
+                clientToken: state.clientToken,
+                user: state.user,
+                isAuthenticated: state.isAuthenticated
+            }),
         }
     )
 )
