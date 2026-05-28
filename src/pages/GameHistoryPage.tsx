@@ -1,43 +1,9 @@
 import {useEffect, useState} from "react";
 import {Tabs} from "radix-ui";
 import {Box, Container, Heading, Text, Flex, Card, Table, Spinner} from "@radix-ui/themes";
-import type {GameLog, GameLogHistory} from "../apis/data-contracts";
+import {useNavigate} from "react-router-dom";
 import {logApi} from "../api/client";
-
-type GameHistoryLog = GameLog | GameLogHistory;
-type LogPayload = Record<string, unknown>;
-
-function getLogs(data: unknown): GameHistoryLog[] {
-    if (Array.isArray(data)) return data;
-    if (!isPayload(data)) return [];
-
-    for (const value of [data.results, data.logs, data.data, data.items]) {
-        const logs = getLogs(value);
-        if (logs.length > 0 || Array.isArray(value)) return logs;
-    }
-
-    return [];
-}
-
-function isPayload(value: unknown): value is LogPayload {
-    return typeof value === "object" && value !== null;
-}
-
-function nestedRecord(payload: LogPayload, key: string): LogPayload | null {
-    const value = payload[key];
-    return isPayload(value) ? value : null;
-}
-
-function getTableName(log: GameHistoryLog) {
-    const payload = isPayload(log.payload) ? log.payload : {};
-    const parsed = nestedRecord(payload, "parsed");
-    const header = parsed ? nestedRecord(parsed, "header") : null;
-    const parsedTable = header ? nestedRecord(header, "table") : null;
-    const table = nestedRecord(payload, "table");
-    const name = parsedTable?.name ?? payload.table_name ?? payload.tableName ?? table?.name ?? table?.table_name;
-
-    return typeof name === "string" && name.trim() ? name : "Unknown table";
-}
+import {getLogs, getTableName, isPayload, nestedRecord, type GameHistoryLog} from "./gameHistoryUtils";
 
 function getParticipantCount(log: GameHistoryLog) {
     const payload = isPayload(log.payload) ? log.payload : {};
@@ -63,6 +29,7 @@ function getLogDate(log: GameHistoryLog) {
 }
 
 function LogsTable({logs}: { logs: unknown }) {
+    const navigate = useNavigate();
     const rows = getLogs(logs);
 
     if (rows.length === 0) {
@@ -86,13 +53,31 @@ function LogsTable({logs}: { logs: unknown }) {
                 </Table.Row>
             </Table.Header>
             <Table.Body>
-                {rows.map((log, index) => (
-                    <Table.Row key={log.id ?? index}>
-                        <Table.Cell>{getTableName(log)}</Table.Cell>
-                        <Table.Cell>{getLogDate(log)}</Table.Cell>
-                        <Table.Cell>{getParticipantCount(log)}</Table.Cell>
-                    </Table.Row>
-                ))}
+                {rows.map((log, index) => {
+                    const path = log.id ? `/game-history/${log.id}` : null;
+
+                    return (
+                        <Table.Row
+                            className={path ? "game-history-row" : undefined}
+                            key={log.id ?? index}
+                            onClick={() => {
+                                if (path) navigate(path, {state: {log}});
+                            }}
+                            onKeyDown={(event) => {
+                                if (path && (event.key === "Enter" || event.key === " ")) {
+                                    event.preventDefault();
+                                    navigate(path, {state: {log}});
+                                }
+                            }}
+                            role={path ? "button" : undefined}
+                            tabIndex={path ? 0 : undefined}
+                        >
+                            <Table.Cell>{getTableName(log)}</Table.Cell>
+                            <Table.Cell>{getLogDate(log)}</Table.Cell>
+                            <Table.Cell>{getParticipantCount(log)}</Table.Cell>
+                        </Table.Row>
+                    );
+                })}
             </Table.Body>
         </Table.Root>
     );

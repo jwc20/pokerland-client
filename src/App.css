@@ -53,6 +53,27 @@ body {
     outline-offset: 2px;
 }
 
+.game-history-row {
+    cursor: pointer;
+}
+
+.game-history-row:focus-visible {
+    outline: 2px solid var(--accent-8);
+    outline-offset: -2px;
+}
+
+.game-history-back-link {
+    color: var(--accent-11);
+    text-decoration: none;
+}
+
+.raw-hand-history {
+    overflow-x: auto;
+    margin: 0;
+    white-space: pre-wrap;
+    font: 13px/1.55 var(--font-mono);
+}
+
 @media (hover: hover) {
     .interactive-hover:hover {
         border: none;
@@ -65,6 +86,10 @@ body {
     }
 
     .card-hover:hover {
+        background-color: var(--accent-a3);
+    }
+
+    .game-history-row:hover {
         background-color: var(--accent-a3);
     }
 }

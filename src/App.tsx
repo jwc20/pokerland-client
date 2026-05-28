@@ -10,6 +10,7 @@ import ArticlesPage from "./pages/ArticlesPage";
 import AboutPage from "./pages/AboutPage";
 import MyDataPage from "./pages/MyDataPage";
 import GameHistoryPage from "./pages/GameHistoryPage";
+import GameHistoryRawHandPage from "./pages/GameHistoryRawHandPage";
 import PracticePage from "./pages/PracticePage";
 import CoursesPage from "./pages/CoursesPage";
 import SimulationsPage from "./pages/SimulationsPage";
@@ -41,6 +42,7 @@ export default function App() {
                         <Route path="/home" element={<ProtectedRoute><HomePage/></ProtectedRoute>}/>
                         <Route path="/my-data" element={<ProtectedRoute><MyDataPage/></ProtectedRoute>}/>
                         <Route path="/game-history" element={<ProtectedRoute><GameHistoryPage/></ProtectedRoute>}/>
+                        <Route path="/game-history/:id" element={<ProtectedRoute><GameHistoryRawHandPage/></ProtectedRoute>}/>
                         <Route path="/practice" element={<ProtectedRoute><PracticePage/></ProtectedRoute>}/>
                         <Route path="/courses" element={<ProtectedRoute><CoursesPage/></ProtectedRoute>}/>
                         <Route path="/simulations" element={<ProtectedRoute><SimulationsPage/></ProtectedRoute>}/>
