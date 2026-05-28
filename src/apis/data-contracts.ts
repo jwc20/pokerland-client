@@ -283,6 +283,11 @@ export interface UserEmailLogin {
 export interface UserSignupLoginResponse {
   user: UserMyProfileResponse;
   token_info: TokenResponse;
+  /**
+   * Client token
+   * @minLength 1
+   */
+  client_token?: string;
 }
 
 export interface UserMyProfileUpdate {
