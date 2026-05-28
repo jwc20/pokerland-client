@@ -121,7 +121,7 @@ export default function UserProfilePage() {
                     </Flex>
                 </Card>
 
-                
+
                 <Card>
                     <Flex direction="column" gap="4">
                         <Heading size="3">Account Settings</Heading>
@@ -130,7 +130,7 @@ export default function UserProfilePage() {
                         <Flex justify="between" align="center" gap="3" wrap="wrap">
                             <Flex direction="column" gap="1">
                                 <Text size="2" weight="medium">Email</Text>
-                                <Text size="2" color="gray">{user?.email ?? "choi.jae100@gmail.com"}</Text>
+                                <Text size="2" color="gray">{user?.email ?? "example@email.com"}</Text>
                                 {emailStatus ? <Text size="2" color="gray">{emailStatus}</Text> : null}
                             </Flex>
                             <Dialog.Root open={emailDialogOpen} onOpenChange={(open) => {
@@ -155,7 +155,7 @@ export default function UserProfilePage() {
                                                 <Text size="2" weight="medium" mb="1">Email</Text>
                                                 <TextField.Root
                                                     type="email"
-                                                    placeholder={user?.email ?? "choi.jae100@gmail.com"}
+                                                    placeholder={user?.email ?? "example@email.com"}
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     required
