@@ -48,6 +48,46 @@ export interface GameLog {
   created_at?: string;
 }
 
+export interface GameLogHistory {
+  /**
+   * Id
+   * @format uuid
+   */
+  id?: string;
+  /** User */
+  user?: number | null;
+  /**
+   * Auth token
+   * @minLength 1
+   * @maxLength 255
+   */
+  token: string;
+  /**
+   * Client source
+   * @minLength 1
+   * @maxLength 50
+   */
+  client: string;
+  /**
+   * Client version
+   * @minLength 1
+   * @maxLength 20
+   */
+  client_version: string;
+  /**
+   * Client submitted at
+   * @format date-time
+   */
+  submitted_at?: string | null;
+  /** Raw game payload */
+  payload: object;
+  /**
+   * Server received at
+   * @format date-time
+   */
+  created_at?: string;
+}
+
 export interface ErrorLog {
   /**
    * Id
@@ -458,7 +498,19 @@ export interface UsernameUpdate {
 
 export type LogAddGameData = GameLog;
 
+export interface LogGameHistoryParams {
+  api_page: number;
+}
+
+export type LogGameHistoryData = GameLogHistory[];
+
 export type LogLogErrorsData = ErrorLog;
+
+export interface LogMyGameHistoryParams {
+  api_page: number;
+}
+
+export type LogMyGameHistoryData = GameLog[];
 
 export type UserDeleteAccountData = Empty;
 
