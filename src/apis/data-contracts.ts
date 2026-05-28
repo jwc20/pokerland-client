@@ -458,26 +458,7 @@ export interface UsernameUpdate {
 
 export type LogAddGameData = GameLog;
 
-export interface GetAllGameLogsParams {
-  api_page: number;
-}
-
-export type GetAllGameLogsData = GameLog[];
-
 export type LogLogErrorsData = ErrorLog;
-
-export interface GetMyGameLogsParams {
-  api_page: number;
-}
-
-export type GetMyGameLogsData = GameLog[];
-
-export interface GetUserGameLogsParams {
-  api_page: number;
-  username: string;
-}
-
-export type GetUserGameLogsData = GameLog[];
 
 export type UserDeleteAccountData = Empty;
 

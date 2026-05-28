@@ -10,7 +10,7 @@
  * ---------------------------------------------------------------
  */
 
-import {
+import type {
   Empty,
   UserCheckEmailAvailabilityData,
   UserCheckTagAvailabilityData,
@@ -48,7 +48,8 @@ import {
   UserTagUpdateData,
   UsernameUpdate,
 } from "./data-contracts";
-import { ContentType, HttpClient, RequestParams } from "./http-client";
+import { ContentType, HttpClient } from "./http-client";
+import type { RequestParams } from "./http-client";
 
 export class User<
   SecurityDataType = unknown,
