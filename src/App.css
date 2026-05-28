@@ -74,6 +74,16 @@ body {
     font: 13px/1.55 var(--font-mono);
 }
 
+.client-token-placeholder {
+    overflow-x: auto;
+    padding: 10px 12px;
+    border: 1px solid var(--gray-a6);
+    border-radius: var(--radius-3);
+    color: var(--gray-12);
+    background: var(--gray-a2);
+    font: 13px/1.5 var(--font-mono);
+}
+
 @media (hover: hover) {
     .interactive-hover:hover {
         border: none;

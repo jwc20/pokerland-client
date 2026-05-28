@@ -6,6 +6,7 @@ import LandingPage from "./pages/LandingPage";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import SignupPage from "./pages/SignupPage";
+import UserProfilePage from "./pages/UserProfilePage";
 import ArticlesPage from "./pages/ArticlesPage";
 import AboutPage from "./pages/AboutPage";
 import MyDataPage from "./pages/MyDataPage";
@@ -40,6 +41,7 @@ export default function App() {
                         <Route path="/articles" element={<ArticlesPage/>}/>
                         <Route path="/about" element={<AboutPage/>}/>
                         <Route path="/home" element={<ProtectedRoute><HomePage/></ProtectedRoute>}/>
+                        <Route path="/user-profile" element={<ProtectedRoute><UserProfilePage/></ProtectedRoute>}/>
                         <Route path="/my-data" element={<ProtectedRoute><MyDataPage/></ProtectedRoute>}/>
                         <Route path="/game-history" element={<ProtectedRoute><GameHistoryPage/></ProtectedRoute>}/>
                         <Route path="/game-history/:id" element={<ProtectedRoute><GameHistoryRawHandPage/></ProtectedRoute>}/>

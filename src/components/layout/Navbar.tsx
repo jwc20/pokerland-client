@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
 import {Flex, Text, Button, IconButton, Box} from "@radix-ui/themes";
-import {SunIcon, MoonIcon, HamburgerMenuIcon, Cross1Icon} from "@radix-ui/react-icons";
+import {SunIcon, MoonIcon, HamburgerMenuIcon, Cross1Icon, AvatarIcon} from "@radix-ui/react-icons";
 import {useAuthStore} from "../../stores/authStore";
 import {useAppStore} from "../../stores/appStore";
 
@@ -13,15 +13,9 @@ const navLinks = [
 export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false);
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-    const authLogout = useAuthStore((s) => s.logout);
     const toggleTheme = useAppStore((s) => s.toggleTheme);
     const theme = useAppStore((s) => s.theme);
     const navigate = useNavigate();
-
-    async function handleLogout() {
-        await authLogout();
-        navigate("/");
-    }
 
     return (
         <Box asChild px="4" py="3" style={{borderBottom: "1px solid var(--gray-a5)"}}>
@@ -64,10 +58,15 @@ export default function Navbar() {
 
                         <Flex gap="2">
                             {isAuthenticated ? (
-                                <Button size="2" variant="outline" className="button-interactive-hover"
-                                        onClick={handleLogout}>
-                                    Log Out
-                                </Button>
+                                <IconButton
+                                    variant="ghost"
+                                    size="2"
+                                    className="button-interactive-hover"
+                                    onClick={() => navigate("/user-profile")}
+                                    aria-label="Open user profile"
+                                >
+                                    <AvatarIcon/>
+                                </IconButton>
                             ) : (
                                 <>
                                     <Button size="2" variant="outline" className="button-interactive-hover" asChild>
@@ -93,6 +92,21 @@ export default function Navbar() {
                         >
                             {theme === "light" ? <MoonIcon/> : <SunIcon/>}
                         </IconButton>
+
+                        {isAuthenticated ? (
+                            <IconButton
+                                variant="ghost"
+                                size="2"
+                                className="button-interactive-hover"
+                                onClick={() => {
+                                    navigate("/user-profile");
+                                    setMenuOpen(false);
+                                }}
+                                aria-label="Open user profile"
+                            >
+                                <AvatarIcon/>
+                            </IconButton>
+                        ) : null}
 
                         <IconButton
                             variant="ghost"
@@ -127,19 +141,7 @@ export default function Navbar() {
                             </Link>
                         ))}
 
-                        {isAuthenticated ? (
-                            <Button
-                                size="2"
-                                variant="outline"
-                                className="button-interactive-hover"
-                                onClick={() => {
-                                    handleLogout();
-                                    setMenuOpen(false);
-                                }}
-                            >
-                                Log Out
-                            </Button>
-                        ) : (
+                        {!isAuthenticated ? (
                             <Flex gap="2">
                                 <Button size="2" variant="outline" className="button-interactive-hover" asChild>
                                     <Link to="/login" onClick={() => setMenuOpen(false)}>Log In</Link>
@@ -148,7 +150,7 @@ export default function Navbar() {
                                     <Link to="/signup" onClick={() => setMenuOpen(false)}>Sign Up</Link>
                                 </Button>
                             </Flex>
-                        )}
+                        ) : null}
                     </Flex>
                 )}
             </nav>
