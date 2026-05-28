@@ -30,15 +30,21 @@ function nestedRecord(payload: LogPayload, key: string): LogPayload | null {
 
 function getTableName(log: GameHistoryLog) {
     const payload = isPayload(log.payload) ? log.payload : {};
+    const parsed = nestedRecord(payload, "parsed");
+    const header = parsed ? nestedRecord(parsed, "header") : null;
+    const parsedTable = header ? nestedRecord(header, "table") : null;
     const table = nestedRecord(payload, "table");
-    const name = payload.table_name ?? payload.tableName ?? table?.name ?? table?.table_name;
+    const name = parsedTable?.name ?? payload.table_name ?? payload.tableName ?? table?.name ?? table?.table_name;
 
     return typeof name === "string" && name.trim() ? name : "Unknown table";
 }
 
 function getParticipantCount(log: GameHistoryLog) {
     const payload = isPayload(log.payload) ? log.payload : {};
-    const participants = payload.participants ?? payload.players ?? payload.seats;
+    const parsed = nestedRecord(payload, "parsed");
+    const header = parsed ? nestedRecord(parsed, "header") : null;
+    const players = header?.players;
+    const participants = players ?? payload.participants ?? payload.players ?? payload.seats;
     const count = payload.participant_count ?? payload.participantCount ?? payload.player_count ?? payload.playerCount;
 
     if (Array.isArray(participants)) return participants.length;
