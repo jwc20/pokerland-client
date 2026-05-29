@@ -12,7 +12,7 @@ function PokerTableModel() {
         const group = groupRef.current;
         if (!group) return;
 
-        group.position.set(0, 0, 0);
+        group.position.set(0, 100, 0);
         group.scale.setScalar(1);
 
         gltf.scene.traverse((object) => {
@@ -28,7 +28,7 @@ function PokerTableModel() {
         const size = bounds.getSize(new Vector3());
         const center = bounds.getCenter(new Vector3());
         const maxDimension = Math.max(size.x, size.y, size.z);
-        const scale = maxDimension > 0 ? 4 / maxDimension : 1;
+        const scale = maxDimension > 0 ? 7 / maxDimension : 1;
 
         group.scale.setScalar(scale);
         group.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
