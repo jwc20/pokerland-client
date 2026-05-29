@@ -1,6 +1,6 @@
 import {Suspense, useLayoutEffect, useRef} from "react";
 import {Canvas, useLoader} from "@react-three/fiber";
-import {Box3, Mesh, Vector3, type Group} from "three";
+import {Box3, Mesh, PCFShadowMap, Vector3, type Group} from "three";
 import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
 import pokerTableUrl from "../assets/poker_table.glb";
 
@@ -53,7 +53,7 @@ function LoadingTable() {
 export default function PokerScene() {
     return (
         <div className="poker-scene" aria-label="3D poker table scene">
-            <Canvas shadows camera={{position: [4, 2.5, 4], fov: 40}}>
+            <Canvas shadows={{type: PCFShadowMap}} camera={{position: [4, 2.5, 4], fov: 40}}>
                 <color attach="background" args={["#09120f"]}/>
                 <ambientLight intensity={0.65}/>
                 <directionalLight position={[4, 6, 4]} intensity={2.6} castShadow/>

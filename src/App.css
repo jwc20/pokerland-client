@@ -96,6 +96,76 @@ body {
     background: #09120f;
 }
 
+.poker-replay-scene {
+    height: min(62vw, 560px);
+    min-height: 360px;
+}
+
+.poker-replay-controls {
+    padding: 10px;
+    border: 1px solid var(--gray-a5);
+    border-radius: var(--radius-3);
+    background: var(--gray-a2);
+}
+
+.poker-replay-progress-wrap {
+    padding: 0 2px;
+}
+
+.poker-replay-progress {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 8px;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 999px;
+    background: var(--gray-a4);
+    cursor: pointer;
+}
+
+.poker-replay-progress-tooltip {
+    position: absolute;
+    bottom: 14px;
+    z-index: 1;
+    max-width: min(320px, 72vw);
+    padding: 4px 8px;
+    border: 1px solid var(--gray-a6);
+    border-radius: var(--radius-2);
+    color: var(--gray-12);
+    background: var(--color-panel-solid);
+    box-shadow: 0 4px 12px var(--gray-a5);
+    font: 12px/1.3 var(--default-font-family);
+    pointer-events: none;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.poker-replay-progress:focus-visible {
+    outline: 2px solid var(--accent-8);
+    outline-offset: 3px;
+}
+
+.poker-replay-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent-9);
+    transition: width 0.08s linear;
+}
+
+.poker-replay-details {
+    padding: 12px;
+    border: 1px solid var(--gray-a5);
+    border-radius: var(--radius-3);
+    background: var(--gray-a2);
+}
+
+.poker-active-player {
+    color: var(--accent-11);
+    font-weight: 700;
+}
+
 @media (hover: hover) {
     .interactive-hover:hover {
         border: none;

@@ -2,6 +2,7 @@ import {useEffect, useState} from "react";
 import {Link, useLocation, useParams} from "react-router-dom";
 import {Card, Container, Flex, Heading, Spinner, Text} from "@radix-ui/themes";
 import {logApi} from "../api/client";
+import PokerReplay from "../components/poker-scene/PokerReplay";
 import {
     getLogs,
     getTableName,
@@ -32,6 +33,11 @@ function getRawHandHistory(log: GameHistoryLog) {
     return formatRawHandHistory(
         parsed?.raw_hand_history ?? payload.raw_hand_history ?? payload.rawHandHistory,
     );
+}
+
+function getParsedHandHistory(log: GameHistoryLog) {
+    const payload = isPayload(log.payload) ? log.payload : {};
+    return nestedRecord(payload, "parsed");
 }
 
 async function findLog(id: string) {
@@ -91,6 +97,7 @@ export default function GameHistoryRawHandPage() {
     }, [id, log]);
 
     const rawHandHistory = log ? getRawHandHistory(log) : "";
+    const parsedHandHistory = log ? getParsedHandHistory(log) : null;
 
     return (
         <Container size="3" py="6">
@@ -112,14 +119,25 @@ export default function GameHistoryRawHandPage() {
                         <Heading size="3" mb="1">Unable to Load Hand History</Heading>
                         <Text size="2" color="gray">{error}</Text>
                     </Card>
-                ) : rawHandHistory ? (
-                    <Card>
-                        <pre className="raw-hand-history">{rawHandHistory}</pre>
-                    </Card>
+                ) : log ? (
+                    <>
+                        {parsedHandHistory ? <PokerReplay parsed={parsedHandHistory}/> : null}
+                        {rawHandHistory ? (
+                            <Card>
+                                <Heading size="3" mb="2">Raw Hand History</Heading>
+                                <pre className="raw-hand-history">{rawHandHistory}</pre>
+                            </Card>
+                        ) : (
+                            <Card>
+                                <Heading size="3" mb="1">No Raw Hand History Available</Heading>
+                                <Text size="2" color="gray">This log does not include raw_hand_history.</Text>
+                            </Card>
+                        )}
+                    </>
                 ) : (
                     <Card>
-                        <Heading size="3" mb="1">No Raw Hand History Available</Heading>
-                        <Text size="2" color="gray">This log does not include raw_hand_history.</Text>
+                        <Heading size="3" mb="1">No Hand History Available</Heading>
+                        <Text size="2" color="gray">This log could not be loaded.</Text>
                     </Card>
                 )}
             </Flex>
