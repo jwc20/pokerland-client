@@ -86,6 +86,16 @@ body {
     font: 13px/1.5 var(--font-mono);
 }
 
+.poker-scene {
+    width: 100%;
+    height: min(56vw, 460px);
+    min-height: 280px;
+    overflow: hidden;
+    border: 1px solid var(--gray-a6);
+    border-radius: var(--radius-4);
+    background: #09120f;
+}
+
 @media (hover: hover) {
     .interactive-hover:hover {
         border: none;

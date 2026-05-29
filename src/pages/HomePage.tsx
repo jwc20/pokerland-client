@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Box, Container, Heading, Text, Grid, Card, Flex } from "@radix-ui/themes";
+import PokerScene from "../components/PokerScene";
 
 const sections = [
   { title: "Articles", description: "Read strategy articles", path: "/articles" },
@@ -18,6 +19,16 @@ export default function HomePage() {
           <Heading size="6" mb="2">Dashboard</Heading>
           <Text color="gray">Welcome back! Choose where to start.</Text>
         </Box>
+
+        <Card>
+          <Flex direction="column" gap="3">
+            <Box>
+              <Heading size="4" mb="1">Poker Table Preview</Heading>
+              <Text size="2" color="gray">Loaded from the local GLB model in assets.</Text>
+            </Box>
+            <PokerScene />
+          </Flex>
+        </Card>
 
         <Grid columns={{ initial: "1", sm: "2", md: "3" }} gap="4">
           {sections.map((section) => (
