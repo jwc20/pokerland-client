@@ -5,11 +5,12 @@ import {PCFShadowMap} from "three";
 import PlayingCard from "./PlayingCard";
 import PokerChip from "./PokerChip";
 import ReplayControls from "./ReplayControls";
+import {parseCardRevealOrder, type CardRevealOrder} from "./replay/cardRevealParser";
 import {createReplayHand} from "./replay/handLogAdapter";
 import {createReplayTimeline} from "./replay/replayTimeline";
 import {formatCard} from "./replay/cardUtils";
 import {potPosition} from "./replay/tableLayout";
-import type {ReplayEvent, ReplayHand, ReplayViewState} from "./replay/types";
+import type {ReplayEvent, ReplayHand, ReplayStreet, ReplayViewState} from "./replay/types";
 
 const eventDuration = 360;
 
@@ -59,6 +60,31 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent): ReplayViewState
         });
     }
 
+    if (event.type === "reveal-hole-cards") {
+        const existingCards = next.cards.filter((card) => card.owner === event.player);
+        if (existingCards.length > 0) {
+            let cardIndex = 0;
+            next.cards = next.cards.map((card) => {
+                if (card.owner !== event.player) return card;
+
+                const revealed = event.cards[cardIndex];
+                cardIndex += 1;
+                return {...card, card: revealed ?? card.card, faceUp: true};
+            });
+        } else {
+            next.cards.push(...event.cards.map((card, index) => ({
+                id: `${event.player}-showdown-${index}`,
+                owner: event.player,
+                card,
+                faceUp: true,
+                zone: "player" as const,
+                index,
+            })));
+        }
+        next.activePlayer = event.player;
+    }
+
+
     if (event.type === "move-chips-to-pot") {
         next.pot += event.amount;
         next.playerBets[event.player] = (next.playerBets[event.player] ?? 0) + event.amount;
@@ -84,7 +110,7 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent): ReplayViewState
 
     if (event.type === "muck-cards") {
         next.foldedPlayers = next.foldedPlayers.includes(event.player) ? next.foldedPlayers : [...next.foldedPlayers, event.player];
-        next.cards = next.cards.map((card) => card.owner === event.player ? {...card, zone: "muck"} : card);
+        next.cards = next.cards.filter((card) => card.owner !== event.player);
         next.activePlayer = event.player;
     }
 
@@ -102,6 +128,49 @@ function buildViewState(events: ReplayEvent[], count: number) {
     }
 
     return state;
+}
+
+function cardsFromReveal(reveal: CardRevealOrder, type: ReplayStreet["type"]) {
+    if (type === "flop") return reveal.streets.flop;
+    if (type === "turn") return reveal.streets.turn;
+
+    return reveal.streets.river;
+}
+
+function applyRevealOrder(hand: ReplayHand, reveal: CardRevealOrder | null): ReplayHand {
+    if (!reveal || reveal.revealTimeline.length === 0) return hand;
+
+    const streetTypes: ReplayStreet["type"][] = ["flop", "turn", "river"];
+    const streets = streetTypes.flatMap((type) => {
+        const cards = cardsFromReveal(reveal, type);
+        const existing = hand.streets.find((street) => street.type === type);
+        if (cards.length === 0 && !existing) return [];
+
+        return [{
+            type,
+            cards: cards.length > 0 ? cards : existing?.cards ?? [],
+            actions: existing?.actions ?? [],
+        }];
+    });
+    const heroName = reveal.hero || hand.heroName;
+    const heroCards = reveal.streets.holeCards.hero?.cards ?? hand.heroCards;
+
+    return {
+        ...hand,
+        handId: reveal.handId || hand.handId,
+        tableName: reveal.table || hand.tableName,
+        buttonSeat: reveal.buttonSeat ?? hand.buttonSeat,
+        heroName,
+        heroCards,
+        players: hand.players.map((player) => ({...player, isHero: player.name === heroName})),
+        streets,
+        showdownCards: reveal.streets.showdown.flatMap((showdown) => showdown.cards ? [{
+            player: showdown.player,
+            cards: showdown.cards,
+            result: showdown.result,
+            alreadyKnown: showdown.alreadyKnown,
+        }] : []),
+    };
 }
 
 function ReplayScene({hand, events, viewState, currentEvent, progress}: {
@@ -205,14 +274,14 @@ function ReplayProgress({value, current, total, labels, onSeek}: {
     );
 }
 
-function ValidPokerReplay({hand}: {hand: ReplayHand}) {
+function ValidPokerReplay({hand, revealOrder}: {hand: ReplayHand; revealOrder: CardRevealOrder | null}) {
     const [playing, setPlaying] = useState(false);
     const [eventIndex, setEventIndex] = useState(0);
     const [progress, setProgress] = useState(0);
     const events = createReplayTimeline(hand);
     const currentEvent = events[eventIndex];
     const viewState = buildViewState(events, eventIndex);
-    const animatedViewState = currentEvent && (playing || progress > 0) ? applyEvent(viewState, currentEvent) : viewState;
+    const animatedViewState = currentEvent && currentEvent.type !== "muck-cards" && (playing || progress > 0) ? applyEvent(viewState, currentEvent) : viewState;
     const canStep = eventIndex < events.length;
     const replayProgress = events.length > 0 ? Math.min((eventIndex + progress) / events.length, 1) : 0;
 
@@ -277,13 +346,18 @@ function ValidPokerReplay({hand}: {hand: ReplayHand}) {
                 />
                 <ReplayScene hand={hand} events={events} viewState={animatedViewState} currentEvent={currentEvent} progress={progress}/>
                 <ReplayDetails hand={hand} viewState={animatedViewState}/>
+                {revealOrder?.warnings.length ? (
+                    <Text size="1" color="amber">Reveal parser warnings: {revealOrder.warnings.join(" ")}</Text>
+                ) : null}
             </Flex>
         </Card>
     );
 }
 
-export default function PokerReplay({parsed}: {parsed: unknown}) {
-    const hand = createReplayHand(parsed);
+export default function PokerReplay({parsed, rawHandHistory}: {parsed: unknown; rawHandHistory?: string}) {
+    const parsedHand = createReplayHand(parsed);
+    const revealOrder = rawHandHistory ? parseCardRevealOrder(rawHandHistory) : null;
+    const hand = parsedHand ? applyRevealOrder(parsedHand, revealOrder) : null;
 
     if (!hand) {
         return (
@@ -294,5 +368,5 @@ export default function PokerReplay({parsed}: {parsed: unknown}) {
         );
     }
 
-    return <ValidPokerReplay hand={hand}/>;
+    return <ValidPokerReplay hand={hand} revealOrder={revealOrder}/>;
 }

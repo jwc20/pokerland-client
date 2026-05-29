@@ -121,7 +121,7 @@ export default function GameHistoryRawHandPage() {
                     </Card>
                 ) : log ? (
                     <>
-                        {parsedHandHistory ? <PokerReplay parsed={parsedHandHistory}/> : null}
+                        {parsedHandHistory ? <PokerReplay parsed={parsedHandHistory} rawHandHistory={rawHandHistory}/> : null}
                         {rawHandHistory ? (
                             <Card>
                                 <Heading size="3" mb="2">Raw Hand History</Heading>

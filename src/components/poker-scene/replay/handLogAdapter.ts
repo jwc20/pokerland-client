@@ -113,5 +113,6 @@ export function createReplayHand(parsed: unknown): ReplayHand | null {
         blinds: normalizeActions(header.actions, "header"),
         preflopActions: normalizeActions(preflop.actions, "preflop"),
         streets,
+        showdownCards: [],
     };
 }

@@ -1,13 +1,12 @@
 import {useRef} from "react";
 import {useFrame} from "@react-three/fiber";
-import {Group, Vector3} from "three";
+import {Group, Mesh, MeshStandardMaterial, Vector3} from "three";
 import {isRedCard} from "./replay/cardUtils";
-import {boardPosition, deckPosition, muckPosition, playerLayout, type Point3} from "./replay/tableLayout";
+import {boardPosition, deckPosition, playerLayout, type Point3} from "./replay/tableLayout";
 import type {ReplayCardState, ReplayEvent, ReplayPlayer} from "./replay/types";
 
 function pointForCard(card: ReplayCardState, players: ReplayPlayer[]): Point3 {
     if (card.zone === "board" && card.boardIndex !== undefined) return boardPosition(card.boardIndex);
-    if (card.zone === "muck") return muckPosition;
 
     const player = players.find((candidate) => candidate.name === card.owner);
     if (!player) return deckPosition;
@@ -24,10 +23,6 @@ function startForCard(card: ReplayCardState, players: ReplayPlayer[], currentEve
         return deckPosition;
     }
 
-    if (currentEvent?.type === "muck-cards" && currentEvent.player === card.owner) {
-        return pointForCard({...card, zone: "player"}, players);
-    }
-
     return pointForCard(card, players);
 }
 
@@ -38,6 +33,8 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
     currentEvent?: ReplayEvent;
 }) {
     const ref = useRef<Group>(null);
+    const bodyRef = useRef<Mesh>(null);
+    const pipRef = useRef<Mesh>(null);
     const target = pointForCard(card, players);
     const start = startForCard(card, players, currentEvent);
     const frontColor = isRedCard(card.card) ? "#b51f32" : "#151515";
@@ -49,19 +46,29 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
         const animated = currentEvent?.type === "deal-hole-card" || currentEvent?.type === "deal-board-card" || currentEvent?.type === "muck-cards";
         const t = animated ? progress : 1;
         group.position.lerpVectors(new Vector3(...start), new Vector3(...target), t);
+        if (currentEvent?.type === "muck-cards" && currentEvent.player === card.owner) {
+            group.position.y -= progress * 0.035;
+        }
         group.rotation.set(0, 0, 0);
+
+        const opacity = currentEvent?.type === "muck-cards" && currentEvent.player === card.owner ? 1 - progress : 1;
+        for (const mesh of [bodyRef.current, pipRef.current]) {
+            if (mesh?.material instanceof MeshStandardMaterial) {
+                mesh.material.opacity = opacity;
+            }
+        }
     });
 
     return (
         <group ref={ref}>
-            <mesh castShadow receiveShadow>
+            <mesh ref={bodyRef} castShadow receiveShadow>
                 <boxGeometry args={[0.24, 0.015, 0.34]}/>
-                <meshStandardMaterial color={card.faceUp ? "#f7f1df" : "#243f91"} roughness={0.72}/>
+                <meshStandardMaterial color={card.faceUp ? "#f7f1df" : "#243f91"} roughness={0.72} transparent/>
             </mesh>
             {card.faceUp ? (
-                <mesh position={[0, 0.012, -0.06]}>
+                <mesh ref={pipRef} position={[0, 0.012, -0.06]}>
                     <boxGeometry args={[0.12, 0.006, 0.05]}/>
-                    <meshStandardMaterial color={frontColor}/>
+                    <meshStandardMaterial color={frontColor} transparent/>
                 </mesh>
             ) : null}
         </group>

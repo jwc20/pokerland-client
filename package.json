@@ -15,6 +15,7 @@
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/themes": "^3.3.0",
     "@react-three/fiber": "^9.6.1",
+    "@react-three/rapier": "^2.2.0",
     "konva": "^10.3.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.6",

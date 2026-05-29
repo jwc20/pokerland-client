@@ -66,6 +66,16 @@ export function createReplayTimeline(hand: ReplayHand): ReplayEvent[] {
         }
     }
 
+    for (const showdown of hand.showdownCards) {
+        events.push({
+            type: "reveal-hole-cards",
+            player: showdown.player,
+            cards: showdown.cards,
+            alreadyKnown: showdown.alreadyKnown,
+            label: `${showdown.player} shows ${showdown.cards.map(formatCard).join(" ")}`,
+        });
+    }
+
     events.push({type: "finish", label: "Replay complete"});
 
     return events;

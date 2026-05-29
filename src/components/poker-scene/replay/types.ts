@@ -24,6 +24,13 @@ export type ReplayStreet = {
     actions: ReplayAction[];
 };
 
+export type ReplayShowdownCards = {
+    player: string;
+    cards: CardId[];
+    result?: string;
+    alreadyKnown?: boolean;
+};
+
 export type ReplayHand = {
     handId: string;
     tableName: string;
@@ -35,12 +42,14 @@ export type ReplayHand = {
     blinds: ReplayAction[];
     preflopActions: ReplayAction[];
     streets: ReplayStreet[];
+    showdownCards: ReplayShowdownCards[];
 };
 
 export type ReplayEvent =
     | { type: "shuffle"; label: string }
     | { type: "deal-hole-card"; player: string; cardIndex: 0 | 1; card?: CardId; faceUp: boolean; label: string }
     | { type: "deal-board-card"; card: CardId; boardIndex: number; label: string }
+    | { type: "reveal-hole-cards"; player: string; cards: CardId[]; label: string; alreadyKnown?: boolean }
     | { type: "move-chips-to-pot"; player: string; amount: number; label: string }
     | { type: "return-chips"; player: string; amount: number; label: string }
     | { type: "collect-pot"; player: string; amount: number; label: string }
