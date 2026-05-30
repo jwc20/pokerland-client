@@ -63,6 +63,10 @@ const cardTextureFiles: Record<string, string> = {
 };
 
 const suitAliases: Record<string, string> = {clubs: "c", diamonds: "d", hearts: "h", spades: "s"};
+const textureList = Object.values(textureUrls);
+const textureIndexByUrl = new Map(textureList.map((url, index) => [url, index]));
+
+useLoader.preload(TextureLoader, textureList);
 
 function textureUrlForCard(card?: string) {
     const normalized = card ? card.replace(/^(10)/, "T").replace(/(clubs|diamonds|hearts|spades)$/i, (suit) => suitAliases[suit.toLowerCase()]) : "back";
@@ -103,7 +107,9 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
     const faceRef = useRef<Mesh>(null);
     const target = pointForCard(card, players);
     const start = startForCard(card, players, currentEvent);
-    const texture = useLoader(TextureLoader, textureUrlForCard(card.faceUp ? card.card : undefined));
+    const textures = useLoader(TextureLoader, textureList);
+    const textureUrl = textureUrlForCard(card.faceUp ? card.card : undefined);
+    const texture = textures[textureIndexByUrl.get(textureUrl) ?? textureIndexByUrl.get(textureUrlForCard()) ?? 0];
 
     useFrame(() => {
         const group = ref.current;
