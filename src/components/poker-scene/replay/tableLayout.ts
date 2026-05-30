@@ -20,7 +20,7 @@ export const potPosition: Point3 = [0, 0.08, 0];
 export const muckPosition: Point3 = [1.15, 0.06, 0];
 
 export function boardPosition(index: number): Point3 {
-    return [-0.72 + index * 0.36, 0.06, 0];
+    return [-0.72 + index * 0.36, 0.06, 1.2];
 }
 
 export function playerLayout(seat: number): PlayerLayout {
