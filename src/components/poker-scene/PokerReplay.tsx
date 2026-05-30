@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {Canvas} from "@react-three/fiber";
+import {CuboidCollider, Physics} from "@react-three/rapier";
 import {Card, Flex, Heading, Text} from "@radix-ui/themes";
 import {PCFShadowMap} from "three";
 import PlayingCard from "./PlayingCard";
@@ -9,7 +10,6 @@ import {parseCardRevealOrder, type CardRevealOrder} from "./replay/cardRevealPar
 import {createReplayHand} from "./replay/handLogAdapter";
 import {createReplayTimeline} from "./replay/replayTimeline";
 import {formatCard} from "./replay/cardUtils";
-import {potPosition} from "./replay/tableLayout";
 import type {ReplayEvent, ReplayHand, ReplayStreet, ReplayViewState} from "./replay/types";
 
 const eventDuration = 360;
@@ -193,15 +193,14 @@ function ReplayScene({hand, events, viewState, currentEvent, progress}: {
                     <meshStandardMaterial color="#ffffff" roughness={0.82}/>
                 </mesh>
                 <gridHelper args={[7, 28, "#cfd6df", "#edf0f4"]}/>
-                <mesh position={potPosition} castShadow receiveShadow>
-                    <cylinderGeometry args={[0.2, 0.2, Math.max(0.04, Math.min(viewState.pot / 5000, 0.45)), 32]}/>
-                    <meshStandardMaterial color="#d8d8d8" roughness={0.45}/>
-                </mesh>
+                <Physics gravity={[0, -9.81, 0]}>
+                    <CuboidCollider args={[3.5, 0.03, 2.8]} position={[0, -0.03, 0]} friction={1.15} restitution={0.04}/>
+                    {viewState.chipMoves.map((move) => (
+                        <PokerChip key={move.id} move={move} players={hand.players}/>
+                    ))}
+                </Physics>
                 {viewState.cards.map((card) => (
                     <PlayingCard key={card.id} card={card} players={hand.players} progress={progress} currentEvent={currentEvent}/>
-                ))}
-                {viewState.chipMoves.map((move) => (
-                    <PokerChip key={move.id} move={move} players={hand.players} progress={progress}/>
                 ))}
             </Canvas>
         </div>
