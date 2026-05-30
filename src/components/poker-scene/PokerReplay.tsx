@@ -13,6 +13,7 @@ import {formatCard} from "./replay/cardUtils";
 import type {ReplayEvent, ReplayHand, ReplayStreet, ReplayViewState} from "./replay/types";
 
 const eventDuration = 360;
+const boardDealEventDuration = 1400;
 const bettingEventDuration = 2200;
 
 function initialViewState(): ReplayViewState {
@@ -58,7 +59,7 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent, eventKey: number
         next.cards.push({
             id: `board-${event.boardIndex}`,
             card: event.card,
-            faceUp: false,
+            faceUp: true,
             zone: "board",
             index: event.boardIndex,
             boardIndex: event.boardIndex,
@@ -284,7 +285,7 @@ function ValidPokerReplay({hand, revealOrder}: {hand: ReplayHand; revealOrder: C
     const [progress, setProgress] = useState(0);
     const events = createReplayTimeline(hand);
     const currentEvent = events[eventIndex];
-    const currentEventDuration = currentEvent?.type === "move-chips-to-pot" ? bettingEventDuration : eventDuration;
+    const currentEventDuration = currentEvent?.type === "move-chips-to-pot" ? bettingEventDuration : currentEvent?.type === "deal-board-card" ? boardDealEventDuration : eventDuration;
     const viewState = buildViewState(events, eventIndex);
     const animatedViewState = currentEvent && currentEvent.type !== "muck-cards" && (playing || progress > 0) ? applyEvent(viewState, currentEvent, eventIndex) : viewState;
     const canStep = eventIndex < events.length;

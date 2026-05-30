@@ -1,6 +1,6 @@
 import {useRef} from "react";
 import {useFrame, useLoader} from "@react-three/fiber";
-import {Group, Mesh, MeshStandardMaterial, TextureLoader, Vector3} from "three";
+import {BackSide, FrontSide, Group, Mesh, MeshStandardMaterial, TextureLoader, Vector3} from "three";
 import {boardPosition, deckPosition, playerLayout, type Point3} from "./replay/tableLayout";
 import type {ReplayCardState, ReplayEvent, ReplayPlayer} from "./replay/types";
 
@@ -96,6 +96,12 @@ function startForCard(card: ReplayCardState, players: ReplayPlayer[], currentEve
     return pointForCard(card, players);
 }
 
+function boardFlipProgress(card: ReplayCardState, currentEvent: ReplayEvent | undefined, progress: number) {
+    if (card.zone !== "board" || currentEvent?.type !== "deal-board-card" || currentEvent.boardIndex !== card.boardIndex) return 1;
+
+    return Math.min(Math.max((progress - 0.36) / 0.64, 0), 1);
+}
+
 export default function PlayingCard({card, players, progress, currentEvent}: {
     card: ReplayCardState;
     players: ReplayPlayer[];
@@ -105,26 +111,34 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
     const ref = useRef<Group>(null);
     const bodyRef = useRef<Mesh>(null);
     const faceRef = useRef<Mesh>(null);
+    const backRef = useRef<Mesh>(null);
     const target = pointForCard(card, players);
     const start = startForCard(card, players, currentEvent);
     const textures = useLoader(TextureLoader, textureList);
-    const textureUrl = textureUrlForCard(card.faceUp ? card.card : undefined);
-    const texture = textures[textureIndexByUrl.get(textureUrl) ?? textureIndexByUrl.get(textureUrlForCard()) ?? 0];
+    const flipProgress = boardFlipProgress(card, currentEvent, progress);
+    const showFace = card.faceUp && flipProgress >= 0.5;
+    const faceTextureUrl = textureUrlForCard(showFace ? card.card : undefined);
+    const backTextureUrl = textureUrlForCard();
+    const faceTexture = textures[textureIndexByUrl.get(faceTextureUrl) ?? textureIndexByUrl.get(backTextureUrl) ?? 0];
+    const backTexture = textures[textureIndexByUrl.get(backTextureUrl) ?? 0];
 
     useFrame(() => {
         const group = ref.current;
         if (!group) return;
 
         const animated = currentEvent?.type === "deal-hole-card" || currentEvent?.type === "deal-board-card" || currentEvent?.type === "muck-cards";
-        const t = animated ? progress : 1;
+        const boardDealMovementProgress = currentEvent?.type === "deal-board-card" ? Math.min(progress / 0.28, 1) : progress;
+        const t = animated ? boardDealMovementProgress : 1;
         group.position.lerpVectors(new Vector3(...start), new Vector3(...target), t);
         if (currentEvent?.type === "muck-cards" && currentEvent.player === card.owner) {
             group.position.y -= progress * 0.035;
         }
-        group.rotation.set(0, 0, 0);
+        const flipLift = flipProgress < 1 ? Math.sin(flipProgress * Math.PI) : 0;
+        group.position.y += flipLift * 0.08;
+        group.rotation.set(0, 0, (1 - flipProgress) * Math.PI);
 
         const opacity = currentEvent?.type === "muck-cards" && currentEvent.player === card.owner ? 1 - progress : 1;
-        for (const mesh of [bodyRef.current, faceRef.current]) {
+        for (const mesh of [bodyRef.current, faceRef.current, backRef.current]) {
             if (mesh?.material instanceof MeshStandardMaterial) {
                 mesh.material.opacity = opacity;
             }
@@ -139,7 +153,11 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
             </mesh>
             <mesh ref={faceRef} position={[0, 0.009, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[0.235, 0.335]}/>
-                <meshStandardMaterial map={texture} roughness={0.5} transparent/>
+                <meshStandardMaterial map={faceTexture} roughness={0.5} transparent side={FrontSide}/>
+            </mesh>
+            <mesh ref={backRef} position={[0, -0.009, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+                <planeGeometry args={[0.235, 0.335]}/>
+                <meshStandardMaterial map={backTexture} roughness={0.5} transparent side={BackSide}/>
             </mesh>
         </group>
     );
