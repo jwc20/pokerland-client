@@ -13,6 +13,7 @@ import {formatCard} from "./replay/cardUtils";
 import type {ReplayEvent, ReplayHand, ReplayStreet, ReplayViewState} from "./replay/types";
 
 const eventDuration = 360;
+const bettingEventDuration = 2200;
 
 function initialViewState(): ReplayViewState {
     return {
@@ -26,13 +27,17 @@ function initialViewState(): ReplayViewState {
     };
 }
 
-function applyEvent(state: ReplayViewState, event: ReplayEvent): ReplayViewState {
+function chipMoveId(event: Extract<ReplayEvent, {type: "move-chips-to-pot" | "return-chips" | "collect-pot"}>, eventKey: number) {
+    return `${eventKey}-${event.type}-${event.player}-${event.amount}`;
+}
+
+function applyEvent(state: ReplayViewState, event: ReplayEvent, eventKey: number): ReplayViewState {
     const next: ReplayViewState = {
         ...state,
         cards: state.cards.map((card) => ({...card})),
         foldedPlayers: [...state.foldedPlayers],
         playerBets: {...state.playerBets},
-        chipMoves: [],
+        chipMoves: [...state.chipMoves],
         activePlayer: undefined,
         actionLabel: event.label,
     };
@@ -88,19 +93,19 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent): ReplayViewState
     if (event.type === "move-chips-to-pot") {
         next.pot += event.amount;
         next.playerBets[event.player] = (next.playerBets[event.player] ?? 0) + event.amount;
-        next.chipMoves = [{id: `${event.player}-${event.amount}-${Date.now()}`, player: event.player, amount: event.amount, direction: "to-pot"}];
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "to-pot"});
         next.activePlayer = event.player;
     }
 
     if (event.type === "return-chips") {
         next.pot = Math.max(0, next.pot - event.amount);
-        next.chipMoves = [{id: `${event.player}-${event.amount}-${Date.now()}`, player: event.player, amount: event.amount, direction: "from-pot"}];
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot"});
         next.activePlayer = event.player;
     }
 
     if (event.type === "collect-pot") {
         next.pot = 0;
-        next.chipMoves = [{id: `${event.player}-${event.amount}-${Date.now()}`, player: event.player, amount: event.amount, direction: "from-pot"}];
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot"});
         next.activePlayer = event.player;
     }
 
@@ -123,8 +128,8 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent): ReplayViewState
 
 function buildViewState(events: ReplayEvent[], count: number) {
     let state = initialViewState();
-    for (const event of events.slice(0, count)) {
-        state = applyEvent(state, event);
+    for (const [index, event] of events.slice(0, count).entries()) {
+        state = applyEvent(state, event, index);
     }
 
     return state;
@@ -279,8 +284,9 @@ function ValidPokerReplay({hand, revealOrder}: {hand: ReplayHand; revealOrder: C
     const [progress, setProgress] = useState(0);
     const events = createReplayTimeline(hand);
     const currentEvent = events[eventIndex];
+    const currentEventDuration = currentEvent?.type === "move-chips-to-pot" ? bettingEventDuration : eventDuration;
     const viewState = buildViewState(events, eventIndex);
-    const animatedViewState = currentEvent && currentEvent.type !== "muck-cards" && (playing || progress > 0) ? applyEvent(viewState, currentEvent) : viewState;
+    const animatedViewState = currentEvent && currentEvent.type !== "muck-cards" && (playing || progress > 0) ? applyEvent(viewState, currentEvent, eventIndex) : viewState;
     const canStep = eventIndex < events.length;
     const replayProgress = events.length > 0 ? Math.min((eventIndex + progress) / events.length, 1) : 0;
 
@@ -291,7 +297,7 @@ function ValidPokerReplay({hand, revealOrder}: {hand: ReplayHand; revealOrder: C
         const startedAt = performance.now();
 
         function tick(now: number) {
-            const nextProgress = Math.min((now - startedAt) / eventDuration, 1);
+            const nextProgress = Math.min((now - startedAt) / currentEventDuration, 1);
             setProgress(nextProgress);
 
             if (nextProgress >= 1) {
@@ -307,7 +313,7 @@ function ValidPokerReplay({hand, revealOrder}: {hand: ReplayHand; revealOrder: C
         frame = requestAnimationFrame(tick);
 
         return () => cancelAnimationFrame(frame);
-    }, [eventIndex, events.length, playing]);
+    }, [currentEventDuration, eventIndex, events.length, playing]);
 
     return (
         <Card>
