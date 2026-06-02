@@ -1,29 +1,103 @@
-import {useEffect, useRef} from "react";
+import {Suspense, useEffect, useRef} from "react";
+import {useLoader} from "@react-three/fiber";
 import {CylinderCollider, RigidBody, type RapierRigidBody} from "@react-three/rapier";
-import {playerLayout, potPosition} from "./replay/tableLayout";
+import {BufferGeometry, Material, Mesh, type Group} from "three";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import chip1 from "../../assets/poker_chips/poker_chip_1.glb";
+import chip5 from "../../assets/poker_chips/poker_chip_5.glb";
+import chip10 from "../../assets/poker_chips/poker_chip_10.glb";
+import chip20 from "../../assets/poker_chips/poker_chip_20.glb";
+import chip25 from "../../assets/poker_chips/poker_chip_25.glb";
+import chip50 from "../../assets/poker_chips/poker_chip_50.glb";
+import chip100 from "../../assets/poker_chips/poker_chip_100.glb";
+import chip500 from "../../assets/poker_chips/poker_chip_500.glb";
+import chip1000 from "../../assets/poker_chips/poker_chip_1000.glb";
+import chip5000 from "../../assets/poker_chips/poker_chip_5000.glb";
+import {playerLayout, potPosition, type Point3} from "./replay/tableLayout";
 import type {ReplayChipMove, ReplayPlayer} from "./replay/types";
 
-const chipRadius = 0.12;
-const chipHeight = 0.055;
+const chipRadius = 0.095;
+const chipHeight = 0.035;
 const gravity = -9.81;
+const modelDiameter = 0.08016000318527222;
+const modelScale = (chipRadius * 2) / modelDiameter;
+const chipModels = [
+    {value: 1, url: chip1},
+    {value: 5, url: chip5},
+    {value: 10, url: chip10},
+    {value: 20, url: chip20},
+    {value: 25, url: chip25},
+    {value: 50, url: chip50},
+    {value: 100, url: chip100},
+    {value: 500, url: chip500},
+    {value: 1000, url: chip1000},
+    {value: 5000, url: chip5000},
+];
 
-function chipColor(amount: number) {
-    if (amount >= 1000) return "#232323";
-    if (amount >= 500) return "#7a35b8";
-
-    return "#d8d8d8";
-}
+type ChipMesh = {
+    geometry: BufferGeometry;
+    material: Material | Material[];
+};
 
 function chipCount(amount: number) {
     return Math.max(3, Math.min(8, Math.ceil(amount / 250)));
 }
 
-function PhysicsChip({index, count, amount, from, to}: {
+function chipUrl(amount: number) {
+    return chipModels.reduce((best, candidate) => (
+        Math.abs(candidate.value - amount) < Math.abs(best.value - amount) ? candidate : best
+    )).url;
+}
+
+function meshFromScene(scene: Group, name: string): ChipMesh {
+    const object = scene.getObjectByName(name);
+    if (!(object instanceof Mesh)) {
+        throw new Error(`Missing chip mesh: ${name}`);
+    }
+
+    return {geometry: object.geometry, material: object.material};
+}
+
+function PokerChipModel({amount}: {amount: number}) {
+    const {scene} = useLoader(GLTFLoader, chipUrl(amount));
+    const object4 = meshFromScene(scene, "Object_4");
+    const object5 = meshFromScene(scene, "Object_5");
+    const object6 = meshFromScene(scene, "Object_6");
+    const object7 = meshFromScene(scene, "Object_7");
+
+    return (
+        <group dispose={null} rotation={[-Math.PI / 2, 0, 0]} scale={modelScale}>
+            <group rotation={[0.005, 0, 0]}>
+                <group rotation={[Math.PI / 2, 0, 0]}>
+                    <group position={[0, -0.007, 0]} scale={[-0.334, 0.334, 0.334]}>
+                        <mesh castShadow receiveShadow geometry={object4.geometry} material={object4.material}/>
+                        <mesh castShadow receiveShadow geometry={object5.geometry} material={object5.material}/>
+                        <mesh castShadow receiveShadow geometry={object6.geometry} material={object6.material}/>
+                        <mesh castShadow receiveShadow geometry={object7.geometry} material={object7.material}/>
+                    </group>
+                </group>
+            </group>
+        </group>
+    );
+}
+
+function PlaceholderChip({amount}: {amount: number}) {
+    const color = amount >= 1000 ? "#232323" : amount >= 500 ? "#7a35b8" : "#d8d8d8";
+
+    return (
+        <mesh castShadow receiveShadow>
+            <cylinderGeometry args={[chipRadius, chipRadius, chipHeight, 40]}/>
+            <meshStandardMaterial color={color} roughness={0.5} metalness={0.08}/>
+        </mesh>
+    );
+}
+
+function ThrownChip({move, index, count, from, to}: {
+    move: ReplayChipMove;
     index: number;
     count: number;
-    amount: number;
-    from: [number, number, number];
-    to: [number, number, number];
+    from: Point3;
+    to: Point3;
 }) {
     const body = useRef<RapierRigidBody>(null);
     const spread = index - (count - 1) / 2;
@@ -32,14 +106,17 @@ function PhysicsChip({index, count, amount, from, to}: {
     const length = Math.hypot(dx, dz) || 1;
     const sideX = -dz / length;
     const sideZ = dx / length;
+    const forwardX = dx / length;
+    const forwardZ = dz / length;
     const startOffset = spread * 0.035;
-    const targetOffset = spread * 0.025;
-    const startX = from[0] + sideX * startOffset;
-    const startY = from[1] + chipHeight * 1.4 + index * 0.01;
-    const startZ = from[2] + sideZ * startOffset;
-    const targetX = to[0] + sideX * targetOffset;
-    const targetY = to[1] + chipHeight * 0.8;
-    const targetZ = to[2] + sideZ * targetOffset;
+    const targetRing = move.direction === "to-pot" ? 0.045 : 0.12;
+    const targetOffset = spread * targetRing;
+    const startX = from[0] + sideX * startOffset - forwardX * 0.08;
+    const startY = from[1] + chipHeight * 2.5 + index * 0.004;
+    const startZ = from[2] + sideZ * startOffset - forwardZ * 0.08;
+    const targetX = to[0] + sideX * targetOffset + forwardX * 0.015 * (index % 2 ? 1 : -1);
+    const targetY = to[1] + chipHeight * 0.65;
+    const targetZ = to[2] + sideZ * targetOffset + forwardZ * 0.015 * (index % 2 ? -1 : 1);
 
     useEffect(() => {
         const rigidBody = body.current;
@@ -56,6 +133,7 @@ function PhysicsChip({index, count, amount, from, to}: {
             y: 3 + index * 0.6,
             z: -sideX * (10 + index),
         }, true);
+
     }, [index, sideX, sideZ, startX, startY, startZ, targetX, targetY, targetZ]);
 
     return (
@@ -64,16 +142,17 @@ function PhysicsChip({index, count, amount, from, to}: {
             colliders={false}
             friction={0.92}
             restitution={0.12}
-            linearDamping={0.45}
-            angularDamping={0.65}
+            linearDamping={0.18}
+            angularDamping={0.45}
+            canSleep={false}
+            ccd
             position={[startX, startY, startZ]}
             rotation={[0, 0, spread * 0.08]}
         >
             <CylinderCollider args={[chipHeight / 2, chipRadius]}/>
-            <mesh castShadow receiveShadow>
-                <cylinderGeometry args={[chipRadius, chipRadius, chipHeight, 36]}/>
-                <meshStandardMaterial color={chipColor(amount)} roughness={0.48} metalness={0.08}/>
-            </mesh>
+            <Suspense fallback={<PlaceholderChip amount={move.amount}/>}>
+                <PokerChipModel amount={move.amount}/>
+            </Suspense>
         </RigidBody>
     );
 }
@@ -91,7 +170,7 @@ export default function PokerChip({move, players}: {
     return (
         <>
             {Array.from({length: count}, (_, index) => (
-                <PhysicsChip key={`${move.id}-${index}`} index={index} count={count} amount={move.amount} from={from} to={to}/>
+                <ThrownChip key={`${move.id}-${index}`} move={move} index={index} count={count} from={from} to={to}/>
             ))}
         </>
     );
