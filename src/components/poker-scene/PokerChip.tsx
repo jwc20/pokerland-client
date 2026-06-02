@@ -33,14 +33,39 @@ const chipModels = [
     {value: 1000, url: chip1000},
     {value: 5000, url: chip5000},
 ];
+const chipWeights = [
+    ...chipModels.map(({value}) => value),
+    10000,
+    25000,
+    50000,
+    100000,
+    500000,
+    1000000,
+].sort((a, b) => b - a);
 
 type ChipMesh = {
     geometry: BufferGeometry;
     material: Material | Material[];
 };
 
-function chipCount(amount: number) {
-    return Math.max(3, Math.min(8, Math.ceil(amount / 250)));
+function chipAmounts(amount: number) {
+    const chips: number[] = [];
+    let remaining = Math.max(0, Math.round(amount));
+
+    for (const value of chipWeights) {
+        while (remaining >= value && chips.length < 12) {
+            chips.push(value);
+            remaining -= value;
+        }
+    }
+
+    if (remaining > 0 && chips.length < 12) {
+        chips.push(chipModels.reduce((best, candidate) => (
+            Math.abs(candidate.value - remaining) < Math.abs(best.value - remaining) ? candidate : best
+        )).value);
+    }
+
+    return chips.length ? chips : [1];
 }
 
 function chipUrl(amount: number) {
@@ -92,8 +117,9 @@ function PlaceholderChip({amount}: {amount: number}) {
     );
 }
 
-function ThrownChip({move, index, count, from, to}: {
+function ThrownChip({move, amount, index, count, from, to}: {
     move: ReplayChipMove;
+    amount: number;
     index: number;
     count: number;
     from: Point3;
@@ -150,8 +176,10 @@ function ThrownChip({move, index, count, from, to}: {
             rotation={[0, 0, spread * 0.08]}
         >
             <CylinderCollider args={[chipHeight / 2, chipRadius]}/>
-            <Suspense fallback={<PlaceholderChip amount={move.amount}/>}>
-                <PokerChipModel amount={move.amount}/>
+            <Suspense
+                fallback={<PlaceholderChip amount={amount}/>}
+            >
+                <PokerChipModel amount={amount}/>
             </Suspense>
         </RigidBody>
     );
@@ -165,12 +193,12 @@ export default function PokerChip({move, players}: {
     const playerPoint = player ? playerLayout(player.visualSeat).chipPosition : potPosition;
     const from = move.direction === "to-pot" ? playerPoint : potPosition;
     const to = move.direction === "to-pot" ? potPosition : playerPoint;
-    const count = chipCount(move.amount);
+    const amounts = chipAmounts(move.amount);
 
     return (
         <>
-            {Array.from({length: count}, (_, index) => (
-                <ThrownChip key={`${move.id}-${index}`} move={move} index={index} count={count} from={from} to={to}/>
+            {amounts.map((amount, index) => (
+                <ThrownChip key={`${move.id}-${index}`} move={move} amount={amount} index={index} count={amounts.length} from={from} to={to}/>
             ))}
         </>
     );
