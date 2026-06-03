@@ -21,7 +21,7 @@ export interface GameLog {
    * @minLength 1
    * @maxLength 255
    */
-  token: string;
+  client_token_hash: string;
   /**
    * Client source
    * @minLength 1
@@ -61,7 +61,7 @@ export interface GameLogHistory {
    * @minLength 1
    * @maxLength 255
    */
-  token: string;
+  client_token_hash: string;
   /**
    * Client source
    * @minLength 1
@@ -178,11 +178,6 @@ export type UserMyProfileResponse = {
    */
   profile_name: string;
   /**
-   * Client token hash
-   * @maxLength 64
-   */
-  client_token_hash?: string | null;
-  /**
    * Username
    * @minLength 1
    * @maxLength 100
@@ -220,6 +215,11 @@ export type UserMyProfileResponse = {
    * @format date-time
    */
   deletion_requested_at?: string | null;
+  /**
+   * Client token hash
+   * @maxLength 64
+   */
+  client_token_hash?: string | null;
 } | null;
 
 export type TokenResponse = {

@@ -1,9 +1,10 @@
-import {useState, type FormEvent} from "react";
+import {useEffect, useState, type FormEvent} from "react";
 import {useNavigate} from "react-router-dom";
 import {Badge, Button, Card, Checkbox, Container, Dialog, Flex, Heading, Text, TextField} from "@radix-ui/themes";
 import {CheckIcon, CopyIcon} from "@radix-ui/react-icons";
 import {useAuthStore} from "../stores/authStore";
 import {userApi} from "../api/client";
+import type {UserMyProfileResponse} from "../apis/data-contracts";
 
 type ProfileUpdatePayload = Parameters<typeof userApi.userMyProfileUpdate>[0] & {
     email?: string;
@@ -23,11 +24,36 @@ export default function UserProfilePage() {
     const [passwordStatus, setPasswordStatus] = useState("");
     const [updatingEmail, setUpdatingEmail] = useState(false);
     const [updatingPassword, setUpdatingPassword] = useState(false);
-    const user = useAuthStore((s) => s.user);
-    const clientToken = useAuthStore((s) => s.clientToken);
+    const [profile, setProfile] = useState<UserMyProfileResponse>(null);
+    const [profileLoading, setProfileLoading] = useState(true);
+    const [profileError, setProfileError] = useState("");
     const logout = useAuthStore((s) => s.logout);
-    const fetchProfile = useAuthStore((s) => s.fetchProfile);
     const navigate = useNavigate();
+    const clientToken = profile?.client_token_hash ?? null;
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function loadProfile() {
+            setProfileLoading(true);
+            setProfileError("");
+
+            try {
+                const response = await userApi.userMyProfileGet({api_page: 1});
+                if (!cancelled) setProfile(response.data);
+            } catch {
+                if (!cancelled) setProfileError("Unable to load profile.");
+            } finally {
+                if (!cancelled) setProfileLoading(false);
+            }
+        }
+
+        void loadProfile();
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     async function handleCopyClientToken() {
         if (!clientToken) return;
@@ -48,8 +74,8 @@ export default function UserProfilePage() {
 
         try {
             const payload: ProfileUpdatePayload = {email: nextEmail};
-            await userApi.userMyProfileUpdate(payload);
-            await fetchProfile();
+            const response = await userApi.userMyProfileUpdate(payload);
+            setProfile(response.data);
             setEmail("");
             setEmailDialogOpen(false);
             setEmailStatus("Email updated.");
@@ -130,8 +156,11 @@ export default function UserProfilePage() {
                         <Flex justify="between" align="center" gap="3" wrap="wrap">
                             <Flex direction="column" gap="1">
                                 <Text size="2" weight="medium">Email</Text>
-                                <Text size="2" color="gray">{user?.email ?? "example@email.com"}</Text>
+                                <Text size="2" color="gray">
+                                    {profileLoading ? "Loading..." : profile?.email ?? "example@email.com"}
+                                </Text>
                                 {emailStatus ? <Text size="2" color="gray">{emailStatus}</Text> : null}
+                                {profileError ? <Text size="2" color="red">{profileError}</Text> : null}
                             </Flex>
                             <Dialog.Root open={emailDialogOpen} onOpenChange={(open) => {
                                 setEmailDialogOpen(open);
@@ -155,7 +184,7 @@ export default function UserProfilePage() {
                                                 <Text size="2" weight="medium" mb="1">Email</Text>
                                                 <TextField.Root
                                                     type="email"
-                                                    placeholder={user?.email ?? "example@email.com"}
+                                                    placeholder={profile?.email ?? "example@email.com"}
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     required
@@ -255,8 +284,8 @@ export default function UserProfilePage() {
                                 <Text size="2" weight="medium">Subscription</Text>
                                 <Text size="2" color="gray">Access to active subscription features.</Text>
                             </Flex>
-                            <Badge color={user?.is_customer ? "green" : "gray"} variant="soft">
-                                {user?.is_customer ? "Active" : "Inactive"}
+                            <Badge color={profile?.is_customer ? "green" : "gray"} variant="soft">
+                                {profile?.is_customer ? "Active" : "Inactive"}
                             </Badge>
                         </Flex>
 

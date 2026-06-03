@@ -5,7 +5,6 @@ import {userApi} from "../api/client";
 
 type PersistedAuth = {
     token: string | null;
-    clientToken: string | null;
     user: UserMyProfileResponse | null;
     isAuthenticated: boolean
 };
@@ -15,7 +14,9 @@ const cookieStorage = {
         const match = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
         if (!match) return null;
         try {
-            return JSON.parse(decodeURIComponent(match[1]));
+            const value = JSON.parse(decodeURIComponent(match[1]));
+            delete value?.state?.clientToken;
+            return value;
         } catch {
             return null;
         }
@@ -85,11 +86,11 @@ export const useAuthStore = create<AuthState>()(
                 set({loading: true, error: null});
                 try {
                     const response = await userApi.userEmailLogin({email, password});
-                    const {user, token_info} = response.data;
+                    const {user, token_info, client_token} = response.data;
                     if (token_info && user) {
                         set({
                             token: token_info.token_value,
-                            clientToken: user.client_token_hash ?? null,
+                            clientToken: client_token ?? null,
                             user,
                             isAuthenticated: true,
                             loading: false,
@@ -159,7 +160,6 @@ export const useAuthStore = create<AuthState>()(
             storage: cookieStorage,
             partialize: (state) => ({
                 token: state.token,
-                clientToken: state.clientToken,
                 user: state.user,
                 isAuthenticated: state.isAuthenticated
             }),
