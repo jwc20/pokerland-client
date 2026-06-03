@@ -1,6 +1,6 @@
-import {useEffect, useState} from "react";
-import {Canvas} from "@react-three/fiber";
-import {CuboidCollider, Physics} from "@react-three/rapier";
+import {useEffect, useRef, useState} from "react";
+import {Canvas, useFrame} from "@react-three/fiber";
+import {CuboidCollider, Physics, RigidBody, type RapierRigidBody} from "@react-three/rapier";
 import {Card, Flex, Heading, Text} from "@radix-ui/themes";
 import {PCFShadowMap} from "three";
 import PlayingCard from "./PlayingCard";
@@ -9,8 +9,9 @@ import ReplayControls from "./ReplayControls";
 import {parseCardRevealOrder, type CardRevealOrder} from "./replay/cardRevealParser";
 import {createReplayHand} from "./replay/handLogAdapter";
 import {createReplayTimeline} from "./replay/replayTimeline";
+import {playerLayout, potPosition} from "./replay/tableLayout";
 import {formatCard} from "./replay/cardUtils";
-import type {ReplayEvent, ReplayHand, ReplayStreet, ReplayViewState} from "./replay/types";
+import type {ReplayChipMove, ReplayEvent, ReplayHand, ReplayPlayer, ReplayStreet, ReplayViewState} from "./replay/types";
 
 const eventDuration = 360;
 const boardDealEventDuration = 1400;
@@ -30,6 +31,22 @@ function initialViewState(): ReplayViewState {
 
 function chipMoveId(event: Extract<ReplayEvent, {type: "move-chips-to-pot" | "return-chips" | "collect-pot"}>, eventKey: number) {
     return `${eventKey}-${event.type}-${event.player}-${event.amount}`;
+}
+
+function subtractFromPotChips(chipMoves: ReplayChipMove[], amount: number) {
+    let remaining = amount;
+    const next = [...chipMoves];
+
+    for (let index = next.length - 1; index >= 0 && remaining > 0; index -= 1) {
+        const move = next[index];
+        if (move.source !== "bet" || move.direction !== "to-pot") continue;
+
+        const removed = Math.min(move.amount, remaining);
+        remaining -= removed;
+        next[index] = {...move, amount: move.amount - removed};
+    }
+
+    return next.filter((move) => move.amount > 0);
 }
 
 function applyEvent(state: ReplayViewState, event: ReplayEvent, eventKey: number): ReplayViewState {
@@ -94,19 +111,20 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent, eventKey: number
     if (event.type === "move-chips-to-pot") {
         next.pot += event.amount;
         next.playerBets[event.player] = (next.playerBets[event.player] ?? 0) + event.amount;
-        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "to-pot"});
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "to-pot", source: "bet"});
         next.activePlayer = event.player;
     }
 
     if (event.type === "return-chips") {
         next.pot = Math.max(0, next.pot - event.amount);
-        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot"});
+        next.chipMoves = subtractFromPotChips(next.chipMoves, event.amount);
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot", source: "return"});
         next.activePlayer = event.player;
     }
 
     if (event.type === "collect-pot") {
         next.pot = 0;
-        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot"});
+        next.chipMoves.push({id: chipMoveId(event, eventKey), player: event.player, amount: event.amount, direction: "from-pot", source: "collect"});
         next.activePlayer = event.player;
     }
 
@@ -125,6 +143,48 @@ function applyEvent(state: ReplayViewState, event: ReplayEvent, eventKey: number
     }
 
     return next;
+}
+
+function ChipSweepWall({move, players}: {move: ReplayChipMove; players: ReplayPlayer[]}) {
+    const body = useRef<RapierRigidBody>(null);
+    const startTime = useRef<number | null>(null);
+    const player = players.find((candidate) => candidate.name === move.player);
+    const playerPoint = player ? playerLayout(player.visualSeat).chipPosition : potPosition;
+    const dx = playerPoint[0] - potPosition[0];
+    const dz = playerPoint[2] - potPosition[2];
+    const length = Math.hypot(dx, dz) || 1;
+    const forwardX = dx / length;
+    const forwardZ = dz / length;
+    const yaw = Math.atan2(forwardX, forwardZ);
+    const start = -0.72;
+    const end = length + 0.36;
+    const duration = 1.55;
+
+    useFrame(({clock}) => {
+        const rigidBody = body.current;
+        if (!rigidBody || !player) return;
+
+        startTime.current ??= clock.getElapsedTime();
+        const elapsed = clock.getElapsedTime() - startTime.current;
+        const progress = Math.min(elapsed / duration, 1);
+        const distance = start + (end - start) * progress;
+
+        rigidBody.setNextKinematicTranslation({
+            x: potPosition[0] + forwardX * distance,
+            y: 0.22,
+            z: potPosition[2] + forwardZ * distance,
+        });
+    });
+
+    if (!player) return null;
+
+    return (
+        <RigidBody ref={body} type="kinematicPosition" colliders={false} position={[potPosition[0] + forwardX * start, 0.2, potPosition[2] + forwardZ * start]} rotation={[0, yaw, 0]}>
+            <CuboidCollider args={[1.35, 0.26, 0.055]} friction={1.55} restitution={0.01}/>
+            <CuboidCollider args={[0.62, 0.24, 0.045]} position={[-0.86, 0, -0.28]} rotation={[0, -0.55, 0]} friction={1.55} restitution={0.01}/>
+            <CuboidCollider args={[0.62, 0.24, 0.045]} position={[0.86, 0, -0.28]} rotation={[0, 0.55, 0]} friction={1.55} restitution={0.01}/>
+        </RigidBody>
+    );
 }
 
 function buildViewState(events: ReplayEvent[], count: number) {
@@ -190,7 +250,7 @@ function ReplayScene({hand, events, viewState, currentEvent, progress}: {
 
     return (
         <div className="poker-scene poker-replay-scene" aria-label="3D poker hand replay">
-            <Canvas shadows={{type: PCFShadowMap}} camera={{position: [0, 1.15, 3.15], rotation: [-0.36, 0, 0], fov: 60}}>
+            <Canvas shadows={{type: PCFShadowMap}} camera={{position: [0, 1.25, 3.75], rotation: [-0.32, 0, 0], fov: 64}}>
                 <color attach="background" args={["#ffffff"]}/>
                 <ambientLight intensity={1.7}/>
                 <directionalLight position={[1.5, 4, 2]} intensity={1.3} castShadow/>
@@ -201,6 +261,9 @@ function ReplayScene({hand, events, viewState, currentEvent, progress}: {
                 <gridHelper args={[7, 28, "#cfd6df", "#edf0f4"]}/>
                 <Physics gravity={[0, -9.81, 0]}>
                     <CuboidCollider args={[3.5, 0.03, 2.8]} position={[0, -0.03, 0]} friction={1.15} restitution={0.04}/>
+                    {viewState.chipMoves.filter((move) => move.source === "collect").map((move) => (
+                        <ChipSweepWall key={`${move.id}-wall`} move={move} players={hand.players}/>
+                    ))}
                     {viewState.chipMoves.map((move) => (
                         <PokerChip key={move.id} move={move} players={hand.players}/>
                     ))}

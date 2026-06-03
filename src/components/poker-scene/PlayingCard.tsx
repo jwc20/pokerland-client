@@ -106,6 +106,13 @@ function boardFlipProgress(card: ReplayCardState, currentEvent: ReplayEvent | un
     return Math.min(Math.max((progress - 0.36) / 0.64, 0), 1);
 }
 
+function cardYaw(card: ReplayCardState, players: ReplayPlayer[]) {
+    if (card.zone !== "player") return 0;
+
+    const target = pointForCard(card, players);
+    return Math.atan2(target[0], target[2]);
+}
+
 export default function PlayingCard({card, players, progress, currentEvent}: {
     card: ReplayCardState;
     players: ReplayPlayer[];
@@ -125,6 +132,7 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
     const backTextureUrl = textureUrlForCard();
     const faceTexture = textures[textureIndexByUrl.get(faceTextureUrl) ?? textureIndexByUrl.get(backTextureUrl) ?? 0];
     const backTexture = textures[textureIndexByUrl.get(backTextureUrl) ?? 0];
+    const yaw = cardYaw(card, players);
 
     useFrame(() => {
         const group = ref.current;
@@ -139,7 +147,7 @@ export default function PlayingCard({card, players, progress, currentEvent}: {
         }
         const flipLift = flipProgress < 1 ? Math.sin(flipProgress * Math.PI) : 0;
         group.position.y += flipLift * 0.08;
-        group.rotation.set(0, 0, (1 - flipProgress) * Math.PI);
+        group.rotation.set(0, yaw, (1 - flipProgress) * Math.PI);
 
         const opacity = currentEvent?.type === "muck-cards" && currentEvent.player === card.owner ? 1 - progress : 1;
         for (const mesh of [bodyRef.current, faceRef.current, backRef.current]) {

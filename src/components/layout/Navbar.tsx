@@ -45,28 +45,26 @@ export default function Navbar() {
                     </Flex>
 
                     {/* Right: auth + theme toggle (desktop) */}
-                    <Flex gap="2" align="center" display={{initial: "none", md: "flex"}}>
-                        <IconButton
+                    <Flex gap="4" align="center" display={{initial: "none", md: "flex"}}>
+                        <Button
                             variant="ghost"
                             size="2"
                             className="button-interactive-hover"
                             onClick={toggleTheme}
-                            aria-label="Toggle theme"
                         >
                             {theme === "light" ? <MoonIcon/> : <SunIcon/>}
-                        </IconButton>
+                        </Button>
 
                         <Flex gap="2">
                             {isAuthenticated ? (
-                                <IconButton
+                                <Button
                                     variant="ghost"
                                     size="2"
                                     className="button-interactive-hover"
                                     onClick={() => navigate("/user-profile")}
-                                    aria-label="Open user profile"
                                 >
                                     <AvatarIcon/>
-                                </IconButton>
+                                </Button>
                             ) : (
                                 <>
                                     <Button size="2" variant="outline" className="button-interactive-hover" asChild>
@@ -82,19 +80,18 @@ export default function Navbar() {
                     </Flex>
 
                     {/* Right: theme + hamburger (mobile only) */}
-                    <Flex gap="2" align="center" display={{initial: "flex", md: "none"}}>
-                        <IconButton
+                    <Flex gap="4" align="center" display={{initial: "flex", md: "none"}}>
+                        <Button
                             variant="ghost"
                             size="2"
                             className="button-interactive-hover"
                             onClick={toggleTheme}
-                            aria-label="Toggle theme"
                         >
                             {theme === "light" ? <MoonIcon/> : <SunIcon/>}
-                        </IconButton>
+                        </Button>
 
                         {isAuthenticated ? (
-                            <IconButton
+                            <Button
                                 variant="ghost"
                                 size="2"
                                 className="button-interactive-hover"
@@ -102,10 +99,9 @@ export default function Navbar() {
                                     navigate("/user-profile");
                                     setMenuOpen(false);
                                 }}
-                                aria-label="Open user profile"
                             >
                                 <AvatarIcon/>
-                            </IconButton>
+                            </Button>
                         ) : null}
 
                         <IconButton

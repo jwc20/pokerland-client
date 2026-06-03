@@ -10,6 +10,16 @@ body {
     opacity 0.15s ease;
 }
 
+.button-interactive-hover:not(:disabled),
+.interactive-hover:not(:disabled) {
+    cursor: pointer;
+}
+
+.button-interactive-hover:disabled,
+.interactive-hover:disabled {
+    cursor: default;
+}
+
 .interactive-hover {
     transition: transform 0.15s ease,
     filter 0.15s ease,

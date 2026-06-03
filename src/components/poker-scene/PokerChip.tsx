@@ -189,6 +189,8 @@ export default function PokerChip({move, players}: {
     move: ReplayChipMove;
     players: ReplayPlayer[];
 }) {
+    if (move.source === "collect") return null;
+
     const player = players.find((candidate) => candidate.name === move.player);
     const playerPoint = player ? playerLayout(player.visualSeat).chipPosition : potPosition;
     const from = move.direction === "to-pot" ? playerPoint : potPosition;

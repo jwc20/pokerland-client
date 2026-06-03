@@ -72,6 +72,7 @@ export type ReplayChipMove = {
     player: string;
     amount: number;
     direction: "to-pot" | "from-pot";
+    source: "bet" | "return" | "collect";
 };
 
 export type ReplayViewState = {

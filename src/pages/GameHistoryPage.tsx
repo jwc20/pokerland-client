@@ -21,6 +21,78 @@ function getParticipantCount(log: GameHistoryLog) {
     return "Unknown";
 }
 
+function asArray(value: unknown) {
+    return Array.isArray(value) ? value : [];
+}
+
+function amount(value: unknown) {
+    if (Array.isArray(value)) return Number(value[1]) || 0;
+    return Number(value) || 0;
+}
+
+function getParsedPayload(log: GameHistoryLog) {
+    const payload = isPayload(log.payload) ? log.payload : {};
+    return nestedRecord(payload, "parsed");
+}
+
+function getActionAmount(action: Record<string, unknown>) {
+    return amount(action.amount ?? action.bet ?? action.bet_to);
+}
+
+function getHandActions(log: GameHistoryLog) {
+    const parsed = getParsedPayload(log);
+    const header = parsed ? nestedRecord(parsed, "header") : null;
+    const preflop = parsed ? nestedRecord(parsed, "preflop") : null;
+    const streets = parsed ? asArray(parsed.streets) : [];
+    const streetActions = streets.flatMap((street) => {
+        const record = isPayload(street) ? street : null;
+        return record ? asArray(record.actions) : [];
+    });
+
+    return [
+        ...asArray(header?.actions),
+        ...asArray(preflop?.actions),
+        ...streetActions,
+    ].flatMap((action) => isPayload(action) ? [action] : []);
+}
+
+function getSubmittedBy(log: GameHistoryLog, submitterFallback: string) {
+    const payload = isPayload(log.payload) ? log.payload : {};
+    const user = (log as {user?: unknown}).user ?? payload.user ?? payload.user_id ?? payload.userId ?? payload.submitted_by ?? payload.submittedBy;
+
+    if (typeof user === "number") return `User ${user}`;
+    if (typeof user === "string" && user.trim()) return user;
+
+    return submitterFallback;
+}
+
+function getTotalBet(log: GameHistoryLog) {
+    const payload = isPayload(log.payload) ? log.payload : {};
+    const explicit = amount(payload.total_amount_bet ?? payload.totalAmountBet ?? payload.total_bet ?? payload.totalBet);
+    if (explicit > 0) return explicit.toLocaleString();
+
+    const total = getHandActions(log).reduce((sum, action) => {
+        const type = action.type;
+        const actionAmount = getActionAmount(action);
+        if (type === "return_bet") return sum - actionAmount;
+        if (["blind", "call", "bet", "raise"].includes(typeof type === "string" ? type : "")) return sum + actionAmount;
+
+        return sum;
+    }, 0);
+
+    return total > 0 ? total.toLocaleString() : "Unknown";
+}
+
+function getWinner(log: GameHistoryLog) {
+    const winners = getHandActions(log).flatMap((action) => {
+        if (action.type !== "collect_pot") return [];
+        const name = action.name ?? action.player ?? action.winner;
+        return typeof name === "string" && name.trim() ? [name] : [];
+    });
+
+    return winners.length > 0 ? [...new Set(winners)].join(", ") : "Unknown";
+}
+
 function getLogDate(log: GameHistoryLog) {
     const rawDate = log.submitted_at ?? log.created_at;
     if (!rawDate) return "Unknown date";
@@ -29,7 +101,7 @@ function getLogDate(log: GameHistoryLog) {
     return Number.isNaN(date.getTime()) ? rawDate : date.toLocaleString();
 }
 
-function LogsTable({logs}: { logs: unknown }) {
+function LogsTable({logs, submitterFallback}: { logs: unknown; submitterFallback: string }) {
     const navigate = useNavigate();
     const rows = getLogs(logs);
 
@@ -50,7 +122,10 @@ function LogsTable({logs}: { logs: unknown }) {
                 <Table.Row>
                     <Table.ColumnHeaderCell>Table name</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Submitted by</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Participants</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Total bet</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Winner</Table.ColumnHeaderCell>
                 </Table.Row>
             </Table.Header>
             <Table.Body>
@@ -75,7 +150,10 @@ function LogsTable({logs}: { logs: unknown }) {
                         >
                             <Table.Cell>{getTableName(log)}</Table.Cell>
                             <Table.Cell>{getLogDate(log)}</Table.Cell>
+                            <Table.Cell>{getSubmittedBy(log, submitterFallback)}</Table.Cell>
                             <Table.Cell>{getParticipantCount(log)}</Table.Cell>
+                            <Table.Cell>{getTotalBet(log)}</Table.Cell>
+                            <Table.Cell>{getWinner(log)}</Table.Cell>
                         </Table.Row>
                     );
                 })}
@@ -84,7 +162,7 @@ function LogsTable({logs}: { logs: unknown }) {
     );
 }
 
-function LogsPanel({logs, loading, error}: { logs: GameHistoryLog[]; loading: boolean; error: string | null }) {
+function LogsPanel({logs, loading, error, submitterFallback}: { logs: GameHistoryLog[]; loading: boolean; error: string | null; submitterFallback: string }) {
     if (loading) {
         return (
             <Flex align="center" gap="2" py="4">
@@ -103,7 +181,7 @@ function LogsPanel({logs, loading, error}: { logs: GameHistoryLog[]; loading: bo
         );
     }
 
-    return <LogsTable logs={logs}/>;
+    return <LogsTable logs={logs} submitterFallback={submitterFallback}/>;
 }
 
 export default function GameHistoryPage() {
@@ -174,10 +252,10 @@ export default function GameHistoryPage() {
 
                     <Box pt="4">
                         <Tabs.Content value="mine">
-                            <LogsPanel logs={myLogs} loading={myLoading} error={myError}/>
+                            <LogsPanel logs={myLogs} loading={myLoading} error={myError} submitterFallback="You"/>
                         </Tabs.Content>
                         <Tabs.Content value="all">
-                            <LogsPanel logs={allLogs} loading={allLoading} error={allError}/>
+                            <LogsPanel logs={allLogs} loading={allLoading} error={allError} submitterFallback="Unknown"/>
                         </Tabs.Content>
                     </Box>
                 </Tabs.Root>
