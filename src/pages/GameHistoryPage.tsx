@@ -3,6 +3,7 @@ import {Tabs} from "radix-ui";
 import {Box, Container, Heading, Text, Flex, Card, Table, Spinner} from "@radix-ui/themes";
 import {useNavigate} from "react-router-dom";
 import {logApi} from "../api/client";
+import {useAppStore} from "../stores/appStore";
 import {getLogs, getTableName, isPayload, nestedRecord, type GameHistoryLog} from "./gameHistoryUtils";
 
 function getParticipantCount(log: GameHistoryLog) {
@@ -106,6 +107,8 @@ function LogsPanel({logs, loading, error}: { logs: GameHistoryLog[]; loading: bo
 }
 
 export default function GameHistoryPage() {
+    const gameHistoryLogScope = useAppStore((s) => s.gameHistoryLogScope);
+    const setGameHistoryLogScope = useAppStore((s) => s.setGameHistoryLogScope);
     const [myLogs, setMyLogs] = useState<GameHistoryLog[]>([]);
     const [allLogs, setAllLogs] = useState<GameHistoryLog[]>([]);
     const [myLoading, setMyLoading] = useState(true);
@@ -158,7 +161,12 @@ export default function GameHistoryPage() {
                 <Heading size="6">Game History</Heading>
                 <Text color="gray">Review your past games and compare them with all logged game history.</Text>
 
-                <Tabs.Root defaultValue="mine">
+                <Tabs.Root
+                    value={gameHistoryLogScope}
+                    onValueChange={(value) => {
+                        if (value === "mine" || value === "all") setGameHistoryLogScope(value);
+                    }}
+                >
                     <Tabs.List className="game-history-tabs" aria-label="Game history views">
                         <Tabs.Trigger className="game-history-tab" value="mine">My logs</Tabs.Trigger>
                         <Tabs.Trigger className="game-history-tab" value="all">All users</Tabs.Trigger>
