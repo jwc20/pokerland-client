@@ -1,5 +1,20 @@
 # React + TypeScript + Vite
 
+## API client
+
+`src/api/generated/` is generated from pokerland-api's OpenAPI schema by
+[swagger-typescript-api](https://github.com/acacode/swagger-typescript-api), so
+don't edit it by hand. After changing the API, run it locally and regenerate:
+
+```bash
+npm run generate:api
+```
+
+This reads `http://localhost:8000/api/schema/`; set `OPENAPI_SCHEMA` to another
+URL or a schema file to read that instead. `src/api/client.ts` configures the
+generated classes: the base URL, sending the auth cookies, and renewing the
+access token on a 401.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
