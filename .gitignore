@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Wrangler state, and a .env it may read Cloudflare credentials from
+.wrangler
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
