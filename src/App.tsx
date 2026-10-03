@@ -1,28 +1,52 @@
-import { useState } from 'react'
-import SignInForm, { type AuthMode } from './auth/SignInForm.tsx'
-import { useAuth } from './auth/useAuth.ts'
+import { Navigate, Route, Routes } from 'react-router'
+import { SignedInOnly, SignedOutOnly } from './auth/guards.tsx'
+import SignInForm from './auth/SignInForm.tsx'
 import Navbar from './components/Navbar.tsx'
+import HomePage from './pages/HomePage.tsx'
+import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
 
 function App() {
-  const { user } = useAuth()
-  const [authMode, setAuthMode] = useState<AuthMode>('login')
-
   return (
     <>
-      <Navbar onAuth={setAuthMode} />
+      <Navbar />
       <main className="page">
-        {user === undefined ? (
-          <p>Loading…</p>
-        ) : user ? (
-          <section className="welcome">
-            <h1>Welcome, {user.username}</h1>
-            {user.email && <p>{user.email}</p>}
-          </section>
-        ) : (
-          // Keyed by mode, so switching from the navbar also resets fields and errors.
-          <SignInForm key={authMode} mode={authMode} onModeChange={setAuthMode} />
-        )}
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <SignedInOnly>
+                <HomePage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <SignedInOnly>
+                <SettingsPage />
+              </SignedInOnly>
+            }
+          />
+          {/* Keyed, so switching between the two forms resets fields and errors. */}
+          <Route
+            path="/login"
+            element={
+              <SignedOutOnly>
+                <SignInForm key="login" mode="login" />
+              </SignedOutOnly>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <SignedOutOnly>
+                <SignInForm key="register" mode="register" />
+              </SignedOutOnly>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
     </>
   )

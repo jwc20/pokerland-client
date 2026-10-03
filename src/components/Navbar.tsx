@@ -1,54 +1,30 @@
-import { useState } from 'react'
-import { errorMessage } from '../api/client.ts'
-import type { AuthMode } from '../auth/SignInForm.tsx'
+import { Link } from 'react-router'
 import { useAuth } from '../auth/useAuth.ts'
+import AccountMenu from './AccountMenu.tsx'
 import './Navbar.css'
 
-function Navbar({ onAuth }: { onAuth: (mode: AuthMode) => void }) {
-  const { user, logout } = useAuth()
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleLogout() {
-    setError(null)
-    try {
-      await logout()
-      onAuth('login')
-    } catch (err) {
-      setError(errorMessage(err))
-    }
-  }
+function Navbar() {
+  const { user } = useAuth()
 
   return (
     <header className="navbar">
-      <a className="navbar-brand" href="/">
+      <Link className="navbar-brand" to="/">
         Pokerland
-      </a>
-      {/* Empty until the API says who is signed in, so the wrong buttons never flash. */}
+      </Link>
+      {/* Empty until the API says who is signed in, so the wrong links never flash. */}
       {user !== undefined && (
         <nav className="navbar-account" aria-label="Account">
           {user ? (
-            <>
-              <span className="navbar-user" title={user.username}>
-                {user.username}
-              </span>
-              <button type="button" className="button" onClick={handleLogout}>
-                Sign out
-              </button>
-            </>
+            <AccountMenu username={user.username} />
           ) : (
             <>
-              <button type="button" className="link-button" onClick={() => onAuth('login')}>
+              <Link className="link-button" to="/login">
                 Sign in
-              </button>
-              <button type="button" className="button" onClick={() => onAuth('register')}>
+              </Link>
+              <Link className="button" to="/register">
                 Create account
-              </button>
+              </Link>
             </>
-          )}
-          {error && (
-            <p className="navbar-error error-message" role="alert">
-              {error}
-            </p>
           )}
         </nav>
       )}

@@ -111,8 +111,10 @@ code {
 }
 
 .button {
+  display: inline-block;
   font: inherit;
   font-size: 16px;
+  text-decoration: none;
   padding: 6px 14px;
   border-radius: 5px;
   color: var(--accent);
@@ -137,6 +139,7 @@ code {
 .link-button {
   font: inherit;
   font-size: 16px;
+  text-decoration: none;
   padding: 0;
   color: var(--accent);
   background: none;

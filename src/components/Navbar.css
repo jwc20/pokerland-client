@@ -29,17 +29,3 @@
   gap: 16px;
   min-width: 0;
 }
-
-.navbar-user {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 16px;
-  color: var(--text-h);
-}
-
-.navbar-error {
-  flex-basis: 100%;
-  text-align: right;
-}

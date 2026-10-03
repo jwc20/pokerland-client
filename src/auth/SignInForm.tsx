@@ -1,15 +1,9 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { errorMessage } from '../api/client.ts'
 import { useAuth } from './useAuth.ts'
 
-export type AuthMode = 'login' | 'register'
-
-interface SignInFormProps {
-  mode: AuthMode
-  onModeChange: (mode: AuthMode) => void
-}
-
-function SignInForm({ mode, onModeChange }: SignInFormProps) {
+function SignInForm({ mode }: { mode: 'login' | 'register' }) {
   const { login, register } = useAuth()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -75,13 +69,9 @@ function SignInForm({ mode, onModeChange }: SignInFormProps) {
       <button type="submit" className="button" disabled={pending}>
         {registering ? 'Create account' : 'Sign in'}
       </button>
-      <button
-        type="button"
-        className="link-button"
-        onClick={() => onModeChange(registering ? 'login' : 'register')}
-      >
+      <Link className="link-button" to={registering ? '/login' : '/register'}>
         {registering ? 'Have an account? Sign in' : 'No account? Create one'}
-      </button>
+      </Link>
     </form>
   )
 }

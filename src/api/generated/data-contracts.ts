@@ -10,6 +10,10 @@
  * ---------------------------------------------------------------
  */
 
+export interface ClientToken {
+  client_token: string;
+}
+
 /** Serializer for JWT authentication with expiration times. */
 export interface JWT {
   access: string;
@@ -199,3 +203,5 @@ export type AuthUserRetrieveData = UserDetails;
 export type AuthUserUpdateData = UserDetails;
 
 export type AuthUserPartialUpdateData = UserDetails;
+
+export type UsersMeClientTokenRetrieveData = ClientToken;

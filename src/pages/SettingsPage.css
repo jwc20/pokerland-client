@@ -1,0 +1,57 @@
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 800px;
+  text-align: left;
+
+  h1 {
+    font-size: 32px;
+    letter-spacing: -0.5px;
+    margin: 0 0 8px;
+  }
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-header {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 20px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.card-hint {
+  font-size: 16px;
+}
+
+.client-token {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  code {
+    color: var(--accent);
+    overflow-wrap: anywhere;
+    user-select: all; /* one click selects it all, if copying fails */
+
+    @media (max-width: 480px) {
+      font-size: 13px; /* keeps the 32 characters on one line on phones */
+    }
+  }
+}
