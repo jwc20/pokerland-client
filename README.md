@@ -1,4 +1,18 @@
-# React + TypeScript + Vite
+# Pokerland
+
+<table>
+  <tr>
+    <td width="50%">
+      
+https://github.com/user-attachments/assets/a05150b2-123e-4615-873e-1be7c0e99c80
+
+  </td>
+    <td width="50%">
+<img alt="CleanShot 2026-10-06 at 16 13 43" src="https://github.com/user-attachments/assets/600145fd-bb17-4c61-ac32-fad80921b9ca" />
+  </td>
+  </tr>
+</table>
+
 
 ## API client
 
