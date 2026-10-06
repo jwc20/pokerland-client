@@ -2,11 +2,12 @@ import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { errorMessage, hands } from '../api/client.ts'
 import type { HandDetail } from '../api/generated/data-contracts.ts'
+import CopyButton from '../components/CopyButton.tsx'
 import PlayingCard from '../components/PlayingCard.tsx'
 import ReplayControls from '../components/ReplayControls.tsx'
 import ReplayTimeline from '../components/ReplayTimeline.tsx'
 import { formatAmount, formatDateTime, gameLabel, streetLabel } from '../handFormat.ts'
-import { buildReplay, hasBoard, holeCardCount, type ReplaySeat } from '../replay.ts'
+import { buildReplay, holeCardCount, type ReplaySeat } from '../replay.ts'
 import { useReplayPlayer } from '../useReplayPlayer.ts'
 import './GameReplayPage.css'
 
@@ -57,7 +58,6 @@ function Replay({ hand }: { hand: HandDetail }) {
   const money = (amount: number) => formatAmount(amount, hand.currency)
   const heroSeat = step.seats.find((seat) => seat.name === hand.hero)
   const holeCards = holeCardCount(hand)
-  const boards = step.boards.length ? step.boards : [[]]
 
   // ← and → step, Home and End jump, the space bar plays and pauses.
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -105,15 +105,11 @@ function Replay({ hand }: { hand: HandDetail }) {
 
       <div className="replay-board">
         <h2 className="replay-label">Board</h2>
-        {hasBoard(hand) &&
-          boards.map((board, run) => (
-            <div key={run} className="replay-board-cards">
-              {boards.length > 1 && <span className="replay-run">Run {run + 1}</span>}
-              {Array.from({ length: 5 }, (_, i) =>
-                board[i] ? <PlayingCard key={i} card={board[i]} /> : <PlayingCard key={i} empty />,
-              )}
-            </div>
-          ))}
+        <div className="replay-board-cards">
+          {Array.from({ length: 5 }, (_, i) =>
+            step.board[i] ? <PlayingCard key={i} card={step.board[i]} /> : <PlayingCard key={i} empty />,
+          )}
+        </div>
         <p className="replay-pot">
           Pot: {money(step.pot)}
           {player.index === player.last && hand.rake ? ` · Rake: ${money(hand.rake)}` : ''}
@@ -130,6 +126,16 @@ function Replay({ hand }: { hand: HandDetail }) {
         <ReplayTimeline steps={steps} index={player.index} hero={hand.hero} onSeek={player.seek} />
         <ReplayControls player={player} />
       </div>
+
+      <details className="replay-phh">
+        <summary>PHH notation</summary>
+        <p>
+          The hand as <a href="https://pokerkit.readthedocs.io/en/stable/notation.html">PokerKit</a> read it, in
+          the <a href="https://phh.readthedocs.io">Poker Hand History</a> format.
+        </p>
+        <pre>{hand.phh}</pre>
+        <CopyButton text={hand.phh} />
+      </details>
     </div>
   )
 }

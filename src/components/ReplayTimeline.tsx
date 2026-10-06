@@ -11,7 +11,6 @@ const HERO_MARKS: Partial<Record<HandEventTypeEnum, string>> = {
   check: 'X',
   call: 'C',
   bet: 'B',
-  bring_in: 'B',
   raise: 'R',
   show: 'S',
   muck: 'M',

@@ -172,11 +172,6 @@
   gap: 6px;
 }
 
-.replay-run {
-  margin-right: 6px;
-  font-size: 13px;
-}
-
 .replay-pot {
   font-size: 15px;
   color: var(--text-h);
@@ -229,5 +224,36 @@
     width: 16px;
     height: 16px;
     fill: currentColor;
+  }
+}
+
+.replay-phh {
+  font-size: 15px;
+
+  summary {
+    width: max-content;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  p {
+    margin: 8px 0;
+  }
+  a {
+    color: var(--accent);
+  }
+  pre {
+    margin: 0 0 10px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    font: 13px/1.5 var(--mono);
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
   }
 }

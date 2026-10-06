@@ -18,15 +18,11 @@
  * * `call` - call
  * * `bet` - bet
  * * `raise` - raise
- * * `bring_in` - bring_in
  * * `street` - street
  * * `return` - return
  * * `collect` - collect
  * * `show` - show
  * * `muck` - muck
- * * `no_show` - no_show
- * * `discard` - discard
- * * `stand_pat` - stand_pat
  */
 export type HandEventTypeEnum =
   | "post"
@@ -36,15 +32,11 @@ export type HandEventTypeEnum =
   | "call"
   | "bet"
   | "raise"
-  | "bring_in"
   | "street"
   | "return"
   | "collect"
   | "show"
-  | "muck"
-  | "no_show"
-  | "discard"
-  | "stand_pat";
+  | "muck";
 
 export interface ChunkAck {
   acked_offset: number;
@@ -88,15 +80,16 @@ export interface HandDetail {
   hero_net: number;
   final_street: string;
   max_seats: number | null;
-  button_seat: number | null;
+  button_seat: number;
   ante: number;
-  total_pot: number | null;
-  rake: number | null;
-  /** The board, or one per run when the hand was run twice. */
-  boards: string[][];
-  /** Every seat, in seat order. */
+  total_pot: number;
+  rake: number;
+  board: string[];
+  /** The players dealt in, in seat order. */
   players: HandPlayer[];
   events: HandEvent[];
+  /** The hand in the PHH notation (https://phh.readthedocs.io), as PokerKit read it. */
+  phh: string;
 }
 
 /** One line of the hand. Fields other than `type` and `street` appear only where they apply. */
@@ -109,21 +102,17 @@ export interface HandEvent {
    * * `call` - call
    * * `bet` - bet
    * * `raise` - raise
-   * * `bring_in` - bring_in
    * * `street` - street
    * * `return` - return
    * * `collect` - collect
    * * `show` - show
    * * `muck` - muck
-   * * `no_show` - no_show
-   * * `discard` - discard
-   * * `stand_pat` - stand_pat
    */
   type: HandEventTypeEnum;
   /** The betting round: preflop, flop, turn, river, showdown, ... */
   street: string;
   player?: string;
-  /** Chips the player puts in (post, call, bet, raise, bring_in) or gets back (return, collect). */
+  /** Chips the player puts in (post, call, bet, raise) or gets back (return, collect). */
   amount?: number;
   /** post: the part that is not a bet, e.g. an ante. */
   dead?: number;
@@ -132,20 +121,16 @@ export interface HandEvent {
   /** raise: how much higher than the bet before. */
   by?: number;
   all_in?: boolean;
-  /** post: small blind, big blind, ante, ... */
+  /** post: small blind, big blind, ante, dead small blind, ... */
   blind?: string;
   /** deal, show, muck: the player's cards. street: the new board cards. */
   cards?: string[];
-  /** street: the whole board of this run. */
+  /** street: the whole board. */
   board?: string[];
-  /** street: 2 for the second board of a run-it-twice hand. */
-  run?: number;
-  /** collect: pot, main pot, side pot, side pot-1, ... */
+  /** collect: pot, or main pot, side pot-1, ... when there are several. */
   pot?: string;
-  /** show: the hand, e.g. a pair of Kings. */
+  /** show: the hand as PokerKit ranks it, e.g. Three of a kind. */
   description?: string;
-  /** discard: how many cards. */
-  count?: number;
 }
 
 export interface HandPlayer {
@@ -153,10 +138,8 @@ export interface HandPlayer {
   name: string;
   /** Chips at the start of the hand. */
   stack: number;
-  /** BTN, SB, BB, UTG, ...; empty when not dealt in or without a button. */
+  /** BTN, SB, BB, UTG, ... */
   position: string;
-  /** Not dealt into this hand. */
-  sitting_out: boolean;
   /** Hole cards, when the history shows them. */
   cards: string[];
   /** Chips collected from the pot. */
