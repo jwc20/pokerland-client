@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { errorMessage, users } from '../api/client.ts'
 import CopyButton from '../components/CopyButton.tsx'
+import TrackerDownloads from '../components/TrackerDownloads.tsx'
+import TrackerStatus from '../components/TrackerStatus.tsx'
 import './SettingsPage.css'
 
 function SettingsPage() {
@@ -31,8 +33,8 @@ function SettingsPage() {
         </h2>
         <div className="card-body">
           <p className="card-hint">
-            The tracker client sends your games to your account with this token. Keep it private:
-            anyone who has it can submit data as you.
+            The tracker sends your hands to your account with this token. Keep it private: anyone who has
+            it can upload hands as you.
           </p>
           {error ? (
             <p className="error-message" role="alert">
@@ -46,6 +48,16 @@ function SettingsPage() {
               <CopyButton text={clientToken} />
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="card" aria-labelledby="tracker-heading">
+        <h2 id="tracker-heading" className="card-header">
+          Tracker
+        </h2>
+        <div className="card-body">
+          <TrackerStatus />
+          <TrackerDownloads />
         </div>
       </section>
     </div>

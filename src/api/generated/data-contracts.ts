@@ -10,8 +10,26 @@
  * ---------------------------------------------------------------
  */
 
+export interface ChunkAck {
+  acked_offset: number;
+}
+
+export interface ChunkRejected {
+  detail: string;
+  acked_offset?: number;
+}
+
 export interface ClientToken {
   client_token: string;
+}
+
+export interface Config {
+  min_version: string;
+  poll_interval_seconds: number;
+  flush_interval_seconds: number;
+  flush_bytes: number;
+  max_read_bytes: number;
+  max_chunk_bytes: number;
 }
 
 /** Serializer for JWT authentication with expiration times. */
@@ -32,6 +50,10 @@ export interface LoginRequest {
   email?: string;
   /** @minLength 1 */
   password: string;
+}
+
+export interface Me {
+  username: string;
 }
 
 export interface PasswordChangeRequest {
@@ -118,6 +140,37 @@ export interface RestAuthDetail {
   detail: string;
 }
 
+export interface StreamAck {
+  /** @format uuid */
+  stream_id: string;
+  acked_offset: number;
+}
+
+export interface StreamRegistrationRequest {
+  /**
+   * @minLength 1
+   * @maxLength 32
+   */
+  source: string;
+  /**
+   * @minLength 1
+   * @maxLength 16
+   */
+  platform: string;
+  /**
+   * @minLength 1
+   * @maxLength 32
+   */
+  client_version: string;
+  /** @maxLength 512 */
+  path_hint?: string;
+  /**
+   * @minLength 1
+   * @pattern ^[0-9a-f]{64}$
+   */
+  fingerprint: string;
+}
+
 export interface TokenRefresh {
   access: string;
   /** @format date-time */
@@ -135,6 +188,16 @@ export interface TokenRefreshRequest {
 export interface TokenVerifyRequest {
   /** @minLength 1 */
   token: string;
+}
+
+/** What the web app shows a user about their tracker. */
+export interface TrackerStatus {
+  /** @format date-time */
+  last_upload_at: string | null;
+  file_count: number;
+  hands_seen: number;
+  platforms: string[];
+  client_versions: string[];
 }
 
 /** User model w/o password */
@@ -203,5 +266,31 @@ export type AuthUserRetrieveData = UserDetails;
 export type AuthUserUpdateData = UserDetails;
 
 export type AuthUserPartialUpdateData = UserDetails;
+
+export type TrackerConfigRetrieveData = Config;
+
+export type TrackerMeRetrieveData = Me;
+
+export type TrackerStatusRetrieveData = TrackerStatus;
+
+export interface TrackerStreamsUpdateParams {
+  /** @format uuid */
+  streamId: string;
+}
+
+export type TrackerStreamsUpdateData = StreamAck;
+
+/** @format binary */
+export type TrackerStreamsChunksUpdatePayload = File;
+
+export interface TrackerStreamsChunksUpdateParams {
+  start: number;
+  /** @format uuid */
+  streamId: string;
+}
+
+export type TrackerStreamsChunksUpdateData = ChunkAck;
+
+export type TrackerStreamsChunksUpdateError = ChunkRejected;
 
 export type UsersMeClientTokenRetrieveData = ClientToken;

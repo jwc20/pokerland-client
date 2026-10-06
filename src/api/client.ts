@@ -1,5 +1,6 @@
 import { Auth } from './generated/Auth.ts'
 import type { ApiConfig, HttpResponse } from './generated/http-client.ts'
+import { Tracker } from './generated/Tracker.ts'
 import { Users } from './generated/Users.ts'
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL
@@ -39,6 +40,8 @@ const apiConfig: ApiConfig = { ...config, customFetch: fetchWithRefresh }
 
 export const auth = new Auth(apiConfig)
 export const users = new Users(apiConfig)
+// Only its status endpoint is for the web app; the trackers use the rest with their client token.
+export const tracker = new Tracker(apiConfig)
 
 // Generated methods reject with the failed response, whose `error` holds DRF's
 // error body ({"field": ["message"]}), or with a TypeError when offline.
