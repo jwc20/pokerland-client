@@ -10,6 +10,42 @@
  * ---------------------------------------------------------------
  */
 
+/**
+ * * `post` - post
+ * * `deal` - deal
+ * * `fold` - fold
+ * * `check` - check
+ * * `call` - call
+ * * `bet` - bet
+ * * `raise` - raise
+ * * `bring_in` - bring_in
+ * * `street` - street
+ * * `return` - return
+ * * `collect` - collect
+ * * `show` - show
+ * * `muck` - muck
+ * * `no_show` - no_show
+ * * `discard` - discard
+ * * `stand_pat` - stand_pat
+ */
+export type HandEventTypeEnum =
+  | "post"
+  | "deal"
+  | "fold"
+  | "check"
+  | "call"
+  | "bet"
+  | "raise"
+  | "bring_in"
+  | "street"
+  | "return"
+  | "collect"
+  | "show"
+  | "muck"
+  | "no_show"
+  | "discard"
+  | "stand_pat";
+
 export interface ChunkAck {
   acked_offset: number;
 }
@@ -30,6 +66,124 @@ export interface Config {
   flush_bytes: number;
   max_read_bytes: number;
   max_chunk_bytes: number;
+}
+
+/** A hand with everything its replay needs. */
+export interface HandDetail {
+  id: number;
+  site: string;
+  hand_id: string;
+  /** @format date-time */
+  played_at: string;
+  game: string;
+  currency: string;
+  play_money: boolean;
+  small_blind: number;
+  big_blind: number;
+  tournament_id: string;
+  table: string;
+  hero: string;
+  hero_position: string;
+  hero_cards: string[];
+  hero_net: number;
+  final_street: string;
+  max_seats: number | null;
+  button_seat: number | null;
+  ante: number;
+  total_pot: number | null;
+  rake: number | null;
+  /** The board, or one per run when the hand was run twice. */
+  boards: string[][];
+  /** Every seat, in seat order. */
+  players: HandPlayer[];
+  events: HandEvent[];
+}
+
+/** One line of the hand. Fields other than `type` and `street` appear only where they apply. */
+export interface HandEvent {
+  /**
+   * * `post` - post
+   * * `deal` - deal
+   * * `fold` - fold
+   * * `check` - check
+   * * `call` - call
+   * * `bet` - bet
+   * * `raise` - raise
+   * * `bring_in` - bring_in
+   * * `street` - street
+   * * `return` - return
+   * * `collect` - collect
+   * * `show` - show
+   * * `muck` - muck
+   * * `no_show` - no_show
+   * * `discard` - discard
+   * * `stand_pat` - stand_pat
+   */
+  type: HandEventTypeEnum;
+  /** The betting round: preflop, flop, turn, river, showdown, ... */
+  street: string;
+  player?: string;
+  /** Chips the player puts in (post, call, bet, raise, bring_in) or gets back (return, collect). */
+  amount?: number;
+  /** post: the part that is not a bet, e.g. an ante. */
+  dead?: number;
+  /** raise: the player's bet on this street afterwards. */
+  to?: number;
+  /** raise: how much higher than the bet before. */
+  by?: number;
+  all_in?: boolean;
+  /** post: small blind, big blind, ante, ... */
+  blind?: string;
+  /** deal, show, muck: the player's cards. street: the new board cards. */
+  cards?: string[];
+  /** street: the whole board of this run. */
+  board?: string[];
+  /** street: 2 for the second board of a run-it-twice hand. */
+  run?: number;
+  /** collect: pot, main pot, side pot, side pot-1, ... */
+  pot?: string;
+  /** show: the hand, e.g. a pair of Kings. */
+  description?: string;
+  /** discard: how many cards. */
+  count?: number;
+}
+
+export interface HandPlayer {
+  seat: number;
+  name: string;
+  /** Chips at the start of the hand. */
+  stack: number;
+  /** BTN, SB, BB, UTG, ...; empty when not dealt in or without a button. */
+  position: string;
+  /** Not dealt into this hand. */
+  sitting_out: boolean;
+  /** Hole cards, when the history shows them. */
+  cards: string[];
+  /** Chips collected from the pot. */
+  won: number;
+  /** Chips won minus chips put in. */
+  net: number;
+}
+
+/** A row of the game history. Amounts are chips, or cents when `currency` is set. */
+export interface HandSummary {
+  id: number;
+  site: string;
+  hand_id: string;
+  /** @format date-time */
+  played_at: string;
+  game: string;
+  currency: string;
+  play_money: boolean;
+  small_blind: number;
+  big_blind: number;
+  tournament_id: string;
+  table: string;
+  hero: string;
+  hero_position: string;
+  hero_cards: string[];
+  hero_net: number;
+  final_street: string;
 }
 
 /** Serializer for JWT authentication with expiration times. */
@@ -54,6 +208,20 @@ export interface LoginRequest {
 
 export interface Me {
   username: string;
+}
+
+export interface PaginatedHandSummaryList {
+  /**
+   * @format uri
+   * @example "http://api.example.org/accounts/?cursor=cD00ODY%3D""
+   */
+  next?: string | null;
+  /**
+   * @format uri
+   * @example "http://api.example.org/accounts/?cursor=cj0xJnA9NDg3"
+   */
+  previous?: string | null;
+  results: HandSummary[];
 }
 
 export interface PasswordChangeRequest {
@@ -266,6 +434,19 @@ export type AuthUserRetrieveData = UserDetails;
 export type AuthUserUpdateData = UserDetails;
 
 export type AuthUserPartialUpdateData = UserDetails;
+
+export interface HandsListParams {
+  /** The pagination cursor value. */
+  cursor?: string;
+}
+
+export type HandsListData = PaginatedHandSummaryList;
+
+export interface HandsRetrieveParams {
+  id: number;
+}
+
+export type HandsRetrieveData = HandDetail;
 
 export type TrackerConfigRetrieveData = Config;
 

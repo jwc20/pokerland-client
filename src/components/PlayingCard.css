@@ -1,0 +1,45 @@
+.playing-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  width: 46px;
+  height: 64px;
+  font: 600 20px/1 var(--sans);
+  letter-spacing: -0.5px;
+  color: #1d1d1f;
+  background: #fff;
+  border: 1px solid #c9c7cc;
+  border-radius: 5px;
+  user-select: none;
+
+  &.red {
+    color: #d92d20;
+  }
+
+  &.face-down {
+    background: repeating-linear-gradient(45deg, var(--accent-bg) 0 5px, transparent 5px 10px), var(--code-bg);
+    border-color: var(--accent-border);
+  }
+
+  &.empty {
+    background: none;
+    border: 1px dashed var(--border);
+  }
+
+  /* In running text, e.g. the game history's Cards column. */
+  &.inline {
+    width: auto;
+    height: auto;
+    font-size: inherit;
+    font-weight: 600;
+    color: var(--text-h);
+    background: none;
+    border: none;
+
+    &.red {
+      color: var(--card-red);
+    }
+  }
+}

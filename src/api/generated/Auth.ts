@@ -36,7 +36,7 @@ import type {
   UserDetailsRequest,
   VerifyEmailRequest,
 } from "./data-contracts.ts";
-import { ContentType, HttpClient, type RequestParams } from "./http-client.ts";
+import { HttpClient, type RequestParams } from "./http-client.ts";
 
 export class Auth<
   SecurityDataType = unknown,
@@ -55,7 +55,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -92,7 +92,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -113,7 +113,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -134,7 +134,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -155,7 +155,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -176,7 +176,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -197,7 +197,7 @@ export class Auth<
       method: "POST",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -216,7 +216,7 @@ export class Auth<
       path: `/api/auth/token/refresh/`,
       method: "POST",
       body: data,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -235,7 +235,7 @@ export class Auth<
       path: `/api/auth/token/verify/`,
       method: "POST",
       body: data,
-      type: ContentType.Json,
+      type: "application/json",
       ...params,
     });
   /**
@@ -268,7 +268,7 @@ export class Auth<
       method: "PUT",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });
@@ -289,7 +289,7 @@ export class Auth<
       method: "PATCH",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });

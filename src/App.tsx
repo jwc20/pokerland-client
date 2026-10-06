@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router'
 import { SignedInOnly, SignedOutOnly } from './auth/guards.tsx'
 import SignInForm from './auth/SignInForm.tsx'
 import Navbar from './components/Navbar.tsx'
+import GameHistoryPage from './pages/GameHistoryPage.tsx'
+import GameReplayPage from './pages/GameReplayPage.tsx'
 import HomePage from './pages/HomePage.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
@@ -17,6 +19,22 @@ function App() {
             element={
               <SignedInOnly>
                 <HomePage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/games"
+            element={
+              <SignedInOnly>
+                <GameHistoryPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/games/:id"
+            element={
+              <SignedInOnly>
+                <GameReplayPage />
               </SignedInOnly>
             }
           />

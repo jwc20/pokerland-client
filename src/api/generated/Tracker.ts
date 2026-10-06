@@ -22,7 +22,7 @@ import type {
   TrackerStreamsUpdateData,
   TrackerStreamsUpdateParams,
 } from "./data-contracts.ts";
-import { ContentType, HttpClient, type RequestParams } from "./http-client.ts";
+import { HttpClient, type RequestParams } from "./http-client.ts";
 
 export class Tracker<
   SecurityDataType = unknown,
@@ -93,7 +93,7 @@ export class Tracker<
       method: "PUT",
       body: data,
       secure: true,
-      type: ContentType.Json,
+      type: "application/json",
       format: "json",
       ...params,
     });

@@ -13,7 +13,7 @@
     "upload:production": "npm run build:production && wrangler versions upload --env production",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate:api": "swagger-typescript-api generate --path \"${OPENAPI_SCHEMA:-http://localhost:8000/api/schema/}\" --output src/api/generated --clean-output --modular --module-name-first-tag --extract-request-body --extract-response-body --extract-response-error --extract-request-params --type-only-imports --import-file-extension .ts"
+    "generate:api": "swagger-typescript-api generate --path \"${OPENAPI_SCHEMA:-http://localhost:8000/api/schema/}\" --output src/api/generated --clean-output --modular --module-name-first-tag --extract-request-body --extract-response-body --extract-response-error --extract-request-params --type-only-imports --import-file-extension .ts --enum-style=union"
   },
   "dependencies": {
     "react": "^19.2.8",

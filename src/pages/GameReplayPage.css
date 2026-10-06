@@ -1,0 +1,233 @@
+.replay-page {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.replay-back {
+  font-size: 15px;
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.replay {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.replay-header {
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+  p {
+    margin-top: 2px;
+    font-size: 15px;
+  }
+}
+
+/* What just happened, like "Flop – Bob bets 200". */
+.replay-step {
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.replay-seats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seat {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  transition: opacity 0.2s;
+
+  &.folded {
+    opacity: 0.45;
+  }
+}
+
+.seat-box {
+  width: 190px;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--text);
+  border-radius: 4px;
+
+  .seat.hero & {
+    background: var(--code-bg);
+  }
+  .seat.active & {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+}
+
+.seat-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+
+  span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.seat-position {
+  flex: none;
+  padding: 0 6px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 4px;
+}
+
+.seat-status {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.seat-cards {
+  display: flex;
+  gap: 6px;
+  min-width: 98px; /* two cards, so the rest of the row stays put when cards go */
+}
+
+.seat-action {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--text);
+
+  .seat.active & {
+    color: var(--text-h);
+  }
+}
+
+.seat-bet {
+  padding: 1px 9px;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
+.seat-won {
+  font-weight: 600;
+  color: var(--win);
+}
+
+.replay-board {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 30px 0 12px;
+  border-block: 1px solid var(--border);
+}
+
+.replay-label {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.replay-board-cards {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.replay-run {
+  margin-right: 6px;
+  font-size: 13px;
+}
+
+.replay-pot {
+  font-size: 15px;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.replay-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  padding-top: 4px;
+}
+
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  button,
+  select {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    min-width: 38px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+}
