@@ -14,6 +14,24 @@
   --loss: #d92d20;
   --card-red: #d92d20;
 
+  /* The results calendar's scales, darker for more: losses pink, wins green
+     (PiYG, which colour-blind readers can tell apart) around an even grey, and
+     hands played in the accent. */
+  --heat-empty: #f4f3f6;
+  --heat-even: #c1c0c3;
+  --heat-loss-1: #e797c4;
+  --heat-loss-2: #d65da3;
+  --heat-loss-3: #b8217c;
+  --heat-loss-4: #8c0553;
+  --heat-win-1: #a2d060;
+  --heat-win-2: #75af2b;
+  --heat-win-3: #4a8b10;
+  --heat-win-4: #296818;
+  --heat-hands-1: #d0b8ee;
+  --heat-hands-2: #b689e7;
+  --heat-hands-3: #9d57de;
+  --heat-hands-4: #8218c9;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -49,6 +67,22 @@
     --win: #47cd89;
     --loss: #f97066;
     --card-red: #f97066;
+
+    /* Brighter for more on the dark background. */
+    --heat-empty: #212124;
+    --heat-even: #4f4f53;
+    --heat-loss-1: #6d2c5a;
+    --heat-loss-2: #9e3b7b;
+    --heat-loss-3: #d04f99;
+    --heat-loss-4: #f080b8;
+    --heat-win-1: #405a13;
+    --heat-win-2: #537d20;
+    --heat-win-3: #66a32e;
+    --heat-win-4: #88ca4f;
+    --heat-hands-1: #563576;
+    --heat-hands-2: #794da5;
+    --heat-hands-3: #9e66d7;
+    --heat-hands-4: #c28efb;
   }
 
   #social .button-icon {
@@ -168,5 +202,160 @@ code {
 
   @media (prefers-color-scheme: dark) {
     color: #f97066;
+  }
+}
+
+/* Shared by the pages: cards, tabs, stat tiles and hand tables. */
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.card-header {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 20px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.card-hint {
+  font-size: 16px;
+}
+
+.tracker-status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 0;
+
+  div {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  dt {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  dd {
+    margin: 2px 0 0;
+    font-size: 18px;
+    color: var(--text-h);
+  }
+}
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+
+  button {
+    font: inherit;
+    font-size: 15px;
+    padding: 6px 14px;
+    color: var(--text);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &[aria-selected='true'] {
+      color: var(--accent);
+      background: var(--accent-bg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+  }
+}
+
+/* Narrow screens scroll the table sideways instead of squeezing it. */
+.history-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+  color: var(--text-h);
+
+  th,
+  td {
+    padding: 9px 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  th + th,
+  td + td {
+    border-left: 1px solid var(--border);
+  }
+
+  th {
+    font-weight: 600;
+    white-space: nowrap;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-top: 1px solid var(--border);
+
+    &:first-child {
+      border-top: none;
+    }
+    &:nth-child(even) {
+      background: var(--social-bg);
+    }
+    &:hover {
+      background: var(--accent-bg);
+    }
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  .nowrap {
+    white-space: nowrap;
+  }
+}
+
+.history-result {
+  font-variant-numeric: tabular-nums;
+
+  &.win {
+    color: var(--win);
+  }
+  &.loss {
+    color: var(--loss);
+  }
+  &.even {
+    color: var(--text);
   }
 }

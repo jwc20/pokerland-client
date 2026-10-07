@@ -1,0 +1,120 @@
+.streak-calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+  button {
+    font: inherit;
+    font-size: 22px;
+    line-height: 1;
+    width: 32px;
+    height: 32px;
+    color: var(--text-h);
+    background: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--accent-bg);
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.3;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+}
+
+.streak-calendar-today {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+
+  strong {
+    color: var(--text-h);
+  }
+}
+
+.streak-calendar-countdown {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  justify-items: center;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.streak-calendar-weekday {
+  font-size: 12px;
+}
+
+.streak-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 50%;
+
+  &.win,
+  &.loss,
+  &.even {
+    color: var(--text-h);
+  }
+  &.win {
+    background: var(--heat-win-1);
+  }
+  &.loss {
+    background: var(--heat-loss-1);
+  }
+  &.even {
+    background: var(--heat-even);
+  }
+  &.today {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  &.future {
+    opacity: 0.45;
+  }
+
+  &:is(a):hover {
+    box-shadow: 0 0 0 2px var(--text-h);
+  }
+  &:is(a):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* Two tiles side by side even in the narrow column, each label on one line. */
+.tracker-status.streak-calendar-tiles {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+
+  div {
+    padding: 10px;
+  }
+  dt {
+    font-size: 12px;
+  }
+}

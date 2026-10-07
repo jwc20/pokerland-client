@@ -1,0 +1,49 @@
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+
+  h1 {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.home-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  p {
+    max-width: 640px;
+    font-size: 16px;
+    color: var(--text-h);
+  }
+  a {
+    color: var(--accent);
+  }
+}
+
+/* The tag's chips and hands beside how they went and the streak; one column on narrow screens. */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.home-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}

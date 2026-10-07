@@ -1,4 +1,4 @@
-import type { HandSummary } from './api/generated/data-contracts.ts'
+import type { HandSummary, HandTag, TagStakes } from './api/generated/data-contracts.ts'
 
 type Stakes = Pick<HandSummary, 'game' | 'small_blind' | 'big_blind' | 'currency'>
 
@@ -19,10 +19,48 @@ export function formatAmount(amount: number, currency: string, signed = false): 
   }
 }
 
+/** The blinds, as "$0.05/$0.10" or "100/200" in chips. */
+export function stakesLabel(stakes: TagStakes): string {
+  return `${formatAmount(stakes.small_blind, stakes.currency)}/${formatAmount(stakes.big_blind, stakes.currency)}`
+}
+
 /** "Hold'em No Limit (100/200)", the way PokerStars names a game. */
 export function gameLabel(hand: Stakes): string {
-  const stakes = `${formatAmount(hand.small_blind, hand.currency)}/${formatAmount(hand.big_blind, hand.currency)}`
-  return `${hand.game} (${stakes})`
+  return `${hand.game} (${stakesLabel(hand)})`
+}
+
+/** A result in big blinds to a tenth: "+12.5 bb", "-3 bb". */
+export function formatBb(bb: number, signed = true): string {
+  return `${bb.toLocaleString(undefined, { maximumFractionDigits: 1, signDisplay: signed ? 'exceptZero' : 'auto' })} bb`
+}
+
+const FORMAT_LABELS: Record<string, string> = { cash: 'Cash', tournament: 'Tournament', play_money: 'Play money' }
+
+/** What a tag's chip says: "All hands", "BTN", "Hold'em No Limit", "$0.05/$0.10", "Play money". */
+export function tagLabel(tag: Pick<HandTag, 'group' | 'value' | 'stakes'>): string {
+  switch (tag.group) {
+    case 'all':
+      return 'All hands'
+    case 'stakes':
+      return tag.stakes ? stakesLabel(tag.stakes) : tag.value
+    case 'format':
+      return FORMAT_LABELS[tag.value] ?? tag.value
+    case 'position':
+    case 'game':
+      return tag.value
+  }
+}
+
+/**
+ * The game history narrowed to a tag's hands or a day's, e.g. "/games?tag=position%3AUTG%2B1".
+ * The keys go through URLSearchParams: a bare "+" in "UTG+1" would arrive as a space.
+ */
+export function historyUrl({ tag, date }: { tag?: string; date?: string }): string {
+  const params = new URLSearchParams()
+  if (tag && tag !== 'all') params.set('tag', tag)
+  if (date) params.set('date', date)
+  const query = params.toString()
+  return query ? `/games?${query}` : '/games'
 }
 
 /** "2026-10-04 10:53", in the viewer's time zone. */

@@ -1,0 +1,24 @@
+.tag-hands-rows {
+  transition: opacity 0.2s;
+
+  &.stale {
+    opacity: 0.5;
+  }
+}
+
+.tag-hands-more {
+  font-size: 15px;
+
+  a {
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+}
