@@ -231,6 +231,11 @@ export interface HandTag {
    * @format double
    */
   net_bb: number;
+  /**
+   * How much a hand's result varies: the sample standard deviation of their results in big blinds, from which bb/100's standard error is 100 × bb_stdev ÷ √hands. Null for fewer than two hands.
+   * @format double
+   */
+  bb_stdev: number | null;
 }
 
 /** Serializer for JWT authentication with expiration times. */

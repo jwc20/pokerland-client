@@ -1,5 +1,6 @@
 import type { HandTag } from '../api/generated/data-contracts.ts'
 import { formatBb, tagLabel } from '../handFormat.ts'
+import WinRateRange from './WinRateRange.tsx'
 import './TagGauge.css'
 
 const SIZE = 132
@@ -17,7 +18,7 @@ function arc(from: number, to: number) {
   return `M ${point(from)} A ${RADIUS} ${RADIUS} 0 ${to - from > 180 ? 1 : 0} 1 ${point(to)}`
 }
 
-/** How a tag's hands went: an arc split into won, even and lost, around the number won. */
+/** How a tag's hands went: an arc split into won, even and lost, around the number won, and the win rate's range. */
 function TagGauge({ tag }: { tag: HandTag }) {
   const parts = [
     { label: 'Won', count: tag.won, color: 'var(--heat-win-3)' },
@@ -82,6 +83,7 @@ function TagGauge({ tag }: { tag: HandTag }) {
           Net {formatBb(tag.net_bb)}
           {tag.hands > 0 && ` · ${formatBb((tag.net_bb / tag.hands) * 100)}/100`}
         </p>
+        <WinRateRange stats={tag} />
       </div>
     </section>
   )
