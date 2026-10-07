@@ -1,0 +1,83 @@
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.stat-tile-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.stat-tile-value {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-h);
+
+  &.none {
+    color: var(--text);
+  }
+}
+
+/* The sample and the range, the figures of each kept together when they wrap. */
+.stat-tile-sample {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.stat-tile-whole {
+  white-space: nowrap;
+}
+
+.stat-tile-hint {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+/* A share's 95% range on a 0–100% track, its marks centred on y = 7px. */
+.share-bar {
+  position: relative;
+  height: 14px;
+  margin: 2px 0;
+
+  span {
+    position: absolute;
+  }
+}
+
+.share-bar-track {
+  top: 6.5px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.share-bar-range {
+  top: 3px;
+  height: 8px;
+  min-width: 2px;
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+/* The share, ringed in the background colour so it stands off its range. */
+.share-bar-dot {
+  top: 1px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  box-sizing: border-box;
+  background: var(--text-h);
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+}

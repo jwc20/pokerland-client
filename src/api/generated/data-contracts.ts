@@ -360,6 +360,102 @@ export interface RestAuthDetail {
   detail: string;
 }
 
+/** How often the hero did something out of how often they could have, with its 95% Wilson interval. */
+export interface Stat {
+  did: number;
+  could: number;
+  /**
+   * did ÷ could, in percent; null without a chance.
+   * @format double
+   */
+  pct: number | null;
+  /**
+   * Where the 95% interval begins, in percent.
+   * @format double
+   */
+  ci_low: number | null;
+  /**
+   * Where the 95% interval ends, in percent.
+   * @format double
+   */
+  ci_high: number | null;
+}
+
+/** The hero's statistics over a group of their hands: all of them, a position's, or a month's. */
+export interface StatGroup {
+  /** "all", a position such as "BTN", or a month such as "2026-10". */
+  key: string;
+  hands: number;
+  /**
+   * Their results summed in big blinds.
+   * @format double
+   */
+  net_bb: number;
+  /**
+   * How much a hand's result varies: the sample standard deviation of their results in big blinds. Null for fewer than two hands.
+   * @format double
+   */
+  bb_stdev: number | null;
+  /** Every statistic in tracker.parsing.facts.STATS, and the aggression frequency. */
+  stats: StatSet;
+}
+
+/** Every statistic in tracker.parsing.facts.STATS, and the aggression frequency. */
+export interface StatSet {
+  /** Put money in before the flop by choice: called or raised, not just posted a blind. */
+  vpip: Stat;
+  /** Raised before the flop. */
+  pfr: Stat;
+  /** Raised first in: the chance is an unopened pot, folded to the player. */
+  rfi: Stat;
+  /** Called the big blind with no raise in front. */
+  limp: Stat;
+  /** Called a raise with no money in by choice yet. */
+  cold_call: Stat;
+  /** Re-raised a raise. */
+  three_bet: Stat;
+  /** Opened with a raise, then folded to a re-raise. */
+  fold_to_three_bet: Stat;
+  /** Re-raised a 3-bet. */
+  four_bet: Stat;
+  /** Re-raised a raise that had been called, with no money in by choice yet. */
+  squeeze: Stat;
+  /** Raised first in from the cutoff, the button or the small blind. */
+  steal: Stat;
+  /** In a blind, folded to a steal. */
+  fold_to_steal: Stat;
+  /** In a blind, called a steal. */
+  call_vs_steal: Stat;
+  /** In a blind, re-raised a steal. */
+  three_bet_vs_steal: Stat;
+  /** In the big blind, called or re-raised a steal. */
+  bb_defend: Stat;
+  /** Raised last before the flop, then bet the flop when it was checked to them. */
+  cbet_flop: Stat;
+  /** C-bet the flop and wasn't raised, then bet the turn when it was checked to them. */
+  cbet_turn: Stat;
+  /** C-bet the turn and wasn't raised, then bet the river when it was checked to them. */
+  cbet_river: Stat;
+  /** Folded to a c-bet on the flop. */
+  fold_to_cbet_flop: Stat;
+  /** Folded to a c-bet on the turn. */
+  fold_to_cbet_turn: Stat;
+  /** Folded to a c-bet on the river. */
+  fold_to_cbet_river: Stat;
+  /** Bet the flop into the player who raised last before it, before they could act. */
+  donk_flop: Stat;
+  /** Checked, then raised a bet on the same street: one chance a street. */
+  check_raise: Stat;
+  /** Saw the flop: the chance is being dealt in. */
+  saw_flop: Stat;
+  /** Went to showdown: the chance is seeing the flop. */
+  went_to_showdown: Stat;
+  /** Won money at showdown: the chance is going to showdown. */
+  won_at_showdown: Stat;
+  /** Bet or raised after the flop: (bets + raises) ÷ (bets + raises + calls + folds). */
+  aggression: Stat;
+}
+
 export interface StreamAck {
   /** @format uuid */
   stream_id: string;
@@ -535,6 +631,41 @@ export interface HandsDaysRetrieveParams {
 export type HandsDaysRetrieveData = HandCalendar;
 
 export type HandsTagsListData = HandTag[];
+
+export interface StatsListParams {
+  /**
+   * One group of all the hands, or one per position, or one per month in `tz`.
+   *
+   * * `none` - none
+   * * `position` - position
+   * * `month` - month
+   * @minLength 1
+   * @default "none"
+   */
+  group_by?: "none" | "position" | "month";
+  /**
+   * Only the hands played from this day on, in `tz`.
+   * @format date
+   */
+  since?: string;
+  /**
+   * Only the hands a tag counts: its `key` in /api/hands/tags/.
+   * @minLength 1
+   */
+  tag?: string;
+  /**
+   * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
+  /**
+   * Only the hands played up to the end of this day, in `tz`.
+   * @format date
+   */
+  until?: string;
+}
+
+export type StatsListData = StatGroup[];
 
 export type TrackerConfigRetrieveData = Config;
 

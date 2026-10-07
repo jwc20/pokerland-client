@@ -1,14 +1,6 @@
 import type { HandTag } from '../api/generated/data-contracts.ts'
-import { RANGE_MIN_HANDS, winRate } from '../winRate.ts'
+import { formatRate, RANGE_MIN_HANDS, winRate } from '../winRate.ts'
 import './WinRateRange.css'
-
-/** A rate in bb/100 with its sign, whole once it is in the hundreds: "+560", "−3.2". */
-function formatRate(rate: number) {
-  return rate.toLocaleString(undefined, {
-    maximumFractionDigits: Math.abs(rate) >= 100 ? 0 : 1,
-    signDisplay: 'exceptZero',
-  })
-}
 
 /** A rough count of hands: "1,200", "3.4 million". */
 function aboutHands(count: number) {

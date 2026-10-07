@@ -5,6 +5,7 @@ import Navbar from './components/Navbar.tsx'
 import GameHistoryPage from './pages/GameHistoryPage.tsx'
 import GameReplayPage from './pages/GameReplayPage.tsx'
 import HomePage from './pages/HomePage.tsx'
+import MyGamePage from './pages/MyGamePage.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
 
@@ -35,6 +36,14 @@ function App() {
             element={
               <SignedInOnly>
                 <GameReplayPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/stats"
+            element={
+              <SignedInOnly>
+                <MyGamePage />
               </SignedInOnly>
             }
           />

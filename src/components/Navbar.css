@@ -15,6 +15,12 @@
   gap: 8px 24px;
 }
 
+.navbar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+}
+
 .navbar-links a {
   font-size: 16px;
   color: var(--text);

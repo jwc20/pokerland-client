@@ -15,6 +15,7 @@ function Navbar() {
         {user && (
           <nav className="navbar-links" aria-label="Main">
             <NavLink to="/games">Game History</NavLink>
+            <NavLink to="/stats">My game</NavLink>
           </nav>
         )}
       </div>

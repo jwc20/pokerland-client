@@ -1,0 +1,151 @@
+.position-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+
+  figcaption {
+    font-size: 13px;
+    color: var(--text);
+  }
+}
+
+/* Label, plot, rate and hands in columns, a row per position, the zero line running unbroken through them. */
+.position-bars-grid {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto auto;
+}
+
+.position-bars-row {
+  display: contents;
+
+  > span {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.axis > span {
+    min-height: 22px;
+    font-size: 12px;
+    color: var(--text);
+  }
+}
+
+.position-bars-label {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.position-bars-plot {
+  position: relative;
+  margin: 0 12px;
+
+  .axis & span {
+    position: absolute;
+    top: 3px;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+  .axis & span:first-child:not(:only-child) {
+    transform: none;
+  }
+  .axis & span:last-child:not(:only-child) {
+    transform: translateX(-100%);
+  }
+}
+
+.position-bars-value {
+  justify-content: flex-end;
+  padding-right: 12px;
+  color: var(--text-h);
+}
+
+.position-bars-hands {
+  justify-content: flex-end;
+  color: var(--text);
+}
+
+.position-bars-zero {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  margin-left: -0.5px;
+  background: var(--text);
+}
+
+/* Square at zero, rounded at the rate. */
+.position-bars-bar {
+  position: absolute;
+  top: 8px;
+  height: 12px;
+
+  &.above {
+    background: var(--heat-win-3);
+    border-radius: 0 4px 4px 0;
+  }
+  &.below {
+    background: var(--heat-loss-3);
+    border-radius: 4px 0 0 4px;
+  }
+  &.unsure {
+    opacity: 0.4;
+  }
+}
+
+/* The 95% range: a thin line with end caps, over the bar. */
+.position-bars-range {
+  position: absolute;
+  top: 13px;
+  height: 2px;
+  background: var(--text-h);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    width: 2px;
+    height: 10px;
+    background: var(--text-h);
+  }
+  &::before {
+    left: 0;
+  }
+  &::after {
+    right: 0;
+  }
+}
+
+.position-bars-table {
+  font-size: 14px;
+
+  summary {
+    width: max-content;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  table {
+    margin-top: 8px;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  th,
+  td {
+    padding: 4px 12px 4px 0;
+    text-align: left;
+    color: var(--text-h);
+  }
+  thead th {
+    color: var(--text);
+    font-weight: 600;
+  }
+}

@@ -1,0 +1,86 @@
+.style-quadrant {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+
+  svg {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+  }
+  figcaption {
+    font-size: 14px;
+    color: var(--text);
+  }
+  strong {
+    color: var(--text-h);
+  }
+}
+
+.style-quadrant-frame {
+  fill: none;
+  stroke: var(--border);
+}
+
+.style-quadrant-split {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+.style-quadrant-region {
+  font-size: 11px;
+  fill: var(--text);
+
+  &.end {
+    text-anchor: end;
+  }
+}
+
+.style-quadrant-tick {
+  font-size: 11px;
+  fill: var(--text);
+  text-anchor: middle;
+
+  &.end {
+    text-anchor: end;
+  }
+}
+
+.style-quadrant-axis {
+  font-size: 12px;
+  fill: var(--text-h);
+  text-anchor: middle;
+}
+
+.style-quadrant-trail {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.5;
+}
+
+/* Each month, then you, ringed in the background colour so they stand off the lines. */
+.style-quadrant-month {
+  fill: var(--text);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.style-quadrant-you {
+  fill: var(--accent);
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+
+.style-quadrant-you-label {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--text-h);
+
+  &.end {
+    text-anchor: end;
+  }
+}

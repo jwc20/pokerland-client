@@ -1,6 +1,7 @@
 import { Auth } from './generated/Auth.ts'
 import { Hands } from './generated/Hands.ts'
 import type { ApiConfig, HttpResponse } from './generated/http-client.ts'
+import { Stats } from './generated/Stats.ts'
 import { Tracker } from './generated/Tracker.ts'
 import { Users } from './generated/Users.ts'
 
@@ -42,6 +43,7 @@ const apiConfig: ApiConfig = { ...config, customFetch: fetchWithRefresh }
 export const auth = new Auth(apiConfig)
 export const users = new Users(apiConfig)
 export const hands = new Hands(apiConfig)
+export const stats = new Stats(apiConfig)
 // Only its status endpoint is for the web app; the trackers use the rest with their client token.
 export const tracker = new Tracker(apiConfig)
 

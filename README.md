@@ -66,15 +66,18 @@ pokerland-tracker login --api http://localhost:8000
 
 ```
 src/
-  pages/           Home, Game History, Replay and Settings
-  components/      the home page's widgets, the hand table, playing cards, the replay's controls and decision panel, ...
+  pages/           Home, Game History, Replay, My game and Settings
+  components/      the home page's widgets, the hand table, playing cards, the replay's controls and decision panel,
+                   My game's stat tiles and charts, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
   calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
   decision.ts      the numbers behind each of the hero's decisions: pot odds, MDF, bet sizes, effective stack, SPR, M
   handFormat.ts    amounts, stakes, big blinds, cards, hand nicknames and tag labels
+  playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
   replay.ts        turns a hand's events into the replay's steps
+  winRate.ts       bb/100 with its 95% range, and how many more hands would tell a winner from a loser
   index.css        light and dark colour tokens, and the styles the pages share
 ```
 

@@ -24,6 +24,14 @@ export interface WinRate {
   handsToTell?: number
 }
 
+/** A rate in bb/100 with its sign, whole once it is in the hundreds: "+560", "−3.2". */
+export function formatRate(rate: number) {
+  return rate.toLocaleString(undefined, {
+    maximumFractionDigits: Math.abs(rate) >= 100 ? 0 : 1,
+    signDisplay: 'exceptZero',
+  })
+}
+
 /** The win rate of hands with these results; undefined for no hands. */
 export function winRate({ hands, net_bb, bb_stdev }: Pick<HandTag, 'hands' | 'net_bb' | 'bb_stdev'>): WinRate | undefined {
   if (hands === 0) return undefined
