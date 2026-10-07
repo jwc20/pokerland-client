@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router'
 import { errorMessage, hands } from '../api/client.ts'
 import type { HandDetail } from '../api/generated/data-contracts.ts'
 import CopyButton from '../components/CopyButton.tsx'
+import DecisionPanel from '../components/DecisionPanel.tsx'
 import PlayingCard from '../components/PlayingCard.tsx'
 import ReplayControls from '../components/ReplayControls.tsx'
 import ReplayTimeline from '../components/ReplayTimeline.tsx'
-import { formatAmount, formatDateTime, gameLabel, streetLabel } from '../handFormat.ts'
+import { formatAmount, formatDateTime, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
 import { buildReplay, holeCardCount, type ReplaySeat } from '../replay.ts'
 import { useReplayPlayer } from '../useReplayPlayer.ts'
 import './GameReplayPage.css'
@@ -91,40 +92,58 @@ function Replay({ hand }: { hand: HandDetail }) {
         <p>{details.filter(Boolean).join(' · ')}</p>
       </header>
 
-      <p className="replay-step" aria-live="polite">
-        {streetLabel(step.street)} – {step.text}
-      </p>
+      <div className="replay-main">
+        <div className="replay-table">
+          <p className="replay-step" aria-live="polite">
+            {streetLabel(step.street)} – {step.text}
+          </p>
 
-      <div className="replay-seats">
-        {step.seats
-          .filter((seat) => seat !== heroSeat)
-          .map((seat) => (
-            <Seat key={seat.seat} seat={seat} active={step.event?.player === seat.name} holeCards={holeCards} money={money} />
-          ))}
-      </div>
+          <div className="replay-seats">
+            {step.seats
+              .filter((seat) => seat !== heroSeat)
+              .map((seat) => (
+                <Seat
+                  key={seat.seat}
+                  seat={seat}
+                  active={step.event?.player === seat.name}
+                  holeCards={holeCards}
+                  money={money}
+                />
+              ))}
+          </div>
 
-      <div className="replay-board">
-        <h2 className="replay-label">Board</h2>
-        <div className="replay-board-cards">
-          {Array.from({ length: 5 }, (_, i) =>
-            step.board[i] ? <PlayingCard key={i} card={step.board[i]} /> : <PlayingCard key={i} empty />,
+          <div className="replay-board">
+            <h2 className="replay-label">Board</h2>
+            <div className="replay-board-cards">
+              {Array.from({ length: 5 }, (_, i) =>
+                step.board[i] ? <PlayingCard key={i} card={step.board[i]} /> : <PlayingCard key={i} empty />,
+              )}
+            </div>
+            <p className="replay-pot">
+              Pot: {money(step.pot)}
+              {player.index === player.last && hand.rake ? ` · Rake: ${money(hand.rake)}` : ''}
+            </p>
+          </div>
+
+          {heroSeat && (
+            <div className="replay-seats">
+              <Seat
+                seat={heroSeat}
+                active={step.event?.player === heroSeat.name}
+                holeCards={holeCards}
+                money={money}
+                hero
+              />
+            </div>
           )}
-        </div>
-        <p className="replay-pot">
-          Pot: {money(step.pot)}
-          {player.index === player.last && hand.rake ? ` · Rake: ${money(hand.rake)}` : ''}
-        </p>
-      </div>
 
-      {heroSeat && (
-        <div className="replay-seats">
-          <Seat seat={heroSeat} active={step.event?.player === heroSeat.name} holeCards={holeCards} money={money} hero />
+          <div className="replay-footer">
+            <ReplayTimeline steps={steps} index={player.index} hero={hand.hero} onSeek={player.seek} />
+            <ReplayControls player={player} />
+          </div>
         </div>
-      )}
 
-      <div className="replay-footer">
-        <ReplayTimeline steps={steps} index={player.index} hero={hand.hero} onSeek={player.seek} />
-        <ReplayControls player={player} />
+        <DecisionPanel hand={hand} steps={steps} index={player.index} onSeek={player.seek} />
       </div>
 
       <details className="replay-phh">
@@ -157,6 +176,7 @@ function Seat({
   // A folded opponent's cards are gone; the hero still knows theirs.
   const showCards = hero || !seat.folded
   const hidden = showCards ? Math.max(0, holeCards - seat.cards.length) : 0
+  const nickname = hero ? handNickname(seat.cards) : undefined
   const classes = ['seat', active && 'active', seat.folded && 'folded', hero && 'hero'].filter(Boolean).join(' ')
   return (
     <div className={classes}>
@@ -168,11 +188,14 @@ function Seat({
         <div>Stack: {money(seat.stack)}</div>
         <div className="seat-status">{seat.allIn ? 'All-in' : seat.folded ? 'Folded' : `Seat ${seat.seat}`}</div>
       </div>
-      <div className="seat-cards">
-        {showCards && seat.cards.map((card) => <PlayingCard key={card} card={card} />)}
-        {Array.from({ length: hidden }, (_, i) => (
-          <PlayingCard key={i} />
-        ))}
+      <div className="seat-hand">
+        <div className="seat-cards">
+          {showCards && seat.cards.map((card) => <PlayingCard key={card} card={card} />)}
+          {Array.from({ length: hidden }, (_, i) => (
+            <PlayingCard key={i} />
+          ))}
+        </div>
+        {nickname && <div className="seat-nickname">{nickname}</div>}
       </div>
       <div className="seat-action">
         {seat.bet > 0 && <span className="seat-bet">Bet {money(seat.bet)}</span>}

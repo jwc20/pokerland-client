@@ -346,6 +346,11 @@ code {
   }
 }
 
+/* The hero's hand by name after their cards, e.g. "8♠ 8♥ · Snowmen". */
+.history-nickname {
+  color: var(--text);
+}
+
 .history-result {
   font-variant-numeric: tabular-nums;
 

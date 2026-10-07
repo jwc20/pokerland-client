@@ -1,0 +1,153 @@
+.decision {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  /* The replay is at this decision, or at the step that shows it. */
+  &.now {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+  }
+}
+
+.decision-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 7px 8px 7px 14px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+  border-radius: 7px 7px 0 0;
+
+  h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+}
+
+.decision-count {
+  font-variant-numeric: tabular-nums;
+}
+
+.decision-nav {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+.decision-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+
+  & + & {
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* What the hero faced, and what they did. */
+.decision-lead {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.decision-move {
+  color: var(--accent);
+}
+
+/* A row per fact, label left and value right; a long value wraps without moving the other rows. */
+.decision-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  dt {
+    flex: none;
+  }
+  dd {
+    min-width: 0;
+    margin: 0;
+    color: var(--text-h);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.decision-help {
+  padding: 10px 14px 12px;
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+
+  summary {
+    width: max-content;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  dl {
+    margin: 8px 0 0;
+  }
+  dt {
+    font-weight: 600;
+    color: var(--text-h);
+  }
+  dd {
+    margin: 0 0 8px;
+  }
+}

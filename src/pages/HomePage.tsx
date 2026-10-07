@@ -94,7 +94,7 @@ function HomePage() {
                   <TagChips tags={dashboard.tags} selected={tag.key} onSelect={selectTag} />
                   <TagHands tag={tag} />
                 </div>
-                <div className="home-column">
+                <div className="home-column home-rail">
                   <TagGauge tag={tag} />
                   <StreakCalendar calendar={dashboard.calendar} today={today} />
                 </div>

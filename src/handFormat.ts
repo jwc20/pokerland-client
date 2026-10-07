@@ -108,3 +108,32 @@ export function cardsText(cards: string[]): string {
     })
     .join(' ')
 }
+
+const RANKS = '23456789TJQKA'
+
+// Hold'em starting hands by name, keyed "88", "AK" (suited or not) or "Q7o".
+// From the Johns Hopkins course's quiz, plus three every table knows (AA, QQ, JJ).
+const NICKNAMES: Record<string, string> = {
+  AA: 'Pocket rockets',
+  KK: 'Cowboys',
+  QQ: 'Ladies',
+  JJ: 'Fishhooks',
+  '88': 'Snowmen',
+  '55': 'Speed limit',
+  '22': 'Ducks',
+  AK: 'Big Slick',
+  AQ: 'Little Slick',
+  A8: "Dead man's hand",
+  K9: 'Canine',
+  J5: 'Jackson Five',
+  Q7o: 'The computer hand',
+  T2: 'The Doyle Brunson',
+}
+
+/** The name two hole cards go by, e.g. "Snowmen" for ["8s", "8h"]; undefined for most hands, and Omaha's four cards. */
+export function handNickname(cards: string[]): string | undefined {
+  if (cards.length !== 2) return undefined
+  const [high, low] = cards.map((card) => card.slice(0, -1)).sort((a, b) => RANKS.indexOf(b) - RANKS.indexOf(a))
+  const kind = high === low ? '' : cards[0].slice(-1) === cards[1].slice(-1) ? 's' : 'o'
+  return NICKNAMES[high + low + kind] ?? NICKNAMES[high + low]
+}

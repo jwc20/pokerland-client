@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import type { HandSummary } from '../api/generated/data-contracts.ts'
-import { formatAmount, formatDateTime, gameLabel, streetLabel } from '../handFormat.ts'
+import { formatAmount, formatDateTime, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
 import PlayingCard from './PlayingCard.tsx'
 
 /** Hands as the game history lists them. `compact` leaves out the table and account columns. */
@@ -33,6 +33,7 @@ function HandTable({ hands, compact }: { hands: HandSummary[]; compact?: boolean
 function HandRow({ hand, compact }: { hand: HandSummary; compact?: boolean }) {
   const result = hand.hero_net > 0 ? 'win' : hand.hero_net < 0 ? 'loss' : 'even'
   const street = streetLabel(hand.final_street)
+  const nickname = handNickname(hand.hero_cards)
   return (
     <tr>
       <td className="nowrap">{formatDateTime(hand.played_at)}</td>
@@ -49,6 +50,7 @@ function HandRow({ hand, compact }: { hand: HandSummary; compact?: boolean }) {
               </span>
             ))
           : '—'}
+        {nickname && <span className="history-nickname"> · {nickname}</span>}
       </td>
       <td className={`nowrap history-result ${result}`}>
         {hand.hero ? formatAmount(hand.hero_net, hand.currency, true) : '—'}

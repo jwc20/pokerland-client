@@ -41,6 +41,26 @@
   }
 }
 
+/* The table and its controls, with the decision panel beside them; below them on narrow screens. */
+.replay-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 20px 28px;
+
+  @media (min-width: 901px) {
+    &:has(> .decision) {
+      grid-template-columns: minmax(0, 1fr) 340px;
+    }
+  }
+}
+
+.replay-table {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 /* What just happened, like "Flop – Bob bets 200". */
 .replay-step {
   font-size: 16px;
@@ -114,10 +134,24 @@
   color: var(--text);
 }
 
+.seat-hand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .seat-cards {
   display: flex;
   gap: 6px;
   min-width: 98px; /* two cards, so the rest of the row stays put when cards go */
+}
+
+/* The hero's hand by name, e.g. "Snowmen" under 8♠ 8♥. */
+.seat-nickname {
+  font-size: 13px;
+  line-height: 1.2;
+  color: var(--text);
 }
 
 .seat-action {

@@ -1,4 +1,5 @@
 .home {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -46,4 +47,26 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+}
+
+/*
+ * With room for it, the gauge and the streak calendar leave the page's column
+ * for a rail beside it, level with the top of the page, and the column and the
+ * rail are centred together.
+ */
+@media (min-width: 1540px) {
+  #root:has(.home-rail) {
+    margin-left: calc((100% - 1126px - 360px) / 2);
+  }
+
+  .home-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-rail {
+    position: absolute;
+    top: 0;
+    left: calc(100% + 57px); /* 40px outside the column's border, past the page's 16px padding */
+    width: 320px;
+  }
 }
