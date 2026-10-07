@@ -11,6 +11,20 @@
  */
 
 /**
+ * * `all` - all
+ * * `position` - position
+ * * `game` - game
+ * * `stakes` - stakes
+ * * `format` - format
+ */
+export type HandTagGroupEnum =
+  | "all"
+  | "position"
+  | "game"
+  | "stakes"
+  | "format";
+
+/**
  * * `post` - post
  * * `deal` - deal
  * * `fold` - fold
@@ -58,6 +72,28 @@ export interface Config {
   flush_bytes: number;
   max_read_bytes: number;
   max_chunk_bytes: number;
+}
+
+/** The days a user played on, in their time zone, and their runs of consecutive days. */
+export interface HandCalendar {
+  /** The days with hands, oldest first. */
+  days: HandDay[];
+  /** Consecutive days up to today, or up to yesterday while today has no hands yet. */
+  current_streak: number;
+  /** The longest run of consecutive days. */
+  best_streak: number;
+  played_today: boolean;
+}
+
+export interface HandDay {
+  /** @format date */
+  date: string;
+  hands: number;
+  /**
+   * The day's result in big blinds.
+   * @format double
+   */
+  net_bb: number;
 }
 
 /** A hand with everything its replay needs. */
@@ -167,6 +203,34 @@ export interface HandSummary {
   hero_cards: string[];
   hero_net: number;
   final_street: string;
+}
+
+/** Hands that share a position, game, cash-game stakes or format, and how they went. */
+export interface HandTag {
+  /** What /api/hands/?tag= takes: "<group>:<value>", or "all". */
+  key: string;
+  /**
+   * * `all` - all
+   * * `position` - position
+   * * `game` - game
+   * * `stakes` - stakes
+   * * `format` - format
+   */
+  group: HandTagGroupEnum;
+  /** BTN, Hold'em No Limit, USD:5:10 (currency:small blind:big blind), cash, ...; empty for "all". */
+  value: string;
+  /** A stakes tag's blinds; null for the other groups. */
+  stakes: TagStakes | null;
+  hands: number;
+  /** Hands with a positive result. */
+  won: number;
+  /** Hands with a negative result. */
+  lost: number;
+  /**
+   * Their results summed in big blinds.
+   * @format double
+   */
+  net_bb: number;
 }
 
 /** Serializer for JWT authentication with expiration times. */
@@ -322,6 +386,13 @@ export interface StreamRegistrationRequest {
   fingerprint: string;
 }
 
+export interface TagStakes {
+  /** Empty for chips; the blinds are cents otherwise. */
+  currency: string;
+  small_blind: number;
+  big_blind: number;
+}
+
 export interface TokenRefresh {
   access: string;
   /** @format date-time */
@@ -421,6 +492,23 @@ export type AuthUserPartialUpdateData = UserDetails;
 export interface HandsListParams {
   /** The pagination cursor value. */
   cursor?: string;
+  /**
+   * Only the hands played on this day in `tz`.
+   * @format date
+   */
+  date?: string;
+  /** Number of results to return per page. */
+  page_size?: number;
+  /**
+   * Only the hands a tag counts: its `key` in /api/hands/tags/.
+   * @minLength 1
+   */
+  tag?: string;
+  /**
+   * The IANA time zone `date` is a day in, e.g. "Europe/London"; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
 }
 
 export type HandsListData = PaginatedHandSummaryList;
@@ -430,6 +518,18 @@ export interface HandsRetrieveParams {
 }
 
 export type HandsRetrieveData = HandDetail;
+
+export interface HandsDaysRetrieveParams {
+  /**
+   * The IANA time zone days begin and end in, e.g. "Europe/London".
+   * @minLength 1
+   */
+  tz: string;
+}
+
+export type HandsDaysRetrieveData = HandCalendar;
+
+export type HandsTagsListData = HandTag[];
 
 export type TrackerConfigRetrieveData = Config;
 

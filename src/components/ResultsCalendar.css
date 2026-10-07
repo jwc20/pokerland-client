@@ -1,0 +1,93 @@
+.results-calendar-top,
+.results-calendar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.results-calendar-summary {
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.results-calendar-frame {
+  position: relative;
+}
+
+/* Narrow screens scroll the weeks sideways instead of shrinking the days. */
+.results-calendar-years {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.results-calendar-year {
+  display: block;
+  flex: none;
+
+  text {
+    font-size: 11px;
+    fill: var(--text);
+  }
+  .results-calendar-year-label {
+    font-weight: 600;
+    fill: var(--text-h);
+  }
+
+  a {
+    cursor: pointer;
+    outline: none;
+  }
+  a:hover rect,
+  a:focus-visible rect {
+    stroke: var(--text-h);
+    stroke-width: 1.5px;
+  }
+  a:focus-visible rect {
+    stroke: var(--accent);
+    stroke-width: 2px;
+  }
+}
+
+.results-calendar-tip {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 10px;
+  font-size: 13px;
+  white-space: nowrap;
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  transform: translate(-50%, calc(-100% - 6px));
+
+  strong {
+    font-size: 15px;
+    color: var(--text-h);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.results-calendar-legend {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 13px;
+
+  span {
+    margin: 0 6px;
+    font-variant-numeric: tabular-nums;
+  }
+  i {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+  }
+}

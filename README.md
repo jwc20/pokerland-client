@@ -1,10 +1,28 @@
-# Pokerland
+<h1 align="center">Pokerland</h1>
+
+<p align="center">
+  <a href="#quick-start"><strong>Quick start</strong></a> •
+  <a href="#scripts"><strong>Scripts</strong></a> •
+  <a href="#development"><strong>Development</strong></a> •
+  <a href="#deploying"><strong>Deploying</strong></a> •
+  <a href="https://github.com/jwc20/pokerland-api"><strong>API</strong></a> •
+  <a href="https://github.com/jwc20/pokerland-trackers"><strong>Trackers</strong></a>
+</p>
+
+<p align="center">
+  <img alt="React 19" src="https://img.shields.io/badge/react-19-149eca?logo=react&logoColor=white">
+  <img alt="React Router 8" src="https://img.shields.io/badge/react%20router-8-ca4245?logo=reactrouter&logoColor=white">
+  <img alt="TypeScript 6" src="https://img.shields.io/badge/typescript-6-3178c6?logo=typescript&logoColor=white">
+  <img alt="Vite 8" src="https://img.shields.io/badge/vite-8-646cff?logo=vite&logoColor=white">
+  <img alt="Hosted on Cloudflare Workers" src="https://img.shields.io/badge/hosted%20on-Cloudflare%20Workers-f38020?logo=cloudflare&logoColor=white">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-blue"></a>
+</p>
 
 <table>
   <tr>
     <td width="50%">
-      
-https://github.com/user-attachments/assets/a05150b2-123e-4615-873e-1be7c0e99c80
+
+<https://github.com/user-attachments/assets/a05150b2-123e-4615-873e-1be7c0e99c80>
 
   </td>
     <td width="50%">
@@ -13,92 +31,90 @@ https://github.com/user-attachments/assets/a05150b2-123e-4615-873e-1be7c0e99c80
   </tr>
 </table>
 
+## Quick start
 
-## API client
-
-`src/api/generated/` is generated from pokerland-api's OpenAPI schema by
-[swagger-typescript-api](https://github.com/acacode/swagger-typescript-api), so
-don't edit it by hand. After changing the API, run it locally and regenerate:
+You need Node.js 20.19+ or 22.12+, and [pokerland-api](https://github.com/jwc20/pokerland-api) running at
+<http://localhost:8000> (see its quick start).
 
 ```bash
-npm run generate:api
+git clone https://github.com/jwc20/pokerland-client.git
+cd pokerland-client
+npm install
+npm run dev    # http://localhost:5173
 ```
 
-This reads `http://localhost:8000/api/schema/`; set `OPENAPI_SCHEMA` to another
-URL or a schema file to read that instead. `src/api/client.ts` configures the
-generated classes: the base URL, sending the auth cookies, and renewing the
-access token on a 401.
+The committed `.env.development` already points the app at <http://localhost:8000>. Create an account at
+<http://localhost:5173/register>, copy the client token from Settings, and sign a tracker in to your local API:
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+pokerland-tracker login --api http://localhost:8000
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Command                                               | What it does                                                                             |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `npm run dev`                                         | Starts Vite's dev server on port 5173, with hot reload                                   |
+| `npm run build`                                       | Type-checks and builds to `dist/`, including the `version.json` the update banner checks |
+| `npm run lint`                                        | Runs ESLint, with the React Hooks rules                                                  |
+| `npm run preview`                                     | Serves the build locally                                                                 |
+| `npm run generate:api`                                | Regenerates `src/api/generated/` from pokerland-api's OpenAPI schema                     |
+| `npm run deploy:staging`, `npm run deploy:production` | Builds for that mode and deploys it to Cloudflare                                        |
+| `npm run upload:production`                           | Builds and uploads a production version without deploying it                             |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Development
 
 ```
+src/
+  pages/           Home, Game History, Replay and Settings
+  components/      the home page's widgets, the hand table, playing cards, the replay's controls, ...
+  api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
+  api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
+  auth/            who is signed in, the sign-in form and the route guards
+  calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
+  handFormat.ts    amounts, stakes, big blinds, cards and tag labels
+  replay.ts        turns a hand's events into the replay's steps
+  index.css        light and dark colour tokens, and the styles the pages share
+```
+
+### Conventions
+
+- **Plain CSS.** Each component has its own file, with class names prefixed by the component's name. Colours come
+  from the tokens in `src/index.css`, which has light and dark values for each. The results calendar's colour scales
+  are tokens too, picked so colour-blind readers can tell losses from wins.
+- **Few dependencies.** There are no UI, chart, date or state libraries: React, React Router and the generated API
+  client do the work.
+- **Explicit imports.** Imports include their `.ts` or `.tsx` extension, and types come in with `import type`.
+
+## Deploying
+
+The app is static assets on Cloudflare Workers (`wrangler.json`). Unknown paths get `index.html`, so client-side
+routes work on a reload.
+
+| Environment  | Command                     | Served at                            |
+| ------------ | --------------------------- | ------------------------------------ |
+| `staging`    | `npm run deploy:staging`    | workers.dev, with preview URLs       |
+| `production` | `npm run deploy:production` | The custom domain in `wrangler.json` |
+
+- Each mode reads `.env.<mode>`, described in [`.env.example`](.env.example). `VITE_API_BASE_URL` is the API's base
+  URL, and the API must list the app's origin in its `CORS_ALLOWED_ORIGINS`. Only `VITE_` variables reach the app,
+  and they are public, so never put a secret in these files.
+- Sign in to Cloudflare with `npx wrangler login` locally. In CI, set `CLOUDFLARE_API_TOKEN` and
+  `CLOUDFLARE_ACCOUNT_ID`.
+- Built assets are cached for a year (`public/_headers`). Each build writes `BUILD_ID` (the build time, unless you
+  set it) to `version.json`, which open tabs check before offering a reload.
+
+## Related projects
+
+- [pokerland-api](https://github.com/jwc20/pokerland-api): the Django REST API that parses the hand histories and
+  serves this app.
+- [pokerland-trackers](https://github.com/jwc20/pokerland-trackers): the trackers for Windows and macOS that upload
+  them.
+
+## Support
+
+Found a bug, or have an idea? [Open an issue](https://github.com/jwc20/pokerland-client/issues).
+
+## License
+
+[MIT](LICENSE)

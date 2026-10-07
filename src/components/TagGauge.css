@@ -1,0 +1,66 @@
+.tag-gauge-figure {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tag-gauge-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  margin: 0;
+  font-size: 15px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  dt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  dd {
+    margin: 0;
+    color: var(--text-h);
+    font-variant-numeric: tabular-nums;
+  }
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+  }
+}
+
+.tag-gauge-arc {
+  flex: none;
+
+  path {
+    fill: none;
+    stroke-width: 10px;
+  }
+  text {
+    text-anchor: middle;
+    fill: var(--text);
+  }
+  .tag-gauge-won {
+    font-size: 30px;
+    font-weight: 600;
+    fill: var(--text-h);
+  }
+  .tag-gauge-of {
+    font-size: 14px;
+  }
+  .tag-gauge-caption {
+    font-size: 13px;
+  }
+}
+
+.tag-gauge-net {
+  font-size: 15px;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
