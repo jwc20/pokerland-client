@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { errorMessage, hands } from '../api/client.ts'
 import type { HandSummary, HandTag } from '../api/generated/data-contracts.ts'
-import { historyUrl, tagLabel } from '../handFormat.ts'
+import { tagLabel } from '../handFormat.ts'
+import { historyUrl } from '../historyFilters.ts'
 import HandTable from './HandTable.tsx'
 import './TagHands.css'
 
@@ -15,7 +16,8 @@ function TagHands({ tag }: { tag: HandTag }) {
 
   useEffect(() => {
     let active = true
-    hands.handsList({ tag: tag.key, page_size: RECENT }).then(
+    // "all" too: with any tag the list leaves out hands sat out, as the counts do.
+    hands.handsList({ tag: [tag.key], page_size: RECENT }).then(
       ({ data }) => {
         if (active) setLoaded({ key: tag.key, rows: data.results })
       },
@@ -49,7 +51,7 @@ function TagHands({ tag }: { tag: HandTag }) {
         )}
         <p className="tag-hands-more">
           {tag.hands > RECENT && `The ${RECENT} most recent of ${tag.hands.toLocaleString()}. `}
-          <Link to={historyUrl({ tag: tag.key })}>See all in Game History →</Link>
+          <Link to={historyUrl({ tags: [tag.key] })}>See all in Game History →</Link>
         </p>
       </div>
     </section>

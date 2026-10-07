@@ -20,6 +20,17 @@
   color: var(--text-h);
 }
 
+.history-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  strong {
+    color: var(--text-h);
+  }
+}
+
 .game-history-empty {
   font-size: 16px;
 }

@@ -16,8 +16,25 @@
   grid-template-columns: 52px minmax(0, 1fr) auto auto;
 }
 
+/* A row spans the columns and lines its cells up with them, so it can be a link of its own. */
 .position-bars-row {
-  display: contents;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  border-radius: 4px;
+
+  &.linked {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      background: var(--accent-bg);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
 
   > span {
     display: flex;

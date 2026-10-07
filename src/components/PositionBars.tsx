@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import type { StatGroup } from '../api/generated/data-contracts.ts'
 import { formatRate, RANGE_MIN_HANDS, winRate } from '../winRate.ts'
 import './PositionBars.css'
@@ -6,9 +7,15 @@ import './PositionBars.css'
  * Win rate by position: a bar per position from zero to its bb/100, with its
  * 95% range drawn across it once it has the hands for one. Money flows to late
  * position, so you would expect the button highest and the blinds below zero
- * [MIT 3].
+ * [MIT 3]. With `positionUrl`, each row links to its position's hands.
  */
-function PositionBars({ groups }: { groups: StatGroup[] }) {
+function PositionBars({
+  groups,
+  positionUrl,
+}: {
+  groups: StatGroup[]
+  positionUrl?: (position: string) => string
+}) {
   const rows = groups.flatMap((group) => {
     const result = winRate(group)
     return result ? [{ group, ...result }] : []
@@ -29,12 +36,9 @@ function PositionBars({ groups }: { groups: StatGroup[] }) {
         {rows.map(({ group, rate, range }) => {
           const side = rate > 0 ? 'above' : rate < 0 ? 'below' : 'even'
           const rangeText = range ? `95% range ${formatRate(range.low)} to ${formatRate(range.high)}` : 'too few hands for a range'
-          return (
-            <div
-              key={group.key}
-              className="position-bars-row"
-              title={`${group.key}: ${formatRate(rate)} bb/100 over ${group.hands.toLocaleString()} hands, ${rangeText}`}
-            >
+          const summary = `${group.key}: ${formatRate(rate)} bb/100 over ${group.hands.toLocaleString()} hands, ${rangeText}`
+          const cells = (
+            <>
               <span className="position-bars-label">{group.key}</span>
               <span className="position-bars-plot" aria-hidden="true">
                 <span className="position-bars-zero" style={{ left: `${zero}%` }} />
@@ -51,6 +55,21 @@ function PositionBars({ groups }: { groups: StatGroup[] }) {
               </span>
               <span className="position-bars-value">{formatRate(rate)}</span>
               <span className="position-bars-hands">{group.hands.toLocaleString()}</span>
+            </>
+          )
+          return positionUrl ? (
+            <Link
+              key={group.key}
+              className="position-bars-row linked"
+              to={positionUrl(group.key)}
+              title={`${summary}. See these hands in Game History.`}
+              aria-label={`${summary}; see these hands`}
+            >
+              {cells}
+            </Link>
+          ) : (
+            <div key={group.key} className="position-bars-row" title={summary}>
+              {cells}
             </div>
           )
         })}

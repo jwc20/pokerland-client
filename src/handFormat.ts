@@ -51,18 +51,6 @@ export function tagLabel(tag: Pick<HandTag, 'group' | 'value' | 'stakes'>): stri
   }
 }
 
-/**
- * The game history narrowed to a tag's hands or a day's, e.g. "/games?tag=position%3AUTG%2B1".
- * The keys go through URLSearchParams: a bare "+" in "UTG+1" would arrive as a space.
- */
-export function historyUrl({ tag, date }: { tag?: string; date?: string }): string {
-  const params = new URLSearchParams()
-  if (tag && tag !== 'all') params.set('tag', tag)
-  if (date) params.set('date', date)
-  const query = params.toString()
-  return query ? `/games?${query}` : '/games'
-}
-
 /** "2026-10-04 10:53", in the viewer's time zone. */
 export function formatDateTime(iso: string): string {
   const date = new Date(iso)

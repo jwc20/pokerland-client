@@ -75,6 +75,7 @@ src/
   calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
   decision.ts      the numbers behind each of the hero's decisions: pot odds, MDF, bet sizes, effective stack, SPR, M
   handFormat.ts    amounts, stakes, big blinds, cards, hand nicknames and tag labels
+  historyFilters.ts the game history's filters and sort, read from and written to its URL; every link to it
   playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
   replay.ts        turns a hand's events into the replay's steps
   winRate.ts       bb/100 with its 95% range, and how many more hands would tell a winner from a loser

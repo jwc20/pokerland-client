@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import type { HandCalendar } from '../api/generated/data-contracts.ts'
 import { formatDayKey, formatMonth, keyParts, monthGrid, msToLocalMidnight, weekdayInitials } from '../calendar.ts'
-import { formatBb, historyUrl } from '../handFormat.ts'
+import { formatBb } from '../handFormat.ts'
+import { historyUrl } from '../historyFilters.ts'
 import './StreakCalendar.css'
 
 const WEEKDAYS = weekdayInitials()
@@ -69,7 +70,7 @@ function StreakCalendar({ calendar, today }: { calendar: HandCalendar; today: st
             return (
               <Link
                 key={key}
-                to={historyUrl({ date: key })}
+                to={historyUrl({ since: key, until: key })}
                 className={className}
                 aria-current={key === today ? 'date' : undefined}
                 aria-label={`${formatDayKey(key)}: ${hands}, ${formatBb(day.net_bb)}`}

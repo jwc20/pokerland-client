@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import type { Stat } from '../api/generated/data-contracts.ts'
 import { enough, formatPct, MIN_CHANCES, type ShownStat } from '../playerStats.ts'
 import './StatTile.css'
@@ -5,11 +7,11 @@ import './StatTile.css'
 /**
  * A statistic as PokerTracker counts it, how often you did something out of
  * how often you could have: the share, its sample, and its 95% range on a
- * 0–100% bar.
+ * 0–100% bar. With `to`, the tile links to the hands it counts.
  */
-function StatTile({ label, hint, stat }: { label: string; hint: string; stat: Stat }) {
+function StatTile({ label, hint, stat, to }: { label: string; hint: string; stat: Stat; to?: string }) {
   return (
-    <div className="stat-tile">
+    <TileBox to={to} label={label}>
       <div className="stat-tile-label">{label}</div>
       {enough(stat) ? (
         <>
@@ -36,7 +38,16 @@ function StatTile({ label, hint, stat }: { label: string; hint: string; stat: St
         </>
       )}
       <p className="stat-tile-hint">{hint}</p>
-    </div>
+    </TileBox>
+  )
+}
+
+function TileBox({ to, label, children }: { to?: string; label: string; children: ReactNode }) {
+  if (!to) return <div className="stat-tile">{children}</div>
+  return (
+    <Link className="stat-tile linked" to={to} title={`See the hands behind ${label} in Game History`}>
+      {children}
+    </Link>
   )
 }
 

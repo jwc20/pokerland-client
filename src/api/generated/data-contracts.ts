@@ -598,18 +598,105 @@ export interface HandsListParams {
    * @format date
    */
   date?: string;
+  /** With `stat`: only the hands where the hero took the chance (true) or let it go (false). */
+  did?: boolean | null;
   /** Number of results to return per page. */
   page_size?: number;
   /**
-   * Only the hands a tag counts: its `key` in /api/hands/tags/.
+   * Only the hands the hero won, lost or broke even in.
+   *
+   * * `won` - won
+   * * `lost` - lost
+   * * `even` - even
    * @minLength 1
    */
-  tag?: string;
+  result?: "won" | "lost" | "even";
   /**
-   * The IANA time zone `date` is a day in, e.g. "Europe/London"; UTC if left out.
+   * Only the hands played from this day on, in `tz`.
+   * @format date
+   */
+  since?: string;
+  /**
+   * Newest or oldest first, or by the hero's result in big blinds: the biggest wins or losses first.
+   *
+   * * `newest` - newest
+   * * `oldest` - oldest
+   * * `biggest_win` - biggest_win
+   * * `biggest_loss` - biggest_loss
+   * @minLength 1
+   * @default "newest"
+   */
+  sort?: "newest" | "oldest" | "biggest_win" | "biggest_loss";
+  /**
+   * Only the hands that gave the hero a chance at this statistic, as /api/stats/ counts them.
+   *
+   * * `vpip` - vpip
+   * * `pfr` - pfr
+   * * `rfi` - rfi
+   * * `limp` - limp
+   * * `cold_call` - cold_call
+   * * `three_bet` - three_bet
+   * * `fold_to_three_bet` - fold_to_three_bet
+   * * `four_bet` - four_bet
+   * * `squeeze` - squeeze
+   * * `steal` - steal
+   * * `fold_to_steal` - fold_to_steal
+   * * `call_vs_steal` - call_vs_steal
+   * * `three_bet_vs_steal` - three_bet_vs_steal
+   * * `bb_defend` - bb_defend
+   * * `cbet_flop` - cbet_flop
+   * * `cbet_turn` - cbet_turn
+   * * `cbet_river` - cbet_river
+   * * `fold_to_cbet_flop` - fold_to_cbet_flop
+   * * `fold_to_cbet_turn` - fold_to_cbet_turn
+   * * `fold_to_cbet_river` - fold_to_cbet_river
+   * * `donk_flop` - donk_flop
+   * * `check_raise` - check_raise
+   * * `saw_flop` - saw_flop
+   * * `went_to_showdown` - went_to_showdown
+   * * `won_at_showdown` - won_at_showdown
+   * * `aggression` - aggression
+   * @minLength 1
+   */
+  stat?:
+    | "vpip"
+    | "pfr"
+    | "rfi"
+    | "limp"
+    | "cold_call"
+    | "three_bet"
+    | "fold_to_three_bet"
+    | "four_bet"
+    | "squeeze"
+    | "steal"
+    | "fold_to_steal"
+    | "call_vs_steal"
+    | "three_bet_vs_steal"
+    | "bb_defend"
+    | "cbet_flop"
+    | "cbet_turn"
+    | "cbet_river"
+    | "fold_to_cbet_flop"
+    | "fold_to_cbet_turn"
+    | "fold_to_cbet_river"
+    | "donk_flop"
+    | "check_raise"
+    | "saw_flop"
+    | "went_to_showdown"
+    | "won_at_showdown"
+    | "aggression";
+  /** Only the hands every one of these tags counts: their `key`s in /api/hands/tags/. Repeatable. */
+  tag?: string[];
+  /**
+   * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
    * @minLength 1
    */
   tz?: string;
+  /**
+   * Only the hands played up to the end of this day, in `tz`.
+   * @format date
+   */
+  until?: string;
 }
 
 export type HandsListData = PaginatedHandSummaryList;
@@ -648,11 +735,8 @@ export interface StatsListParams {
    * @format date
    */
   since?: string;
-  /**
-   * Only the hands a tag counts: its `key` in /api/hands/tags/.
-   * @minLength 1
-   */
-  tag?: string;
+  /** Only the hands every one of these tags counts: their `key`s in /api/hands/tags/. Repeatable. */
+  tag?: string[];
   /**
    * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
    * @minLength 1

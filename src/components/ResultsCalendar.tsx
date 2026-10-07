@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { Link } from 'react-router'
 import type { HandDay } from '../api/generated/data-contracts.ts'
 import { formatDayKey, monthAbbreviations, yearGrid } from '../calendar.ts'
-import { formatBb, historyUrl } from '../handFormat.ts'
+import { formatBb } from '../handFormat.ts'
+import { historyUrl } from '../historyFilters.ts'
 import './ResultsCalendar.css'
 
 type Mode = 'result' | 'hands'
@@ -221,7 +222,7 @@ function YearGrid({ year, today, byDate, fill, tabStop, onShow, onHide, onFocusD
         return (
           <Link
             key={cell.key}
-            to={historyUrl({ date: cell.key })}
+            to={historyUrl({ since: cell.key, until: cell.key })}
             data-date={cell.key}
             tabIndex={cell.key === tabStop ? 0 : -1}
             aria-label={describe(day)}

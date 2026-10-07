@@ -25,7 +25,7 @@ export class Hands<
   SecurityDataType = unknown,
 > extends HttpClient<SecurityDataType> {
   /**
-   * @description The signed-in user's hands, most recent first, or those of a tag or a day.
+   * @description The signed-in user's hands, most recent first, or narrowed by tags, days, decisions or results, or sorted.
    *
    * @tags hands
    * @name HandsList

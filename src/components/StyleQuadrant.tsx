@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import type { StatGroup } from '../api/generated/data-contracts.ts'
 import { AGGRESSIVE, enough, formatPct, LOOSE_VPIP, MIN_CHANCES, playerType } from '../playerStats.ts'
 import './StyleQuadrant.css'
@@ -26,9 +28,20 @@ function monthLabel(key: string) {
 /**
  * Your style on two axes, how often you play a hand (VPIP) and how often you
  * bet or raise after the flop, with the four player types of the MIT course as
- * its regions [MIT 1], and a trail of where each month put you.
+ * its regions [MIT 1], and a trail of where each month put you. With the URLs,
+ * your dot and each month's link to their hands.
  */
-function StyleQuadrant({ overall, months }: { overall: StatGroup; months: StatGroup[] }) {
+function StyleQuadrant({
+  overall,
+  months,
+  allUrl,
+  monthUrl,
+}: {
+  overall: StatGroup
+  months: StatGroup[]
+  allUrl?: string
+  monthUrl?: (month: string) => string
+}) {
   const you = place(overall)
   if (!you) {
     return (
@@ -99,16 +112,22 @@ function StyleQuadrant({ overall, months }: { overall: StatGroup; months: StatGr
             points={trail.map((point) => `${x(point.vpip)},${y(point.aggression)}`).join(' ')}
           />
         )}
-        {trail.map((point) => (
-          <circle key={point.key} className="style-quadrant-month" cx={x(point.vpip)} cy={y(point.aggression)} r={4}>
-            <title>
-              {`${monthLabel(point.key)}: VPIP ${formatPct(point.vpip)}, aggression ${formatPct(point.aggression)}, ${point.hands.toLocaleString()} hands`}
-            </title>
-          </circle>
-        ))}
-        <circle className="style-quadrant-you" cx={x(you.vpip)} cy={y(you.aggression)} r={6}>
-          <title>{`You: VPIP ${formatPct(you.vpip)}, aggression ${formatPct(you.aggression)}`}</title>
-        </circle>
+        {trail.map((point) => {
+          const text = `${monthLabel(point.key)}: VPIP ${formatPct(point.vpip)}, aggression ${formatPct(point.aggression)}, ${point.hands.toLocaleString()} hands`
+          return (
+            <Mark key={point.key} to={monthUrl?.(point.key)} label={text} cx={x(point.vpip)} cy={y(point.aggression)}>
+              <circle className="style-quadrant-month" cx={x(point.vpip)} cy={y(point.aggression)} r={4} />
+            </Mark>
+          )
+        })}
+        <Mark
+          to={allUrl}
+          label={`You: VPIP ${formatPct(you.vpip)}, aggression ${formatPct(you.aggression)}`}
+          cx={x(you.vpip)}
+          cy={y(you.aggression)}
+        >
+          <circle className="style-quadrant-you" cx={x(you.vpip)} cy={y(you.aggression)} r={6} />
+        </Mark>
         <text
           className={you.vpip > xMax * 0.8 ? 'style-quadrant-you-label end' : 'style-quadrant-you-label'}
           x={x(you.vpip) + (you.vpip > xMax * 0.8 ? -10 : 10)}
@@ -124,6 +143,25 @@ function StyleQuadrant({ overall, months }: { overall: StatGroup; months: StatGr
         {AGGRESSIVE}% are rough splits, not rules.
       </figcaption>
     </figure>
+  )
+}
+
+/** A dot with its hover title, and with `to` a link to its hands, its hit area wider than the dot. */
+function Mark({ to, label, cx, cy, children }: { to?: string; label: string; cx: number; cy: number; children: ReactNode }) {
+  if (!to) {
+    return (
+      <g>
+        <title>{label}</title>
+        {children}
+      </g>
+    )
+  }
+  return (
+    <Link to={to} className="style-quadrant-link" aria-label={`${label}; see these hands`}>
+      <title>{`${label}. See these hands in Game History.`}</title>
+      <circle className="style-quadrant-hit" cx={cx} cy={cy} r={10} />
+      {children}
+    </Link>
   )
 }
 

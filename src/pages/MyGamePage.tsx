@@ -8,43 +8,20 @@ import StatTile, { ShareBar } from '../components/StatTile.tsx'
 import StyleQuadrant from '../components/StyleQuadrant.tsx'
 import WinRateRange from '../components/WinRateRange.tsx'
 import { formatBb, tagLabel } from '../handFormat.ts'
-import { enough, formatPct } from '../playerStats.ts'
+import { historyUrl, monthDays, type HistoryFilters } from '../historyFilters.ts'
+import { enough, formatPct, STAT_INFO } from '../playerStats.ts'
 import './MyGamePage.css'
 
-interface Tile {
-  stat: keyof StatSet
-  label: string
-  hint: string
-}
-
-const PREFLOP: Tile[] = [
-  { stat: 'vpip', label: 'VPIP', hint: 'Put money in by choice before the flop: called or raised.' },
-  { stat: 'pfr', label: 'PFR', hint: 'Raised before the flop.' },
-  { stat: 'three_bet', label: '3-bet', hint: 'Re-raised a raise.' },
-  { stat: 'fold_to_three_bet', label: 'Fold to 3-bet', hint: 'Opened, then folded to a re-raise.' },
-  { stat: 'steal', label: 'Steal', hint: 'Raised first in from the cutoff, the button or the small blind.' },
-  { stat: 'fold_to_steal', label: 'Fold to steal', hint: 'In a blind, folded to a steal.' },
-  { stat: 'bb_defend', label: 'Big blind defense', hint: 'In the big blind, called or re-raised a steal.' },
+const PREFLOP: (keyof StatSet)[] = ['vpip', 'pfr', 'three_bet', 'fold_to_three_bet', 'steal', 'fold_to_steal', 'bb_defend']
+const POSTFLOP: (keyof StatSet)[] = [
+  'cbet_flop',
+  'cbet_turn',
+  'fold_to_cbet_flop',
+  'fold_to_cbet_turn',
+  'check_raise',
+  'aggression',
 ]
-
-const POSTFLOP: Tile[] = [
-  { stat: 'cbet_flop', label: 'C-bet flop', hint: 'Raised last before the flop, then bet it when checked to.' },
-  { stat: 'cbet_turn', label: 'C-bet turn', hint: 'Bet the turn too, after a flop c-bet nobody raised.' },
-  { stat: 'fold_to_cbet_flop', label: 'Fold to flop c-bet', hint: 'Folded to a c-bet on the flop.' },
-  { stat: 'fold_to_cbet_turn', label: 'Fold to turn c-bet', hint: 'Folded to a c-bet on the turn.' },
-  { stat: 'check_raise', label: 'Check-raise', hint: 'Checked, then raised a bet on the same street.' },
-  {
-    stat: 'aggression',
-    label: 'Aggression',
-    hint: 'Bets and raises out of your bets, raises, calls and folds after the flop.',
-  },
-]
-
-const SHOWDOWN: Tile[] = [
-  { stat: 'saw_flop', label: 'Saw the flop', hint: 'Of the hands you were dealt.' },
-  { stat: 'went_to_showdown', label: 'Went to showdown', hint: 'Of the flops you saw.' },
-  { stat: 'won_at_showdown', label: 'Won at showdown', hint: 'Of the showdowns you went to.' },
-]
+const SHOWDOWN: (keyof StatSet)[] = ['saw_flop', 'went_to_showdown', 'won_at_showdown']
 
 // What the page can narrow the hands to. It groups them by position itself, so those tags are left out.
 const FILTER_GROUPS = [
@@ -98,8 +75,9 @@ function MyGamePage() {
   useEffect(() => {
     const query = new URLSearchParams(key)
     let active = true
+    const tag = query.get('tag')
     loadReport({
-      tag: query.get('tag') || undefined,
+      tag: tag ? [tag] : undefined,
       since: query.get('since') || undefined,
       until: query.get('until') || undefined,
     }).then(
@@ -116,13 +94,21 @@ function MyGamePage() {
   }, [key])
 
   function setFilter(name: string, value: string) {
-    const next = new URLSearchParams(params)
+    // The URL as it is now: React Router renders a navigation later, so `params` may be a change behind.
+    const next = new URLSearchParams(window.location.search)
     if (value) next.set(name, value)
     else next.delete(name)
     setParams(next, { replace: true })
   }
 
   const current = loaded?.key === key ? loaded : undefined
+  // The page's hands as game history filters, which every link to the history starts from.
+  const tag = params.get('tag')
+  const base: HistoryFilters = {
+    tags: tag ? [tag] : [],
+    since: params.get('since') || undefined,
+    until: params.get('until') || undefined,
+  }
   return (
     <section className="my-game">
       <header className="my-game-header">
@@ -141,7 +127,7 @@ function MyGamePage() {
           {current.error}
         </p>
       ) : current?.report ? (
-        <ReportView report={current.report} />
+        <ReportView report={current.report} base={base} />
       ) : (
         <p>Loading…</p>
       )}
@@ -164,7 +150,7 @@ function Filters({
   const since = params.get('since') ?? ''
   const until = params.get('until') ?? ''
   return (
-    <div className="my-game-filters" role="group" aria-label="Which hands">
+    <div className="filter-bar" role="group" aria-label="Which hands">
       <label>
         Hands
         <select value={tag} onChange={(event) => onChange('tag', event.target.value)}>
@@ -204,8 +190,13 @@ function Filters({
   )
 }
 
-function ReportView({ report }: { report: Report }) {
+/**
+ * The report. Each figure links to the game history, narrowed to the hands it counts: a tile to its
+ * chances, a position to its hands, a month to its days.
+ */
+function ReportView({ report, base }: { report: Report; base: HistoryFilters }) {
   const { all, positions, months } = report
+  const atPosition = (position: string) => [...base.tags, `position:${position}`]
   if (all.hands === 0) {
     return (
       <p className="card-hint">
@@ -225,6 +216,9 @@ function ReportView({ report }: { report: Report }) {
             {formatBb((all.net_bb / all.hands) * 100)}/100
           </p>
           <WinRateRange stats={all} />
+          <Link className="my-game-more" to={historyUrl(base)}>
+            See these hands in Game History →
+          </Link>
         </div>
       </section>
 
@@ -234,7 +228,12 @@ function ReportView({ report }: { report: Report }) {
             Your style
           </h2>
           <div className="card-body">
-            <StyleQuadrant overall={all} months={months} />
+            <StyleQuadrant
+              overall={all}
+              months={months}
+              allUrl={historyUrl(base)}
+              monthUrl={(month) => historyUrl({ ...base, ...within(monthDays(month), base) })}
+            />
           </div>
         </section>
         <section className="card" aria-labelledby="my-game-positions">
@@ -242,28 +241,54 @@ function ReportView({ report }: { report: Report }) {
             bb/100 by position
           </h2>
           <div className="card-body">
-            <PositionBars groups={positions} />
+            <PositionBars
+              groups={positions}
+              positionUrl={(position) => historyUrl({ ...base, tags: atPosition(position) })}
+            />
           </div>
         </section>
       </div>
 
-      <TileCard id="my-game-preflop" title="Before the flop" tiles={PREFLOP} stats={all.stats} />
+      <TileCard id="my-game-preflop" title="Before the flop" tiles={PREFLOP} stats={all.stats} base={base} />
       <section className="card" aria-labelledby="my-game-rfi">
         <h2 id="my-game-rfi" className="card-header">
           Raise first in by position
         </h2>
         <div className="card-body">
           <p className="card-hint">How often you raised when the pot was folded to you. Expect more the nearer you sit to the button.</p>
-          <RaiseFirstIn positions={positions} />
+          <RaiseFirstIn
+            positions={positions}
+            positionUrl={(position) => historyUrl({ ...base, tags: atPosition(position), stat: 'rfi' })}
+          />
         </div>
       </section>
-      <TileCard id="my-game-postflop" title="After the flop" tiles={POSTFLOP} stats={all.stats} />
-      <TileCard id="my-game-showdown" title="Showdowns" tiles={SHOWDOWN} stats={all.stats} />
+      <TileCard id="my-game-postflop" title="After the flop" tiles={POSTFLOP} stats={all.stats} base={base} />
+      <TileCard id="my-game-showdown" title="Showdowns" tiles={SHOWDOWN} stats={all.stats} base={base} />
     </>
   )
 }
 
-function TileCard({ id, title, tiles, stats }: { id: string; title: string; tiles: Tile[]; stats: StatSet }) {
+/** A month's days, cut to the page's own when they begin later or end earlier. ISO days compare as text. */
+function within(days: { since: string; until: string }, base: HistoryFilters) {
+  return {
+    since: base.since && base.since > days.since ? base.since : days.since,
+    until: base.until && base.until < days.until ? base.until : days.until,
+  }
+}
+
+function TileCard({
+  id,
+  title,
+  tiles,
+  stats,
+  base,
+}: {
+  id: string
+  title: string
+  tiles: (keyof StatSet)[]
+  stats: StatSet
+  base: HistoryFilters
+}) {
   return (
     <section className="card" aria-labelledby={id}>
       <h2 id={id} className="card-header">
@@ -271,8 +296,14 @@ function TileCard({ id, title, tiles, stats }: { id: string; title: string; tile
       </h2>
       <div className="card-body">
         <div className="my-game-tiles">
-          {tiles.map((tile) => (
-            <StatTile key={tile.stat} label={tile.label} hint={tile.hint} stat={stats[tile.stat]} />
+          {tiles.map((stat) => (
+            <StatTile
+              key={stat}
+              label={STAT_INFO[stat].label}
+              hint={STAT_INFO[stat].hint}
+              stat={stats[stat]}
+              to={stats[stat].could > 0 ? historyUrl({ ...base, stat }) : undefined}
+            />
           ))}
         </div>
       </div>
@@ -280,7 +311,13 @@ function TileCard({ id, title, tiles, stats }: { id: string; title: string; tile
   )
 }
 
-function RaiseFirstIn({ positions }: { positions: StatGroup[] }) {
+function RaiseFirstIn({
+  positions,
+  positionUrl,
+}: {
+  positions: StatGroup[]
+  positionUrl: (position: string) => string
+}) {
   const rows = positions.filter((group) => group.stats.rfi.could > 0)
   if (!rows.length) return <p className="card-hint">No pots folded to you yet.</p>
   return (
@@ -288,14 +325,19 @@ function RaiseFirstIn({ positions }: { positions: StatGroup[] }) {
       {rows.map((group) => {
         const stat = group.stats.rfi
         return (
-          <div key={group.key} className="my-game-rfi-row">
+          <Link
+            key={group.key}
+            className="my-game-rfi-row"
+            to={positionUrl(group.key)}
+            aria-label={`${group.key}: raised first in ${stat.did} of ${stat.could} times; see these hands`}
+          >
             <span className="my-game-rfi-position">{group.key}</span>
             {enough(stat) ? <ShareBar stat={stat} /> : <span className="my-game-rfi-few">Too few chances</span>}
             <span className="my-game-rfi-value">{enough(stat) ? formatPct(stat.pct) : '—'}</span>
             <span className="my-game-rfi-sample">
               {stat.did.toLocaleString()} of {stat.could.toLocaleString()}
             </span>
-          </div>
+          </Link>
         )
       })}
     </div>

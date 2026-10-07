@@ -75,6 +75,24 @@
   stroke-width: 2;
 }
 
+/* The dots that open their hands in the game history: a target wider than the dot, ringed on hover and focus. */
+.style-quadrant-link {
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: none;
+  }
+  &:hover .style-quadrant-hit,
+  &:focus-visible .style-quadrant-hit {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+}
+
+.style-quadrant-hit {
+  fill: transparent;
+}
+
 .style-quadrant-you-label {
   font-size: 12px;
   font-weight: 600;
