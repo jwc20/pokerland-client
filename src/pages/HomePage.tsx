@@ -92,7 +92,7 @@ function HomePage() {
             <>
               <ResultsCalendar days={dashboard.calendar.days} today={today} />
               <div className="home-grid">
-                <div className="home-column">
+                <div className="home-column home-main">
                   <ReviewQueue />
                   <TagChips tags={dashboard.tags} selected={tag.key} onSelect={selectTag} />
                   <TagHands tag={tag} />
@@ -100,6 +100,8 @@ function HomePage() {
                 <div className="home-column home-rail">
                   <TagGauge tag={tag} />
                   <StreakCalendar calendar={dashboard.calendar} today={today} />
+                </div>
+                <div className="home-column home-rail-left">
                   <DisciplineCard short />
                 </div>
               </div>
