@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { errorMessage, users } from '../api/client.ts'
+import CoachPresets from '../components/CoachPresets.tsx'
 import CopyButton from '../components/CopyButton.tsx'
 import TrackerDownloads from '../components/TrackerDownloads.tsx'
 import TrackerStatus from '../components/TrackerStatus.tsx'
@@ -60,6 +61,8 @@ function SettingsPage() {
           <TrackerDownloads />
         </div>
       </section>
+
+      <CoachPresets />
     </div>
   )
 }

@@ -67,11 +67,12 @@ pokerland-tracker login --api http://localhost:8000
 
 ```
 src/
-  pages/           Home, Game History, Replay, My game, Practice (its sets, the playbook, coached matches and their
-                   debriefs) and Settings
-  components/      the home page's widgets, the hand table, playing cards, the replay's controls and decision panel,
-                   My game's stat tiles and charts, the practice table, action bar and feedback card, the coach's
-                   rail and read card, ...
+  pages/           Home, Game History, Replay, My game, Sessions, Practice (its sets, the playbook, coached matches
+                   and their debriefs) and Settings (with the coach presets)
+  components/      the home page's widgets and review queue, the hand table, playing cards, the replay's controls,
+                   decision panel and notes panel, My game's stat tiles, charts and its discipline, purpose and rake
+                   cards, sparklines, the practice table, action bar and feedback card, the coach's rail and read
+                   card, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
@@ -80,9 +81,14 @@ src/
   decision.ts      the numbers behind each of the hero's decisions: pot odds, MDF, bet sizes, effective stack, SPR, M
   handFormat.ts    amounts, stakes, big blinds, cards, hand nicknames and tag labels
   historyFilters.ts the game history's filters and sort, read from and written to its URL; every link to it
+  leaks.ts         the preflop discipline checks' names and rules, as the user's coach presets set them
+  notes.ts         the notes panel's words: bet purposes, review states, the hero's bets in a hand
   playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
   practice.ts      the action bar's bet sizes, a question's amounts in the table's unit, and the practice labels
+  rake.ts          rake and results per 100 hands, by kind of cash game
   replay.ts        turns a hand's events into the replay's steps
+  sessions.ts      the sessions page's groupings and their labels, durations and session times
+  useHandNotes.ts  a hand's notes, saved and removed, and the tags to offer
   table.ts         the practice table's geometry: seats on the felt, bets and the dealer button, chips, bb or chips
   useUnit.ts       the practice table's unit (B flips it) and its four-colour deck, remembered on this device
   winRate.ts       bb/100 with its 95% range, and how many more hands would tell a winner from a loser

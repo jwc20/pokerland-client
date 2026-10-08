@@ -11,10 +11,17 @@
  */
 
 import type {
+  HandNoteWriteRequest,
   HandsDaysRetrieveData,
   HandsDaysRetrieveParams,
   HandsListData,
   HandsListParams,
+  HandsNotesCreateData,
+  HandsNotesCreateParams,
+  HandsNotesDestroyData,
+  HandsNotesDestroyParams,
+  HandsNotesListData,
+  HandsNotesListParams,
   HandsRetrieveData,
   HandsRetrieveParams,
   HandsTagsListData,
@@ -55,6 +62,62 @@ export class Hands<
       method: "GET",
       secure: true,
       format: "json",
+      ...params,
+    });
+  /**
+   * @description What the signed-in user wrote on one of their hands, and adding to it or changing it.
+   *
+   * @tags hands
+   * @name HandsNotesList
+   * @request GET:/api/hands/{id}/notes/
+   * @secure
+   */
+  handsNotesList = ({ id }: HandsNotesListParams, params: RequestParams = {}) =>
+    this.request<HandsNotesListData, any>({
+      path: `/api/hands/${id}/notes/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Adds a note, or changes the one it takes the place of: 201 when added, 200 when changed.
+   *
+   * @tags hands
+   * @name HandsNotesCreate
+   * @request POST:/api/hands/{id}/notes/
+   * @secure
+   */
+  handsNotesCreate = (
+    { id }: HandsNotesCreateParams,
+    data: HandNoteWriteRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<HandsNotesCreateData, any>({
+      path: `/api/hands/${id}/notes/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Removes a note from one of the signed-in user's hands: a note, a tag, the review state or a purpose.
+   *
+   * @tags hands
+   * @name HandsNotesDestroy
+   * @request DELETE:/api/hands/{id}/notes/{note_id}/
+   * @secure
+   */
+  handsNotesDestroy = (
+    { id, noteId }: HandsNotesDestroyParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<HandsNotesDestroyData, any>({
+      path: `/api/hands/${id}/notes/${noteId}/`,
+      method: "DELETE",
+      secure: true,
       ...params,
     });
   /**

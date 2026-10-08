@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import type { HandSummary } from '../api/generated/data-contracts.ts'
-import { formatAmount, formatDateTime, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
+import { formatAmount, formatBb, formatDateTime, formatShare, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
 import PlayingCard from './PlayingCard.tsx'
 
 /** Hands as the game history lists them. `compact` leaves out the table and account columns. */
@@ -54,6 +54,14 @@ function HandRow({ hand, compact }: { hand: HandSummary; compact?: boolean }) {
       </td>
       <td className={`nowrap history-result ${result}`}>
         {hand.hero ? formatAmount(hand.hero_net, hand.currency, true) : '—'}
+        {hand.hero_allin_equity !== null && hand.hero_ev_net_bb !== null && (
+          <span
+            className="history-allin"
+            title={`All-in before the river with ${formatShare(hand.hero_allin_equity)}: expected ${formatBb(hand.hero_ev_net_bb)}`}
+          >
+            all-in {formatShare(hand.hero_allin_equity)}
+          </span>
+        )}
       </td>
       <td>
         <Link to={`/games/${hand.id}`} aria-label={`Replay hand #${hand.hand_id}, to the ${street.toLowerCase()}`}>

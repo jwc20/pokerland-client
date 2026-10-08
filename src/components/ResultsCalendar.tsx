@@ -4,6 +4,7 @@ import type { HandDay } from '../api/generated/data-contracts.ts'
 import { formatDayKey, monthAbbreviations, yearGrid } from '../calendar.ts'
 import { formatBb } from '../handFormat.ts'
 import { historyUrl } from '../historyFilters.ts'
+import { sessionTimes } from '../sessions.ts'
 import './ResultsCalendar.css'
 
 type Mode = 'result' | 'hands'
@@ -13,6 +14,7 @@ const STEP = CELL + 2 // a 2px gap of background between cells
 const LEFT = 32 // room for the weekday labels
 const TOP = 16 // and for the month labels
 const YEARS_SHOWN = 3
+const TIP_SESSIONS = 3 // a day's sessions the tip lists
 const MONTHS = monthAbbreviations()
 // Rows 1, 3 and 5, as the weekdays of the week of Sunday 2026-10-04.
 const WEEKDAYS = [1, 3, 5].map(
@@ -38,7 +40,8 @@ function scaleStep(value: number, max: number) {
 
 function describe(day: HandDay) {
   const hands = `${day.hands.toLocaleString()} ${day.hands === 1 ? 'hand' : 'hands'}`
-  return `${formatDayKey(day.date)}: ${hands}, ${formatBb(day.net_bb)}`
+  const sessions = `${day.sessions.length} ${day.sessions.length === 1 ? 'session' : 'sessions'}`
+  return `${formatDayKey(day.date)}: ${hands}, ${formatBb(day.net_bb)}, ${sessions}`
 }
 
 /**
@@ -161,6 +164,19 @@ function ResultsCalendar({ days, today }: { days: HandDay[]; today: string }) {
                   ? `${tip.day.hands.toLocaleString()} ${tip.day.hands === 1 ? 'hand' : 'hands'}`
                   : formatBb(tip.day.net_bb)}
               </span>
+              {tip.day.sessions.length > 0 && (
+                <span className="results-calendar-tip-sessions">
+                  {tip.day.sessions.slice(0, TIP_SESSIONS).map((session) => (
+                    <span key={session.id}>
+                      {sessionTimes(session.start, session.end)} · {session.hands.toLocaleString()}{' '}
+                      {session.hands === 1 ? 'hand' : 'hands'} · {formatBb(session.net_bb)}
+                    </span>
+                  ))}
+                  {tip.day.sessions.length > TIP_SESSIONS && (
+                    <span>and {tip.day.sessions.length - TIP_SESSIONS} more</span>
+                  )}
+                </span>
+              )}
             </div>
           )}
         </div>

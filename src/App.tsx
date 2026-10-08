@@ -12,6 +12,7 @@ import MyGamePage from './pages/MyGamePage.tsx'
 import PlaybookPage from './pages/PlaybookPage.tsx'
 import PracticePage from './pages/PracticePage.tsx'
 import PracticeSetPage from './pages/PracticeSetPage.tsx'
+import SessionsPage from './pages/SessionsPage.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
 
@@ -50,6 +51,14 @@ function App() {
             element={
               <SignedInOnly>
                 <MyGamePage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/sessions"
+            element={
+              <SignedInOnly>
+                <SessionsPage />
               </SignedInOnly>
             }
           />

@@ -1,0 +1,123 @@
+.discipline-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &.short {
+    gap: 6px;
+  }
+}
+
+.discipline-line {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .short & + & {
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* The name, the count, the trend and the link on one line, wrapping on narrow screens. */
+.discipline-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+
+  h3 {
+    margin: 0;
+    min-width: 13em;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-h);
+
+    .short & {
+      min-width: 0;
+      flex: 1 1 auto;
+      font-size: 15px;
+      font-weight: 400;
+    }
+  }
+}
+
+.discipline-count {
+  min-width: 7em;
+  font-size: 16px;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+
+  .short & {
+    min-width: 0;
+    font-size: 15px;
+  }
+}
+
+.discipline-share {
+  color: var(--text);
+}
+
+.discipline-link,
+.discipline-more {
+  font-size: 14px;
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.discipline-more {
+  font-size: 15px;
+}
+
+.discipline-rule,
+.discipline-detail {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.discipline-rule {
+  color: var(--text-h);
+}
+
+.discipline-source {
+  color: var(--text);
+}
+
+.discipline-months summary {
+  width: max-content;
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+.discipline-table {
+  margin-top: 8px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+
+  tbody th {
+    font-weight: 600;
+    background: none;
+    border-bottom: none;
+  }
+  td {
+    text-align: right;
+    white-space: nowrap;
+  }
+}

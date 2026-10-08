@@ -10,7 +10,12 @@
  * ---------------------------------------------------------------
  */
 
-import type { StatsListData, StatsListParams } from "./data-contracts.ts";
+import type {
+  StatsListData,
+  StatsListParams,
+  StatsPurposesListData,
+  StatsPurposesListParams,
+} from "./data-contracts.ts";
 import { HttpClient, type RequestParams } from "./http-client.ts";
 
 export class Stats<
@@ -27,6 +32,26 @@ export class Stats<
   statsList = (query: StatsListParams = {}, params: RequestParams = {}) =>
     this.request<StatsListData, any>({
       path: `/api/stats/`,
+      method: "GET",
+      query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description How the signed-in user's bets and raises went, by the purpose they gave them and by street.
+   *
+   * @tags stats
+   * @name StatsPurposesList
+   * @request GET:/api/stats/purposes/
+   * @secure
+   */
+  statsPurposesList = (
+    query: StatsPurposesListParams = {},
+    params: RequestParams = {},
+  ) =>
+    this.request<StatsPurposesListData, any>({
+      path: `/api/stats/purposes/`,
       method: "GET",
       query: query,
       secure: true,

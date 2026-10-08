@@ -1,0 +1,53 @@
+/* Rake paid, and the win rate before and after it: three figures side by side, stacked on a phone. */
+.rake-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 0;
+
+  div {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  dt {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  dd {
+    margin: 2px 0 0;
+    font-size: 20px;
+    color: var(--text-h);
+    font-variant-numeric: tabular-nums;
+  }
+  .rake-summary-note {
+    font-size: 13px;
+    color: var(--text);
+  }
+}
+
+.rake-table {
+  font-variant-numeric: tabular-nums;
+
+  /* The row's stakes or month, a link rather than a header cell's grey. */
+  tbody th {
+    font-weight: 600;
+    background: none;
+    border-bottom: none;
+  }
+  td {
+    text-align: right;
+  }
+  thead th:not(:first-child) {
+    text-align: right;
+  }
+}
+
+.rake-table-caption {
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}

@@ -1,0 +1,61 @@
+.sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+}
+
+.sessions-header p {
+  max-width: 720px;
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+/* Two charts to a row when they fit. */
+.sessions-patterns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px 28px;
+}
+
+.sessions-pattern {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+}
+
+.sessions-pattern-hint {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.sessions-table {
+  font-variant-numeric: tabular-nums;
+
+  /* The session's start, a link rather than a header cell's grey. */
+  tbody th {
+    font-weight: 400;
+    background: none;
+    border-bottom: none;
+  }
+}
+
+.sessions-more {
+  align-self: flex-start;
+}

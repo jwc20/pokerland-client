@@ -403,6 +403,16 @@ code {
   }
 }
 
+/* A hand whose money went in before the river, with the hero's equity then (A4). */
+.history-allin {
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 12px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+
 /* The hero's hand by name after their cards, e.g. "8♠ 8♥ · Snowmen". */
 .history-nickname {
   color: var(--text);

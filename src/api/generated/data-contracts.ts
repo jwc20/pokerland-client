@@ -41,6 +41,16 @@ export type UnitEnum = "percent" | "ratio" | "number";
 export type StyleEnum = "tag" | "lag" | "station" | "rock";
 
 /**
+ * * `` -
+ * * `preflop` - preflop
+ * * `flop` - flop
+ * * `turn` - turn
+ * *
+ * `river` - river
+ */
+export type StreetEnum = "preflop" | "flop" | "turn" | "river";
+
+/**
  * * `own_hand` - One of your hands
  * * `generated` - Generated
  * * `match` - A coached match
@@ -60,6 +70,12 @@ export type ScenarioGradingEnum = "exact" | "reference" | "rule" | "reflection";
  * * `sizing` - sizing
  */
 export type RuleCardKindEnum = "action" | "sizing";
+
+/**
+ * * `to_review` - to_review
+ * * `reviewed` - reviewed
+ */
+export type ReviewStateEnum = "to_review" | "reviewed";
 
 /**
  * * `value` - value
@@ -101,6 +117,28 @@ export type RaiseKindEnum = "bet" | "raise";
  * * `choice` - choice
  */
 export type QuestionKindEnum = "action" | "choice";
+
+/**
+ * * `open_bb` - open_bb
+ * * `limper_bb` - limper_bb
+ * * `tournament_open_bb` - tournament_open_bb
+ * * `three_bet_x` - three_bet_x
+ * * `size_slack` - size_slack
+ * * `short_stack_bb` - short_stack_bb
+ * * `buy_in_bb` - buy_in_bb
+ * * `orbit_min` - orbit_min
+ * * `orbit_max` - orbit_max
+ */
+export type PresetKeyEnum =
+  | "open_bb"
+  | "limper_bb"
+  | "tournament_open_bb"
+  | "three_bet_x"
+  | "size_slack"
+  | "short_stack_bb"
+  | "buy_in_bb"
+  | "orbit_min"
+  | "orbit_max";
 
 /**
  * * `arithmetic` - arithmetic
@@ -156,6 +194,22 @@ export type NullEnum = null;
 export type NoteRequestKindEnum = "showdown" | "read" | "label";
 
 /**
+ * * `value` - value
+ * * `bluff` - bluff
+ * * `semi_bluff` - semi_bluff
+ * * `protection` - protection
+ * * `pot_control` - pot_control
+ * * `blocking` - blocking
+ */
+export type NotePurposeEnum =
+  | "value"
+  | "bluff"
+  | "semi_bluff"
+  | "protection"
+  | "pot_control"
+  | "blocking";
+
+/**
  * * `coach` - coach
  * * `user` - user
  */
@@ -209,6 +263,27 @@ export type MatchOpponentEnum = "mystery" | "tag" | "lag" | "station" | "rock";
 export type MatchCoachEnum = "progress" | "1" | "2" | "3" | "4";
 
 /**
+ * * `open_limp` - open_limp
+ * * `open_size` - open_size
+ * * `three_bet_size` - three_bet_size
+ * * `short_stack_raise` - short_stack_raise
+ * * `premium_limp` - premium_limp
+ * * `short_buy_in` - short_buy_in
+ * * `hands_per_orbit` - hands_per_orbit
+ */
+export type LeakKeyEnum =
+  | "open_limp"
+  | "open_size"
+  | "three_bet_size"
+  | "short_stack_raise"
+  | "premium_limp"
+  | "short_buy_in"
+  | "hands_per_orbit";
+
+/** * `preflop` - preflop */
+export type LeakGroupEnum = "preflop";
+
+/**
  * * `names` - names
  * * `positions` - positions
  */
@@ -227,6 +302,14 @@ export type HandTagGroupEnum =
   | "game"
   | "stakes"
   | "format";
+
+/**
+ * * `note` - Note
+ * * `tag` - Tag
+ * * `review` - Review
+ * * `purpose` - Purpose
+ */
+export type HandNoteKindEnum = "note" | "tag" | "review" | "purpose";
 
 /**
  * * `post` - post
@@ -307,6 +390,8 @@ export type FacingEnum = "none" | "bet" | "raise";
  * * `strong` - strong
  */
 export type EvidenceEnum = "thin" | "strong";
+
+export type BlankEnum = "";
 
 /**
  * * `exact` - exact
@@ -596,6 +681,18 @@ export interface Config {
   max_chunk_bytes: number;
 }
 
+/** A session that was played on a day, in part or whole. */
+export interface DaySession {
+  id: number;
+  /** @format date-time */
+  start: string;
+  /** @format date-time */
+  end: string;
+  hands: number;
+  /** @format double */
+  net_bb: number;
+}
+
 export interface Debrief {
   /** One thing to fix: none after a match by the book. */
   fix: Fix | null;
@@ -791,6 +888,8 @@ export interface HandDay {
    * @format double
    */
   net_bb: number;
+  /** The sessions played that day, the first first. */
+  sessions: DaySession[];
 }
 
 /** A hand with everything its replay needs. */
@@ -812,6 +911,16 @@ export interface HandDetail {
   hero_cards: string[];
   hero_net: number;
   final_street: string;
+  /**
+   * The hero's share of the pots they could win when the money went in before the river, every live hand shown; null in every other hand.
+   * @format double
+   */
+  hero_allin_equity: number | null;
+  /**
+   * The hero's net in big blinds expected then, rake taken; null when equity is.
+   * @format double
+   */
+  hero_ev_net_bb: number | null;
   max_seats: number | null;
   button_seat: number;
   ante: number;
@@ -866,6 +975,81 @@ export interface HandEvent {
   description?: string;
 }
 
+/** Something the user wrote on a hand: a note, a tag, its review state, or why they made a bet or raise. */
+export interface HandNote {
+  id: number;
+  kind: HandNoteKindEnum;
+  /** note: its street, empty for the whole hand. purpose: the bet's street. */
+  street: string;
+  /** purpose: which of the hero's bets and raises, counted from 0 in the order made. */
+  bet: number | null;
+  /** tag: the tag. review: to_review or reviewed. purpose: value, bluff, ... */
+  value: string;
+  /** note: what the user wrote. */
+  text: string;
+  /** @format date-time */
+  updated: string;
+}
+
+/**
+ * A note to add to a hand, or to change the one it takes the place of: the street's note, the same tag, the
+ * review state, or the bet's purpose. Each kind takes its own fields.
+ */
+export interface HandNoteWriteRequest {
+  /**
+   * * `note` - Note
+   * * `tag` - Tag
+   * * `review` - Review
+   * * `purpose` - Purpose
+   */
+  kind: HandNoteKindEnum;
+  /**
+   * note: the street it is on; empty or left out for the whole hand.
+   *
+   * * `` -
+   * * `preflop` - preflop
+   * * `flop` - flop
+   * * `turn` - turn
+   * * `river` - river
+   */
+  street?: StreetEnum | BlankEnum;
+  /**
+   * note: what to say.
+   * @minLength 1
+   * @maxLength 2000
+   */
+  text?: string;
+  /**
+   * tag: a word or two, e.g. cooler.
+   * @minLength 1
+   * @maxLength 32
+   */
+  tag?: string;
+  /**
+   * review: the hand's state.
+   *
+   * * `to_review` - to_review
+   * * `reviewed` - reviewed
+   */
+  review?: ReviewStateEnum;
+  /**
+   * purpose: which of the hero's bets and raises, counted from 0.
+   * @min 0
+   */
+  bet?: number;
+  /**
+   * purpose: why they made it.
+   *
+   * * `value` - value
+   * * `bluff` - bluff
+   * * `semi_bluff` - semi_bluff
+   * * `protection` - protection
+   * * `pot_control` - pot_control
+   * * `blocking` - blocking
+   */
+  purpose?: NotePurposeEnum;
+}
+
 export interface HandPlayer {
   seat: number;
   name: string;
@@ -912,6 +1096,16 @@ export interface HandSummary {
   hero_cards: string[];
   hero_net: number;
   final_street: string;
+  /**
+   * The hero's share of the pots they could win when the money went in before the river, every live hand shown; null in every other hand.
+   * @format double
+   */
+  hero_allin_equity: number | null;
+  /**
+   * The hero's net in big blinds expected then, rake taken; null when equity is.
+   * @format double
+   */
+  hero_ev_net_bb: number | null;
 }
 
 /** Hands that share a position, game, cash-game stakes or format, and how they went. */
@@ -1021,6 +1215,64 @@ export interface Label {
   vpip: number;
   aggression: number;
   hands: number;
+}
+
+/** A leak check over the hero's hands: how often they broke one of the lectures' rules of thumb (B3). */
+export interface Leak {
+  /**
+   * * `open_limp` - open_limp
+   * * `open_size` - open_size
+   * * `three_bet_size` - three_bet_size
+   * * `short_stack_raise` - short_stack_raise
+   * * `premium_limp` - premium_limp
+   * * `short_buy_in` - short_buy_in
+   * * `hands_per_orbit` - hands_per_orbit
+   */
+  key: LeakKeyEnum;
+  /** * `preflop` - preflop */
+  group: LeakGroupEnum;
+  /** Times the rule was broken out of the chances to keep it; null for hands per orbit. */
+  share: Stat | null;
+  /**
+   * hands_per_orbit: hands played (VPIP) per orbit, an orbit being as many hands as players dealt in.
+   * @format double
+   */
+  rate: number | null;
+  /**
+   * open_size: the average open in big blinds. three_bet_size: in raises.
+   * @format double
+   */
+  average: number | null;
+  /** Sizes: the chances taken smaller than the standard. */
+  below: number | null;
+  /** Sizes: the chances taken bigger than the standard. */
+  above: number | null;
+  /**
+   * The net, in big blinds, of the hands broken.
+   * @format double
+   */
+  net_broken_bb: number | null;
+  /**
+   * The net, in big blinds, of the other chances.
+   * @format double
+   */
+  net_kept_bb: number | null;
+  /** The trend: each month with chances, the oldest first. */
+  months: LeakMonth[];
+}
+
+export interface LeakMonth {
+  /** A month such as "2026-10". */
+  month: string;
+  /** Times the rule was broken; for hands per orbit, the hands played. */
+  did: number;
+  /** The chances to keep it; null for hands per orbit. */
+  could: number | null;
+  /**
+   * Hands per orbit; null for the other checks.
+   * @format double
+   */
+  rate: number | null;
 }
 
 /** The moves the decision allows. Amounts are chips, or cents with a currency. */
@@ -1274,6 +1526,11 @@ export interface NoteRequestRequest {
   withdraw?: boolean;
 }
 
+export interface NoteTag {
+  tag: string;
+  hands: number;
+}
+
 /** The numbers behind a decision, as practice.spots works them out. Amounts are chips. */
 export interface Numbers {
   street: string;
@@ -1324,6 +1581,20 @@ export interface PaginatedHandSummaryList {
   results: HandSummary[];
 }
 
+export interface PaginatedSessionList {
+  /**
+   * @format uri
+   * @example "http://api.example.org/accounts/?cursor=cD00ODY%3D""
+   */
+  next?: string | null;
+  /**
+   * @format uri
+   * @example "http://api.example.org/accounts/?cursor=cj0xJnA9NDg3"
+   */
+  previous?: string | null;
+  results: Session[];
+}
+
 export interface PasswordChangeRequest {
   /**
    * @minLength 1
@@ -1362,6 +1633,73 @@ export interface PasswordResetRequest {
    * @minLength 1
    */
   email: string;
+}
+
+/** New values for some of the leak checks' presets; null puts one back to the course value. */
+export interface PatchedPresetsUpdateRequest {
+  /**
+   * Open-raise in cash games to, in big blinds
+   * @format double
+   * @min 2
+   * @max 6
+   */
+  open_bb?: number | null;
+  /**
+   * Plus, for each limper, in big blinds
+   * @format double
+   * @min 0
+   * @max 3
+   */
+  limper_bb?: number | null;
+  /**
+   * Open-raise in tournaments to, in big blinds
+   * @format double
+   * @min 2
+   * @max 6
+   */
+  tournament_open_bb?: number | null;
+  /**
+   * 3-bet to this many times the raise, plus one more for each caller
+   * @format double
+   * @min 2
+   * @max 6
+   */
+  three_bet_x?: number | null;
+  /**
+   * A size this close to the standard keeps the rule: big blinds, or raises for a 3-bet
+   * @format double
+   * @min 0
+   * @max 2
+   */
+  size_slack?: number | null;
+  /**
+   * At or below this effective stack, in big blinds, move in instead of raising small
+   * @format double
+   * @min 5
+   * @max 25
+   */
+  short_stack_bb?: number | null;
+  /**
+   * Start every cash-game hand with at least this many big blinds
+   * @format double
+   * @min 20
+   * @max 250
+   */
+  buy_in_bb?: number | null;
+  /**
+   * Hands to play an orbit, at least
+   * @format double
+   * @min 0
+   * @max 9
+   */
+  orbit_min?: number | null;
+  /**
+   * Hands to play an orbit, at most
+   * @format double
+   * @min 0.5
+   * @max 9
+   */
+  orbit_max?: number | null;
 }
 
 /** User model w/o password */
@@ -1471,6 +1809,66 @@ export interface PracticeSet {
   spots: Spot[];
 }
 
+/** A threshold of the leak checks: the user's value, the course value, and the range it may be set in. */
+export interface Preset {
+  /**
+   * * `open_bb` - open_bb
+   * * `limper_bb` - limper_bb
+   * * `tournament_open_bb` - tournament_open_bb
+   * * `three_bet_x` - three_bet_x
+   * * `size_slack` - size_slack
+   * * `short_stack_bb` - short_stack_bb
+   * * `buy_in_bb` - buy_in_bb
+   * * `orbit_min` - orbit_min
+   * * `orbit_max` - orbit_max
+   */
+  key: PresetKeyEnum;
+  /** @format double */
+  value: number;
+  /**
+   * The course value.
+   * @format double
+   */
+  default: number;
+  /** @format double */
+  min: number;
+  /** @format double */
+  max: number;
+  label: string;
+  /** The lectures it comes from, e.g. JHU 3. */
+  source: string;
+}
+
+/** How the hero's bets and raises of one purpose went on one street. */
+export interface PurposeStat {
+  /**
+   * * `value` - value
+   * * `bluff` - bluff
+   * * `semi_bluff` - semi_bluff
+   * * `protection` - protection
+   * * `pot_control` - pot_control
+   * * `blocking` - blocking
+   */
+  purpose: NotePurposeEnum;
+  street: string;
+  bets: number;
+  /** Bets nobody called or raised, taking the pot at once, out of all of them. */
+  took_pot: Stat;
+  /** Bets called, and not raised. */
+  called: number;
+  raised: number;
+  /**
+   * Their average size, as a share of everything in the middle before them.
+   * @format double
+   */
+  size: number | null;
+  /**
+   * The share of folds a pure bluff of the average size needs to break even: size ÷ (1 + size).
+   * @format double
+   */
+  needed: number | null;
+}
+
 export interface Question {
   /**
    * What to do, or a choice of four.
@@ -1570,6 +1968,56 @@ export interface Review {
   due: string;
 }
 
+/** A hand in the review queue. */
+export interface ReviewHand {
+  id: number;
+  site: string;
+  hand_id: string;
+  /** @format date-time */
+  played_at: string;
+  game: string;
+  currency: string;
+  play_money: boolean;
+  small_blind: number;
+  big_blind: number;
+  tournament_id: string;
+  table: string;
+  hero: string;
+  hero_position: string;
+  hero_cards: string[];
+  hero_net: number;
+  final_street: string;
+  /**
+   * The hero's share of the pots they could win when the money went in before the river, every live hand shown; null in every other hand.
+   * @format double
+   */
+  hero_allin_equity: number | null;
+  /**
+   * The hero's net in big blinds expected then, rake taken; null when equity is.
+   * @format double
+   */
+  hero_ev_net_bb: number | null;
+  /**
+   * When it was flagged to review.
+   * @format date-time
+   */
+  flagged: string;
+}
+
+/** The user's review queue: the hands that nag them, which they flagged to look at again [JHU 4]. */
+export interface ReviewQueue {
+  /** Hands flagged to review. */
+  to_review: number;
+  /** Hands reviewed since. */
+  reviewed: number;
+  /** The latest hands flagged to review, the latest first: up to 5. */
+  queue: ReviewHand[];
+  /** The user's own tags, the most used first. */
+  tags: NoteTag[];
+  /** Tags to offer anyone. */
+  suggested_tags: string[];
+}
+
 export interface ReviewRequestRequest {
   scenario: number;
   /**
@@ -1652,6 +2100,79 @@ export interface Sent {
   due: string;
 }
 
+/** A stretch of play: the user's hands with no gap of more than half an hour between one and the next (F1). */
+export interface Session {
+  id: number;
+  /** @format date-time */
+  start: string;
+  /** @format date-time */
+  end: string;
+  /** From the first hand's start to the last's. */
+  minutes: number;
+  hands: number;
+  /** Tables played at. */
+  tables: number;
+  /** The most tables played at once. */
+  most_tables: number;
+  /**
+   * The result in big blinds.
+   * @format double
+   */
+  net_bb: number;
+  /**
+   * The sample standard deviation of its hands' results in big blinds; null for fewer than two.
+   * @format double
+   */
+  bb_stdev: number | null;
+  /**
+   * The result adjusted for all-in equity, as /api/stats/ counts it.
+   * @format double
+   */
+  ev_net_bb: number;
+  /**
+   * The biggest pot, in big blinds.
+   * @format double
+   */
+  biggest_pot_bb: number;
+  /** Its hands flagged to review. */
+  flagged: number;
+  /** Its hands with any note, tag, review state or purpose. */
+  noted: number;
+}
+
+/** The hero's hands in one part of their sessions, and how they went. */
+export interface SessionGroup {
+  key: string;
+  hands: number;
+  /**
+   * Their results summed in big blinds.
+   * @format double
+   */
+  net_bb: number;
+  /**
+   * The sample standard deviation of their results in big blinds.
+   * @format double
+   */
+  bb_stdev: number | null;
+  /**
+   * net_bb adjusted for all-in equity.
+   * @format double
+   */
+  ev_net_bb: number;
+}
+
+/** The hero's results set against when and how they played (F1). */
+export interface SessionPatterns {
+  /** By whole hours into the session: "0" is the first hour, then "1", "2" and "3+". */
+  hours_in: SessionGroup[];
+  /** By the part of the day, in `tz`: night (0-6), morning, afternoon, evening (18-24). */
+  time_of_day: SessionGroup[];
+  /** By the day of the week, in `tz`: "1" is Monday, "7" Sunday. */
+  weekday: SessionGroup[];
+  /** By the tables played at once: "1", "2", "3" or "4+". */
+  tables: SessionGroup[];
+}
+
 /** A hand that showed their cards, read backwards: their biggest move and what they held. */
 export interface Showdown {
   /** The hand's number in the match. */
@@ -1724,9 +2245,9 @@ export interface Stat {
   ci_high: number | null;
 }
 
-/** The hero's statistics over a group of their hands: all of them, a position's, or a month's. */
+/** The hero's statistics over a group of their hands: all of them, a position's, a month's, or a stakes'. */
 export interface StatGroup {
-  /** "all", a position such as "BTN", or a month such as "2026-10". */
+  /** "all", a position such as "BTN", a month such as "2026-10", or stakes as a stakes tag's value: "USD:5:10" (currency:small blind:big blind), ":100:200" for chips. */
   key: string;
   hands: number;
   /**
@@ -1739,6 +2260,23 @@ export interface StatGroup {
    * @format double
    */
   bb_stdev: number | null;
+  /**
+   * The hero's share of the rake, in big blinds: each pot's rake split by what the players put in, so some is paid in pots lost too.
+   * @format double
+   */
+  rake_bb: number;
+  /**
+   * net_bb adjusted for all-in equity: in a hand where the money went in before the river with every live hand shown, the net the hero could expect then; else the net.
+   * @format double
+   */
+  ev_net_bb: number;
+  /** Hands whose net is adjusted for all-in equity. */
+  all_ins: number;
+  /**
+   * net_bb with the rake taken from the pots the hero won added back: their results had there been none.
+   * @format double
+   */
+  net_before_rake_bb: number;
   /** Every statistic in tracker.parsing.facts.STATS, and the aggression frequency. */
   stats: StatSet;
 }
@@ -1993,6 +2531,30 @@ export interface HandsListParams {
   date?: string;
   /** With `stat`: only the hands where the hero took the chance (true) or let it go (false). */
   did?: boolean | null;
+  /**
+   * Only the hands in which the hero broke this check's rule, as /api/leaks/ counts it.
+   *
+   * * `open_limp` - open_limp
+   * * `open_size` - open_size
+   * * `three_bet_size` - three_bet_size
+   * * `short_stack_raise` - short_stack_raise
+   * * `premium_limp` - premium_limp
+   * * `short_buy_in` - short_buy_in
+   * @minLength 1
+   */
+  leak?:
+    | "open_limp"
+    | "open_size"
+    | "three_bet_size"
+    | "short_stack_raise"
+    | "premium_limp"
+    | "short_buy_in";
+  /**
+   * Only the hands the user tagged with this, e.g. cooler.
+   * @minLength 1
+   * @maxLength 32
+   */
+  note_tag?: string;
   /** Number of results to return per page. */
   page_size?: number;
   /**
@@ -2004,6 +2566,16 @@ export interface HandsListParams {
    * @minLength 1
    */
   result?: "won" | "lost" | "even";
+  /**
+   * Only the hands flagged to review, or those reviewed.
+   *
+   * * `to_review` - to_review
+   * * `reviewed` - reviewed
+   * @minLength 1
+   */
+  review?: "to_review" | "reviewed";
+  /** Only the hands of this session, by its id. */
+  session?: number;
   /**
    * Only the hands played from this day on, in `tz`.
    * @format date
@@ -2100,6 +2672,25 @@ export interface HandsRetrieveParams {
 
 export type HandsRetrieveData = HandDetail;
 
+export interface HandsNotesListParams {
+  id: number;
+}
+
+export type HandsNotesListData = HandNote[];
+
+export interface HandsNotesCreateParams {
+  id: number;
+}
+
+export type HandsNotesCreateData = HandNote;
+
+export interface HandsNotesDestroyParams {
+  id: number;
+  noteId: number;
+}
+
+export type HandsNotesDestroyData = any;
+
 export interface HandsDaysRetrieveParams {
   /**
    * The IANA time zone days begin and end in, e.g. "Europe/London".
@@ -2111,6 +2702,40 @@ export interface HandsDaysRetrieveParams {
 export type HandsDaysRetrieveData = HandCalendar;
 
 export type HandsTagsListData = HandTag[];
+
+export interface LeaksListParams {
+  /**
+   * The checks before the flop.
+   *
+   * * `preflop` - preflop
+   * @minLength 1
+   * @default "preflop"
+   */
+  group?: "preflop";
+  /**
+   * Only the hands played from this day on, in `tz`.
+   * @format date
+   */
+  since?: string;
+  /** Only the hands every one of these tags counts: their `key`s in /api/hands/tags/. Repeatable. */
+  tag?: string[];
+  /**
+   * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
+  /**
+   * Only the hands played up to the end of this day, in `tz`.
+   * @format date
+   */
+  until?: string;
+}
+
+export type LeaksListData = Leak[];
+
+export type LeaksPresetsListData = Preset[];
+
+export type LeaksPresetsPartialUpdateData = Preset[];
 
 export type PracticeAttemptsCreateData = AttemptResult;
 
@@ -2223,17 +2848,72 @@ export interface PracticeSetsTodayRetrieveParams {
 
 export type PracticeSetsTodayRetrieveData = PracticeSet;
 
+export type ReviewRetrieveData = ReviewQueue;
+
+export interface SessionsListParams {
+  /** The pagination cursor value. */
+  cursor?: string;
+  /** Number of results to return per page. */
+  page_size?: number;
+  /**
+   * Only the sessions begun from this day on.
+   * @format date
+   */
+  since?: string;
+  /**
+   * The IANA time zone days are counted in; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
+  /**
+   * Only the sessions begun up to the end of this day.
+   * @format date
+   */
+  until?: string;
+}
+
+export type SessionsListData = PaginatedSessionList;
+
+export interface SessionsRetrieveParams {
+  id: number;
+}
+
+export type SessionsRetrieveData = Session;
+
+export interface SessionsPatternsRetrieveParams {
+  /**
+   * Only the hands played from this day on, in `tz`.
+   * @format date
+   */
+  since?: string;
+  /** Only the hands every one of these tags counts: their `key`s in /api/hands/tags/. Repeatable. */
+  tag?: string[];
+  /**
+   * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
+  /**
+   * Only the hands played up to the end of this day, in `tz`.
+   * @format date
+   */
+  until?: string;
+}
+
+export type SessionsPatternsRetrieveData = SessionPatterns;
+
 export interface StatsListParams {
   /**
-   * One group of all the hands, or one per position, or one per month in `tz`.
+   * One group of all the hands, or one per position, one per month in `tz`, or one per cash-game stakes (leaving out tournaments, whose blinds go up every level).
    *
    * * `none` - none
    * * `position` - position
    * * `month` - month
+   * * `stakes` - stakes
    * @minLength 1
    * @default "none"
    */
-  group_by?: "none" | "position" | "month";
+  group_by?: "none" | "position" | "month" | "stakes";
   /**
    * Only the hands played from this day on, in `tz`.
    * @format date
@@ -2254,6 +2934,28 @@ export interface StatsListParams {
 }
 
 export type StatsListData = StatGroup[];
+
+export interface StatsPurposesListParams {
+  /**
+   * Only the hands played from this day on, in `tz`.
+   * @format date
+   */
+  since?: string;
+  /** Only the hands every one of these tags counts: their `key`s in /api/hands/tags/. Repeatable. */
+  tag?: string[];
+  /**
+   * The IANA time zone days and months are counted in, e.g. "Europe/London"; UTC if left out.
+   * @minLength 1
+   */
+  tz?: string;
+  /**
+   * Only the hands played up to the end of this day, in `tz`.
+   * @format date
+   */
+  until?: string;
+}
+
+export type StatsPurposesListData = PurposeStat[];
 
 export type TrackerConfigRetrieveData = Config;
 

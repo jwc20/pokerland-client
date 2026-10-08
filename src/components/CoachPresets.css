@@ -1,0 +1,60 @@
+.coach-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The label, the value and the course value in columns; stacked on a phone. */
+.coach-preset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 90px minmax(0, 0.8fr);
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 15px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr) 90px;
+
+    .coach-preset-course {
+      grid-column: 1 / -1;
+    }
+  }
+
+  label {
+    color: var(--text-h);
+  }
+  input {
+    box-sizing: border-box;
+    width: 100%;
+    height: 34px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 15px;
+    text-align: right;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.coach-preset-course {
+  font-size: 13px;
+  color: var(--text);
+
+  .link-button {
+    font-size: 13px;
+  }
+}
+
+.coach-presets-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+}

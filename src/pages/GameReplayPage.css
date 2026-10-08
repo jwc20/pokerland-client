@@ -41,6 +41,17 @@
   }
 }
 
+/* A4: the hero's equity when the money went in before the river, against what happened. */
+.replay-allin {
+  max-width: 760px;
+  padding: 8px 12px;
+  font-size: 15px;
+  color: var(--text-h);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
 /* The table and its controls, with the decision panel beside them; below them on narrow screens. */
 .replay-main {
   display: grid;

@@ -1,14 +1,17 @@
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
 import { errorMessage, hands } from '../api/client.ts'
-import type { HandDetail } from '../api/generated/data-contracts.ts'
+import type { HandDetail, NotePurposeEnum } from '../api/generated/data-contracts.ts'
 import CopyButton from '../components/CopyButton.tsx'
 import DecisionPanel from '../components/DecisionPanel.tsx'
+import NotesPanel from '../components/NotesPanel.tsx'
 import PlayingCard from '../components/PlayingCard.tsx'
 import ReplayControls from '../components/ReplayControls.tsx'
 import ReplayTimeline from '../components/ReplayTimeline.tsx'
-import { formatAmount, formatDateTime, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
-import { buildReplay, holeCardCount, type ReplaySeat } from '../replay.ts'
+import { formatAmount, formatBb, formatDateTime, formatShare, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
+import { heroBets, purposeOf, streetsReached, type PurposeControl } from '../notes.ts'
+import { buildReplay, holeCardCount, lastDecisionStreet, type ReplaySeat } from '../replay.ts'
+import { useHandNotes, useTagChoices } from '../useHandNotes.ts'
 import { useReplayPlayer } from '../useReplayPlayer.ts'
 import './GameReplayPage.css'
 
@@ -58,9 +61,23 @@ function Replay({ hand }: { hand: HandDetail }) {
   const [params] = useSearchParams()
   const player = useReplayPlayer(steps.length, Number(params.get('step')) || 0)
   const step = steps[player.index]
-  const money = (amount: number) => formatAmount(amount, hand.currency)
+  const money = (amount = 0) => formatAmount(amount, hand.currency)
   const heroSeat = step.seats.find((seat) => seat.name === hand.hero)
   const holeCards = holeCardCount(hand)
+  const notes = useHandNotes(hand.id)
+  const tagChoices = useTagChoices()
+  const bets = useMemo(() => heroBets(hand), [hand])
+  const streets = useMemo(() => streetsReached(hand), [hand])
+  const saved = notes.notes
+  const purposes: PurposeControl | undefined = saved && {
+    bets,
+    of: (bet) => purposeOf(saved, bet)?.value as NotePurposeEnum | undefined,
+    onChange: (bet, purpose) => {
+      const current = purposeOf(saved, bet)
+      if (purpose) void notes.save({ kind: 'purpose', bet, purpose })
+      else if (current) void notes.remove(current)
+    },
+  }
 
   // ← and → step, Home and End jump, the space bar plays and pauses.
   const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
@@ -93,6 +110,15 @@ function Replay({ hand }: { hand: HandDetail }) {
         <h1>{gameLabel(hand)}</h1>
         <p>{details.filter(Boolean).join(' · ')}</p>
       </header>
+
+      {hand.hero_allin_equity !== null && hand.hero_ev_net_bb !== null && (
+        <p className="replay-allin">
+          All-in {moneyIn(lastDecisionStreet(hand))} with{' '}
+          {formatShare(hand.hero_allin_equity)}: expected {formatBb(hand.hero_ev_net_bb)}, result{' '}
+          {formatBb(hand.hero_net / hand.big_blind)}. The expected figure is what your decisions were worth when the
+          money went in; the rest was the cards.
+        </p>
+      )}
 
       <div className="replay-main">
         <div className="replay-table">
@@ -145,8 +171,22 @@ function Replay({ hand }: { hand: HandDetail }) {
           </div>
         </div>
 
-        <DecisionPanel hand={hand} steps={steps} index={player.index} onSeek={player.seek} />
+        <DecisionPanel hand={hand} steps={steps} index={player.index} onSeek={player.seek} purposes={purposes} />
       </div>
+
+      {hand.hero && (
+        <NotesPanel
+          notes={saved}
+          streets={streets}
+          bets={bets}
+          tagChoices={tagChoices}
+          money={money}
+          error={notes.error}
+          onSave={notes.save}
+          onDelete={notes.remove}
+          onSeek={player.seek}
+        />
+      )}
 
       <details className="replay-phh">
         <summary>PHH notation</summary>
@@ -159,6 +199,11 @@ function Replay({ hand }: { hand: HandDetail }) {
       </details>
     </div>
   )
+}
+
+/** "before the flop", or "on the turn": when the money went in. */
+function moneyIn(street = 'preflop') {
+  return street === 'preflop' ? 'before the flop' : `on the ${street}`
 }
 
 /** A player: name, position and stack in a box, their cards, and what they did this street. */

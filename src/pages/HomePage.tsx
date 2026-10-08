@@ -4,7 +4,9 @@ import { errorMessage, hands } from '../api/client.ts'
 import type { HandCalendar, HandTag } from '../api/generated/data-contracts.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import { browserTimeZone } from '../calendar.ts'
+import DisciplineCard from '../components/DisciplineCard.tsx'
 import ResultsCalendar from '../components/ResultsCalendar.tsx'
+import ReviewQueue from '../components/ReviewQueue.tsx'
 import StreakCalendar from '../components/StreakCalendar.tsx'
 import TagChips from '../components/TagChips.tsx'
 import TagGauge from '../components/TagGauge.tsx'
@@ -91,12 +93,14 @@ function HomePage() {
               <ResultsCalendar days={dashboard.calendar.days} today={today} />
               <div className="home-grid">
                 <div className="home-column">
+                  <ReviewQueue />
                   <TagChips tags={dashboard.tags} selected={tag.key} onSelect={selectTag} />
                   <TagHands tag={tag} />
                 </div>
                 <div className="home-column home-rail">
                   <TagGauge tag={tag} />
                   <StreakCalendar calendar={dashboard.calendar} today={today} />
+                  <DisciplineCard short />
                 </div>
               </div>
             </>

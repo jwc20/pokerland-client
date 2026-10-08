@@ -2,14 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { errorMessage, hands, stats } from '../api/client.ts'
 import type { HandTag, StatGroup, StatSet, StatsListParams } from '../api/generated/data-contracts.ts'
-import { browserTimeZone } from '../calendar.ts'
+import { inViewerTimeZone } from '../calendar.ts'
+import DisciplineCard from '../components/DisciplineCard.tsx'
 import PositionBars from '../components/PositionBars.tsx'
+import PurposeCard from '../components/PurposeCard.tsx'
+import RakeCard from '../components/RakeCard.tsx'
 import StatTile, { ShareBar } from '../components/StatTile.tsx'
 import StyleQuadrant from '../components/StyleQuadrant.tsx'
 import WinRateRange from '../components/WinRateRange.tsx'
 import { formatBb, tagLabel } from '../handFormat.ts'
-import { historyUrl, monthDays, type HistoryFilters } from '../historyFilters.ts'
+import { historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
 import { enough, formatPct, STAT_INFO } from '../playerStats.ts'
+import { formatRate } from '../winRate.ts'
 import './MyGamePage.css'
 
 const PREFLOP: (keyof StatSet)[] = ['vpip', 'pfr', 'three_bet', 'fold_to_three_bet', 'steal', 'fold_to_steal', 'bb_defend']
@@ -38,15 +42,9 @@ interface Report {
 
 /** The hero's statistics in each grouping, with months counted in the viewer's time zone, or UTC if the API doesn't know it. */
 async function loadReport(filters: StatsListParams): Promise<Report> {
-  const load = (tz: string) =>
-    Promise.all((['none', 'position', 'month'] as const).map((group_by) => stats.statsList({ ...filters, group_by, tz })))
-  let responses
-  try {
-    responses = await load(browserTimeZone())
-  } catch (err) {
-    if (!(err instanceof Response && err.status === 400)) throw err
-    responses = await load('UTC')
-  }
+  const responses = await inViewerTimeZone((tz) =>
+    Promise.all((['none', 'position', 'month'] as const).map((group_by) => stats.statsList({ ...filters, group_by, tz }))),
+  )
   const [all, positions, months] = responses.map(({ data }) => data)
   return { all: all[0], positions, months }
 }
@@ -127,7 +125,7 @@ function MyGamePage() {
           {current.error}
         </p>
       ) : current?.report ? (
-        <ReportView report={current.report} base={base} />
+        <ReportView report={current.report} base={base} tags={tags} />
       ) : (
         <p>Loading…</p>
       )}
@@ -194,7 +192,7 @@ function Filters({
  * The report. Each figure links to the game history, narrowed to the hands it counts: a tile to its
  * chances, a position to its hands, a month to its days.
  */
-function ReportView({ report, base }: { report: Report; base: HistoryFilters }) {
+function ReportView({ report, base, tags }: { report: Report; base: HistoryFilters; tags?: HandTag[] }) {
   const { all, positions, months } = report
   const atPosition = (position: string) => [...base.tags, `position:${position}`]
   if (all.hands === 0) {
@@ -216,6 +214,16 @@ function ReportView({ report, base }: { report: Report; base: HistoryFilters }) 
             {formatBb((all.net_bb / all.hands) * 100)}/100
           </p>
           <WinRateRange stats={all} />
+          {all.all_ins > 0 && (
+            <p className="card-hint">
+              Adjusted for all-in equity: {formatRate((all.ev_net_bb / all.hands) * 100)} bb/100. In{' '}
+              {all.all_ins.toLocaleString()} {all.all_ins === 1 ? 'hand' : 'hands'} the money went in before the
+              river with every hand shown; counting what you could expect then instead of what came,{' '}
+              {all.net_bb >= all.ev_net_bb
+                ? `you ran ${formatBb(all.net_bb - all.ev_net_bb, false)} above it.`
+                : `you ran ${formatBb(all.ev_net_bb - all.net_bb, false)} below it.`}
+            </p>
+          )}
           <Link className="my-game-more" to={historyUrl(base)}>
             See these hands in Game History →
           </Link>
@@ -262,18 +270,13 @@ function ReportView({ report, base }: { report: Report; base: HistoryFilters }) 
           />
         </div>
       </section>
+      <DisciplineCard base={base} />
       <TileCard id="my-game-postflop" title="After the flop" tiles={POSTFLOP} stats={all.stats} base={base} />
       <TileCard id="my-game-showdown" title="Showdowns" tiles={SHOWDOWN} stats={all.stats} base={base} />
+      <PurposeCard base={base} />
+      <RakeCard base={base} tags={tags} />
     </>
   )
-}
-
-/** A month's days, cut to the page's own when they begin later or end earlier. ISO days compare as text. */
-function within(days: { since: string; until: string }, base: HistoryFilters) {
-  return {
-    since: base.since && base.since > days.since ? base.since : days.since,
-    until: base.until && base.until < days.until ? base.until : days.until,
-  }
 }
 
 function TileCard({
