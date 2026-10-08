@@ -30,9 +30,14 @@ export interface ReplayStep {
   board: string[]
 }
 
-/** The table before the hand's first event, and after each one. */
-export function buildReplay(hand: HandDetail): ReplayStep[] {
-  const money = (amount = 0) => formatAmount(amount, hand.currency)
+/** What a replay needs of a hand: a stored hand, or a practice spot's hand up to its decision. */
+export type ReplayHand = Pick<HandDetail, 'players' | 'events' | 'currency' | 'button_seat'>
+
+/** The table before the hand's first event, and after each one; `money` writes the amounts in the steps' text. */
+export function buildReplay(
+  hand: ReplayHand,
+  money: (amount?: number) => string = (amount = 0) => formatAmount(amount, hand.currency),
+): ReplayStep[] {
   let seats: ReplaySeat[] = hand.players.map((player) => ({
     seat: player.seat,
     name: player.name,
@@ -149,6 +154,6 @@ export function buildReplay(hand: HandDetail): ReplayStep[] {
 }
 
 /** How many hole cards each player has, for drawing the ones not shown yet: 4 in Omaha, 2 in hold'em. */
-export function holeCardCount(hand: HandDetail): number {
+export function holeCardCount(hand: Pick<HandDetail, 'game'>): number {
   return /Omaha/.test(hand.game) ? 4 : 2
 }

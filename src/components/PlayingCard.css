@@ -28,6 +28,14 @@
     border: 1px dashed var(--border);
   }
 
+  /* At the practice table's other seats. */
+  &.small {
+    width: 32px;
+    height: 44px;
+    font-size: 15px;
+    border-radius: 4px;
+  }
+
   /* In running text, e.g. the game history's Cards column. */
   &.inline {
     width: auto;
@@ -41,5 +49,16 @@
     &.red {
       color: var(--card-red);
     }
+  }
+}
+
+/* A four-colour deck, where a table asks for one: diamonds blue and clubs green, on the card's white face in either
+   theme. The suit's symbol still tells it; the colours pass the chart palette's colour-blind check with it. */
+.four-colour .playing-card:not(.inline) {
+  &.suit-d {
+    color: var(--card-blue);
+  }
+  &.suit-c {
+    color: var(--card-green);
   }
 }

@@ -1,0 +1,115 @@
+/* The moves, then the sizes. On phones it sticks to the bottom of the screen, above whatever scrolls. */
+.action-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  @media (max-width: 640px) {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    margin-inline: -16px;
+    border-radius: 0;
+    border-inline: none;
+    box-shadow: var(--shadow);
+  }
+
+  button {
+    font: inherit;
+    font-size: 15px;
+    padding: 8px 14px;
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-variant-numeric: tabular-nums;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.45;
+    }
+  }
+}
+
+.action-bar-moves {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+
+  button {
+    min-height: 44px;
+    font-weight: 600;
+  }
+}
+
+.action-bar-raise {
+  color: var(--accent) !important;
+  background: var(--accent-bg) !important;
+}
+
+.action-bar-size {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+
+  input[type='range'] {
+    flex: 1 1 160px;
+    accent-color: var(--accent);
+  }
+}
+
+.action-bar-presets {
+  display: flex;
+  gap: 4px;
+
+  button {
+    padding: 4px 10px;
+    font-size: 14px;
+
+    &[aria-pressed='true'] {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+}
+
+.action-bar-amount {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+
+  input {
+    width: 86px;
+    height: 34px;
+    box-sizing: border-box;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 15px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}

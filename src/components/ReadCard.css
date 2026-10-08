@@ -1,0 +1,166 @@
+.read-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+
+  > header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 14px;
+    background: var(--code-bg);
+    border-bottom: 1px solid var(--border);
+    border-radius: 7px 7px 0 0;
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    span {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+  h3 {
+    margin: 0 0 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+}
+
+/* A count per row: label left, "4 of 5" right. */
+.read-card-counts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 14px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-h);
+    white-space: nowrap;
+  }
+}
+
+.read-card-section {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+
+  p {
+    font-size: 14px;
+    color: var(--text-h);
+  }
+}
+
+.read-card-showdowns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.read-card-note {
+  color: var(--accent) !important;
+
+  span {
+    color: var(--text);
+  }
+}
+
+.read-card-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  margin-top: 4px;
+
+  > span {
+    width: 100%;
+    font-size: 13px;
+  }
+  button {
+    font: inherit;
+    font-size: 13px;
+    padding: 2px 9px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.read-card-reads {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 6px;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--text-h);
+  }
+}
+
+.read-card-evidence {
+  margin-left: 8px;
+  padding: 0 7px;
+  font-size: 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+
+  &.strong {
+    color: var(--accent);
+    border-color: var(--accent-border);
+  }
+}
+
+.read-card-by,
+.read-card-empty {
+  color: var(--text) !important;
+}
+
+.read-card-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  select {
+    flex: 1;
+    height: 32px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+}

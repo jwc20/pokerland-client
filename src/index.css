@@ -13,6 +13,19 @@
   --win: #067647;
   --loss: #d92d20;
   --card-red: #d92d20;
+  /* The four-colour deck's diamonds and clubs, on a card's white face in both themes. */
+  --card-blue: #2a78d6;
+  --card-green: #008300;
+
+  /* The practice table: its felt and rail, and the chips, smallest value first, in the chart palette's fixed
+     order (validated on the felt; the bet's amount is always written beside its chips). */
+  --felt: #e8f1ea;
+  --felt-rail: #c5d9cb;
+  --chip-1: #2a78d6;
+  --chip-2: #eb6834;
+  --chip-3: #1baf7a;
+  --chip-4: #eda100;
+  --chip-5: #e87ba4;
 
   /* The results calendar's scales, darker for more: losses pink, wins green
      (PiYG, which colour-blind readers can tell apart) around an even grey, and
@@ -67,6 +80,14 @@
     --win: #47cd89;
     --loss: #f97066;
     --card-red: #f97066;
+
+    --felt: #1f2a24;
+    --felt-rail: #34473b;
+    --chip-1: #3987e5;
+    --chip-2: #d95926;
+    --chip-3: #199e70;
+    --chip-4: #c98500;
+    --chip-5: #d55181;
 
     /* Brighter for more on the dark background. */
     --heat-empty: #212124;
@@ -400,3 +421,53 @@ code {
     color: var(--text);
   }
 }
+
+/* A link back to the page above, as at the top of a practice set. */
+.back-link {
+  font-size: 15px;
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+/* One dot per spot in the set: open, or the answer's grade, which its title names. */
+.practice-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    width: 14px;
+    height: 14px;
+    box-sizing: border-box;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+
+    &.good {
+      background: var(--win);
+      border-color: var(--win);
+    }
+    &.acceptable {
+      background: var(--heat-even);
+      border-color: var(--heat-even);
+    }
+    &.poor {
+      background: var(--loss);
+      border-color: var(--loss);
+    }
+    &.ungraded {
+      border-color: var(--text);
+    }
+  }
+}
+
