@@ -40,10 +40,11 @@ You need Node.js 20.19+ or 22.12+, and [pokerland-api](https://github.com/jwc20/
 git clone https://github.com/jwc20/pokerland-client.git
 cd pokerland-client
 npm install
+cp .env.example .env
 npm run dev    # http://localhost:5173
 ```
 
-The committed `.env.development` already points the app at <http://localhost:8000>. Create an account at
+The `.env` file, which git ignores, points the app at <http://localhost:8000>. Create an account at
 <http://localhost:5173/register>, copy the client token from Settings, and sign a tracker in to your local API:
 
 ```bash
@@ -66,18 +67,24 @@ pokerland-tracker login --api http://localhost:8000
 
 ```
 src/
-  pages/           Home, Game History, Replay, My game and Settings
+  pages/           Home, Game History, Replay, My game, Practice (its sets, the playbook, coached matches and their
+                   debriefs) and Settings
   components/      the home page's widgets, the hand table, playing cards, the replay's controls and decision panel,
-                   My game's stat tiles and charts, ...
+                   My game's stat tiles and charts, the practice table, action bar and feedback card, the coach's
+                   rail and read card, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
   calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
+  coach.ts         the coached match's stages and what each shows at the table; who a playbook card is for
   decision.ts      the numbers behind each of the hero's decisions: pot odds, MDF, bet sizes, effective stack, SPR, M
   handFormat.ts    amounts, stakes, big blinds, cards, hand nicknames and tag labels
   historyFilters.ts the game history's filters and sort, read from and written to its URL; every link to it
   playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
+  practice.ts      the action bar's bet sizes, a question's amounts in the table's unit, and the practice labels
   replay.ts        turns a hand's events into the replay's steps
+  table.ts         the practice table's geometry: seats on the felt, bets and the dealer button, chips, bb or chips
+  useUnit.ts       the practice table's unit (B flips it) and its four-colour deck, remembered on this device
   winRate.ts       bb/100 with its 95% range, and how many more hands would tell a winner from a loser
   index.css        light and dark colour tokens, and the styles the pages share
 ```
@@ -101,9 +108,10 @@ routes work on a reload.
 | `staging`    | `npm run deploy:staging`    | workers.dev, with preview URLs       |
 | `production` | `npm run deploy:production` | The custom domain in `wrangler.json` |
 
-- Each mode reads `.env.<mode>`, described in [`.env.example`](.env.example). `VITE_API_BASE_URL` is the API's base
-  URL, and the API must list the app's origin in its `CORS_ALLOWED_ORIGINS`. Only `VITE_` variables reach the app,
-  and they are public, so never put a secret in these files.
+- Each mode reads `.env`, then `.env.<mode>` on top, as [`.env.example`](.env.example) describes. Git ignores them,
+  so each machine and CI makes its own. `VITE_API_BASE_URL` is the API's base URL, and the API must list the app's
+  origin in its `CORS_ALLOWED_ORIGINS`. Only `VITE_` variables reach the app, and they are public, so never put a
+  secret in these files.
 - Sign in to Cloudflare with `npx wrangler login` locally. In CI, set `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID`.
 - Built assets are cached for a year (`public/_headers`). Each build writes `BUILD_ID` (the build time, unless you

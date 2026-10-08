@@ -1,0 +1,172 @@
+.feedback-card {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+  p {
+    font-size: 15px;
+    line-height: 1.45;
+  }
+}
+
+/* The grade in its status colour, beside its icon and name. */
+.feedback-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 20px;
+  }
+  .good & h2 {
+    color: var(--win);
+  }
+  .poor & h2 {
+    color: var(--loss);
+  }
+}
+
+.feedback-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 15px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.feedback-card-kind {
+  padding: 2px 10px;
+  font-size: 13px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 999px;
+}
+
+.feedback-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.feedback-card-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  margin: 0;
+
+  div {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  dt {
+    font-size: 13px;
+  }
+  dd {
+    margin: 2px 0 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+}
+
+.feedback-card-formula code {
+  font-size: 14px;
+}
+
+.feedback-card-ev {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    gap: 8px;
+    padding: 4px 12px;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-h);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+}
+
+.feedback-card-rule {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-left: 3px solid var(--accent);
+  background: var(--social-bg);
+
+  p {
+    color: var(--text-h);
+  }
+  footer {
+    margin-top: 4px;
+    font-size: 13px;
+  }
+}
+
+.feedback-card-note {
+  font-size: 14px !important;
+}
+
+/* The numbers behind the spot, label left and value right. */
+.feedback-card-numbers {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 2px 20px;
+  margin: 0;
+  font-size: 14px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 3px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-h);
+  }
+}
+
+.feedback-card-history {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.feedback-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}

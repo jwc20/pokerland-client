@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 
 const STEP_MS = 1000
 
-/** Moves through `length` replay steps by hand, or plays them at `speed` steps a second. */
-export function useReplayPlayer(length: number) {
-  const [index, setIndex] = useState(0)
+/** Moves through `length` replay steps by hand, or plays them at `speed` steps a second, from step `start`. */
+export function useReplayPlayer(length: number, start = 0) {
+  const [index, setIndex] = useState(() => Math.max(0, Math.min(length - 1, start)))
   const [playing, setPlaying] = useState(false)
   const [speed, setSpeed] = useState(1)
   const last = length - 1

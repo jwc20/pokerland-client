@@ -5,6 +5,8 @@ import { formatAmount, formatBb, streetLabel } from '../handFormat.ts'
 import type { ReplayStep } from '../replay.ts'
 import './DecisionPanel.css'
 
+type Stakes = Pick<HandDetail, 'currency' | 'big_blind'>
+
 const percent = (share: number) => share.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 })
 const decimal = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 })
 // With a no-break space, so "1 caller" wraps as one.
@@ -78,42 +80,62 @@ function DecisionPanel({
         <p className="decision-section">You had no decisions to make in this hand.</p>
       )}
 
-      <details className="decision-help">
-        <summary>How these are worked out</summary>
-        <dl>
-          <dt>Pot odds</dt>
-          <dd>
-            The pot against your call. Calling pays when your chance of winning beats the equity needed: your call ÷
-            the pot after it.
-          </dd>
-          <dt>Defend (MDF)</dt>
-          <dd>
-            Minimum defense frequency, pot ÷ (pot + bet). Fold more often and a bluff of that size profits with any
-            two cards.
-          </dd>
-          <dt>A bluff must work</dt>
-          <dd>Your bet ÷ (pot + your bet) of the time, to break even when it is called and loses.</dd>
-          <dt>Effective stack</dt>
-          <dd>The most you can still lose: your stack, or less when nobody still in can match it.</dd>
-          <dt>SPR</dt>
-          <dd>Stack-to-pot ratio: the effective stack ÷ the pot, when the flop came.</dd>
-          {m !== undefined && (
-            <>
-              <dt>M</dt>
-              <dd>
-                Harrington's M, your stack at the start of the hand ÷ (small blind + big blind + antes): the rounds
-                you would last by folding. MIT 15.S50's zones: dead below 2, stealing to 8, steal and re-steal to 12,
-                value-betting to 30, set-mining above.
-              </dd>
-            </>
-          )}
-        </dl>
-      </details>
+      <DecisionHelp m={m} />
     </aside>
   )
 }
 
-function DecisionFacts({ decision, hand, m }: { decision: Decision; hand: HandDetail; m?: number }) {
+/** The numbers behind a decision a practice spot asks you to make: what you face, its price, your stack. */
+export function SpotPanel({ decision, hand, m }: { decision: Decision; hand: Stakes; m?: number }) {
+  return (
+    <aside className="decision" aria-label="The numbers">
+      <header className="decision-header">
+        <h2>{streetLabel(decision.street)} decision</h2>
+      </header>
+      <DecisionFacts decision={decision} hand={hand} m={m} />
+      <DecisionHelp m={m} />
+    </aside>
+  )
+}
+
+/** How the panel's numbers are worked out. */
+function DecisionHelp({ m }: { m?: number }) {
+  return (
+    <details className="decision-help">
+      <summary>How these are worked out</summary>
+      <dl>
+        <dt>Pot odds</dt>
+        <dd>
+          The pot against your call. Calling pays when your chance of winning beats the equity needed: your call ÷
+          the pot after it.
+        </dd>
+        <dt>Defend (MDF)</dt>
+        <dd>
+          Minimum defense frequency, pot ÷ (pot + bet). Fold more often and a bluff of that size profits with any
+          two cards.
+        </dd>
+        <dt>A bluff must work</dt>
+        <dd>Your bet ÷ (pot + your bet) of the time, to break even when it is called and loses.</dd>
+        <dt>Effective stack</dt>
+        <dd>The most you can still lose: your stack, or less when nobody still in can match it.</dd>
+        <dt>SPR</dt>
+        <dd>Stack-to-pot ratio: the effective stack ÷ the pot, when the flop came.</dd>
+        {m !== undefined && (
+          <>
+            <dt>M</dt>
+            <dd>
+              Harrington's M, your stack at the start of the hand ÷ (small blind + big blind + antes): the rounds
+              you would last by folding. MIT 15.S50's zones: dead below 2, stealing to 8, steal and re-steal to 12,
+              value-betting to 30, set-mining above.
+            </dd>
+          </>
+        )}
+      </dl>
+    </details>
+  )
+}
+
+function DecisionFacts({ decision, hand, m }: { decision: Decision; hand: Stakes; m?: number }) {
   const money = (amount = 0) => formatAmount(amount, hand.currency)
   const bb = (amount = 0) => formatBb(amount / hand.big_blind, false)
   const chips = (amount = 0) => `${money(amount)} (${bb(amount)})`
@@ -137,22 +159,24 @@ function DecisionFacts({ decision, hand, m }: { decision: Decision; hand: HandDe
         )}
       </section>
 
-      <section className="decision-section">
-        <p className="decision-lead decision-move">{moveText(decision.move, chips)}</p>
-        {sizing && (
-          <dl className="decision-facts">
-            <Fact term="Size">
-              {money(sizing.amount)} into {money(sizing.potBefore)} ({percent(sizing.amount / sizing.potBefore)})
-            </Fact>
-            <Fact term="A bluff must work">{percent(sizing.breakEven)}</Fact>
-            {sizing.next && (
-              <Fact term={`${sizing.next.player}'s price`}>
-                {odds(sizing.next.price)}, needs {percent(sizing.next.price.toCall / sizing.next.price.pot)}
+      {decision.move && (
+        <section className="decision-section">
+          <p className="decision-lead decision-move">{moveText(decision.move, chips)}</p>
+          {sizing && (
+            <dl className="decision-facts">
+              <Fact term="Size">
+                {money(sizing.amount)} into {money(sizing.potBefore)} ({percent(sizing.amount / sizing.potBefore)})
               </Fact>
-            )}
-          </dl>
-        )}
-      </section>
+              <Fact term="A bluff must work">{percent(sizing.breakEven)}</Fact>
+              {sizing.next && (
+                <Fact term={`${sizing.next.player}'s price`}>
+                  {odds(sizing.next.price)}, needs {percent(sizing.next.price.toCall / sizing.next.price.pot)}
+                </Fact>
+              )}
+            </dl>
+          )}
+        </section>
+      )}
 
       <section className="decision-section">
         <dl className="decision-facts">

@@ -40,8 +40,8 @@ export interface Decision {
   /** The step before the hero acts; the step after shows what they did. */
   step: number
   street: string
-  /** What the hero did: a fold, check, call, bet or raise. */
-  move: HandEvent
+  /** What the hero did: a fold, check, call, bet or raise. None yet at a practice spot. */
+  move?: HandEvent
   /** The hero's chips behind. */
   stack: number
   /** The most the hero can still lose: their stack, or less when no opponent still in can match it. */
@@ -95,15 +95,28 @@ function effectiveStack(step: ReplayStep, hero: ReplaySeat): number {
   return Math.min(hero.stack, Math.max(0, ...others.map((seat) => seat.stack + seat.bet - hero.bet)))
 }
 
+/** What the decisions need of a hand: a stored hand, or a practice spot's hand up to its decision. */
+export type DecisionHand = Pick<HandDetail, 'players' | 'events' | 'button_seat' | 'hero'>
+
 /** Seats in the order they act after the flop: the first seat after the button first, the button last. */
-function postflopOrder(hand: HandDetail): number[] {
+function postflopOrder(hand: DecisionHand): number[] {
   const seats = hand.players.map((player) => player.seat).sort((a, b) => a - b)
   const button = seats.indexOf(hand.button_seat)
   return [...seats.slice(button + 1), ...seats.slice(0, button + 1)]
 }
 
 /** The hero's decisions in the order they came, from the hand and the steps `buildReplay` made of it. */
-export function heroDecisions(hand: HandDetail, steps: ReplayStep[]): Decision[] {
+export function heroDecisions(hand: DecisionHand, steps: ReplayStep[]): Decision[] {
+  return walk(hand, steps).decisions
+}
+
+/** The decision the hero faces once every event has happened, as at a practice spot: all but the move. */
+export function pendingDecision(hand: DecisionHand, steps: ReplayStep[]): Decision | undefined {
+  return walk(hand, steps).pending()
+}
+
+/** Goes through the hand's events, working out each of the hero's decisions as it reaches it. */
+function walk(hand: DecisionHand, steps: ReplayStep[]) {
   const starts = new Map(hand.players.map((player) => [player.name, player.stack]))
   const order = postflopOrder(hand)
   const seatOf = (step: ReplayStep, name?: string) => step.seats.find((seat) => seat.name === name)
@@ -112,45 +125,51 @@ export function heroDecisions(hand: HandDetail, steps: ReplayStep[]): Decision[]
   const heroAtFlop = flop && seatOf(flop, hand.hero)
   const spr = flop && heroAtFlop && !heroAtFlop.folded && flop.pot ? effectiveStack(flop, heroAtFlop) / flop.pot : undefined
 
-  const decisions: Decision[] = []
   let facing: Aggression | undefined
   let callers = 0
   let checks = 0
-  hand.events.forEach((event, i) => {
-    // steps[i] is the table before this event, steps[i + 1] after it.
+
+  /** The hero's decision at step `i` (the table before `move`, if they have made it), as things stand. */
+  function decide(i: number, street: string, move?: HandEvent): Decision | undefined {
     const step = steps[i]
     const hero = seatOf(step, hand.hero)
-    if (event.player === hand.hero && MOVES.has(event.type) && hero) {
-      const able = step.seats.filter((seat) => seat !== hero && !seat.folded && !seat.allIn)
-      const decision: Decision = {
-        step: i,
-        street: event.street,
-        move: event,
-        stack: hero.stack,
-        effectiveStack: effectiveStack(step, hero),
-        players: step.seats.filter((seat) => !seat.folded).length,
-        inPosition: able.length
-          ? able.every((seat) => order.indexOf(seat.seat) < order.indexOf(hero.seat))
-          : undefined,
-        spr: event.street === 'preflop' ? undefined : spr,
-        facing,
-        callers,
-        checks,
-        price: priceToCall(step, hero, starts),
-      }
-      if (facing && event.street !== 'preflop') {
-        decision.mdf = facing.potBefore / (facing.potBefore + (facing.event.amount ?? 0))
-      }
-      if ((event.type === 'bet' || event.type === 'raise') && event.amount) {
-        const potBefore = middle(step)
-        decision.sizing = { amount: event.amount, potBefore, breakEven: event.amount / (potBefore + event.amount) }
-        // The next opponent to act on this street, at the table as they decide.
-        const j = hand.events.findIndex((later, k) => k > i && later.player !== hand.hero && MOVES.has(later.type))
-        const answer = hand.events[j]
-        const caller = answer?.street === event.street ? seatOf(steps[j], answer.player) : undefined
-        if (caller) decision.sizing.next = { player: caller.name, price: priceToCall(steps[j], caller, starts) }
-      }
-      decisions.push(decision)
+    if (!hero) return undefined
+    const able = step.seats.filter((seat) => seat !== hero && !seat.folded && !seat.allIn)
+    const decision: Decision = {
+      step: i,
+      street,
+      move,
+      stack: hero.stack,
+      effectiveStack: effectiveStack(step, hero),
+      players: step.seats.filter((seat) => !seat.folded).length,
+      inPosition: able.length ? able.every((seat) => order.indexOf(seat.seat) < order.indexOf(hero.seat)) : undefined,
+      spr: street === 'preflop' ? undefined : spr,
+      facing,
+      callers,
+      checks,
+      price: priceToCall(step, hero, starts),
+    }
+    if (facing && street !== 'preflop') {
+      decision.mdf = facing.potBefore / (facing.potBefore + (facing.event.amount ?? 0))
+    }
+    if (move && (move.type === 'bet' || move.type === 'raise') && move.amount) {
+      const potBefore = middle(step)
+      decision.sizing = { amount: move.amount, potBefore, breakEven: move.amount / (potBefore + move.amount) }
+      // The next opponent to act on this street, at the table as they decide.
+      const j = hand.events.findIndex((later, k) => k > i && later.player !== hand.hero && MOVES.has(later.type))
+      const answer = hand.events[j]
+      const caller = answer?.street === move.street ? seatOf(steps[j], answer.player) : undefined
+      if (caller) decision.sizing.next = { player: caller.name, price: priceToCall(steps[j], caller, starts) }
+    }
+    return decision
+  }
+
+  const decisions: Decision[] = []
+  hand.events.forEach((event, i) => {
+    // steps[i] is the table before this event, steps[i + 1] after it.
+    if (event.player === hand.hero && MOVES.has(event.type)) {
+      const decision = decide(i, event.street, event)
+      if (decision) decisions.push(decision)
     }
 
     // What the next decision on this street faces.
@@ -159,7 +178,7 @@ export function heroDecisions(hand: HandDetail, steps: ReplayStep[]): Decision[]
       callers = 0
       checks = 0
     } else if (event.type === 'bet' || event.type === 'raise') {
-      facing = { event, potBefore: middle(step) }
+      facing = { event, potBefore: middle(steps[i]) }
       callers = 0
       checks = 0
     } else if (event.player !== hand.hero && event.type === 'call') {
@@ -168,11 +187,12 @@ export function heroDecisions(hand: HandDetail, steps: ReplayStep[]): Decision[]
       checks += 1
     }
   })
-  return decisions
+  const last = steps.length - 1
+  return { decisions, pending: () => decide(last, steps[last].street) }
 }
 
 /** Harrington's M in a tournament: the hero's stack at the start of the hand ÷ (small blind + big blind + antes). */
-export function heroM(hand: HandDetail): number | undefined {
+export function heroM(hand: Pick<HandDetail, 'players' | 'events' | 'hero' | 'tournament_id' | 'small_blind' | 'big_blind'>): number | undefined {
   const hero = hand.players.find((player) => player.name === hand.hero)
   if (!hand.tournament_id || !hero) return undefined
   const antes = hand.events.reduce(

@@ -1,0 +1,113 @@
+.match {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.match-play {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.match-header {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+
+    span {
+      font-weight: 400;
+      color: var(--text);
+    }
+  }
+  p {
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+  .win {
+    color: var(--win);
+  }
+  .loss {
+    color: var(--loss);
+  }
+}
+
+/* The table and your moves, with the coach's rail beside them; below them on narrow screens. */
+.match-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px 24px;
+
+  @media (min-width: 1001px) {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+
+.match-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match-log {
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.match-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match-ask {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.match-clock {
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+
+  &.low {
+    color: var(--loss);
+    font-weight: 600;
+  }
+}
+
+.match-next {
+  align-self: flex-start;
+  padding: 10px 20px !important;
+  font-size: 17px !important;
+}
+
+.match-over {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+
+  p {
+    font-size: 17px;
+    color: var(--text-h);
+  }
+}
+
+.match-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

@@ -5,7 +5,13 @@ import Navbar from './components/Navbar.tsx'
 import GameHistoryPage from './pages/GameHistoryPage.tsx'
 import GameReplayPage from './pages/GameReplayPage.tsx'
 import HomePage from './pages/HomePage.tsx'
+import MatchDebriefPage from './pages/MatchDebriefPage.tsx'
+import MatchNewPage from './pages/MatchNewPage.tsx'
+import MatchPage from './pages/MatchPage.tsx'
 import MyGamePage from './pages/MyGamePage.tsx'
+import PlaybookPage from './pages/PlaybookPage.tsx'
+import PracticePage from './pages/PracticePage.tsx'
+import PracticeSetPage from './pages/PracticeSetPage.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
 
@@ -44,6 +50,54 @@ function App() {
             element={
               <SignedInOnly>
                 <MyGamePage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice"
+            element={
+              <SignedInOnly>
+                <PracticePage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice/playbook"
+            element={
+              <SignedInOnly>
+                <PlaybookPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice/match/new"
+            element={
+              <SignedInOnly>
+                <MatchNewPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice/match/:id"
+            element={
+              <SignedInOnly>
+                <MatchPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice/match/:id/debrief"
+            element={
+              <SignedInOnly>
+                <MatchDebriefPage />
+              </SignedInOnly>
+            }
+          />
+          <Route
+            path="/practice/set/:id"
+            element={
+              <SignedInOnly>
+                <PracticeSetPage />
               </SignedInOnly>
             }
           />

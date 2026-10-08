@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { errorMessage, hands } from '../api/client.ts'
 import type { HandDetail } from '../api/generated/data-contracts.ts'
 import CopyButton from '../components/CopyButton.tsx'
@@ -54,7 +54,9 @@ function GameReplayPage() {
 
 function Replay({ hand }: { hand: HandDetail }) {
   const steps = useMemo(() => buildReplay(hand), [hand])
-  const player = useReplayPlayer(steps.length)
+  // ?step=N opens the replay at a step, as a practice spot's "Open the replay" does at its decision.
+  const [params] = useSearchParams()
+  const player = useReplayPlayer(steps.length, Number(params.get('step')) || 0)
   const step = steps[player.index]
   const money = (amount: number) => formatAmount(amount, hand.currency)
   const heroSeat = step.seats.find((seat) => seat.name === hand.hero)

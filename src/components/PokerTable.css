@@ -1,0 +1,259 @@
+/* The felt fills the box; seats, bets and the dealer button sit at points given as CSS variables, --x and --y on the
+   wide table and --tx and --ty on the upright one phones get. */
+.poker-table {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 400px;
+  max-height: 62vh; /* so the question below it stays near; the layout is in percent, so it squashes evenly */
+  margin-bottom: 12px; /* the hero's seat reaches a little below the felt */
+  user-select: none;
+
+  @media (max-width: 640px) {
+    aspect-ratio: 3 / 4;
+    min-height: 0;
+    max-height: none;
+    margin-bottom: 24px;
+  }
+}
+
+.poker-table-felt {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  ellipse {
+    fill: var(--felt);
+    stroke: var(--felt-rail);
+    stroke-width: 10px;
+  }
+  .tall {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    .wide {
+      display: none;
+    }
+    .tall {
+      display: inline;
+    }
+  }
+}
+
+.poker-table-seat,
+.poker-table-bet,
+.poker-table-dealer {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+
+  @media (max-width: 640px) {
+    left: var(--tx);
+    top: var(--ty);
+  }
+}
+
+.poker-table-middle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  transform: translate(-50%, -50%);
+}
+
+.poker-table-board {
+  display: flex;
+  gap: 5px;
+
+  .playing-card:not(.empty) {
+    animation: poker-table-deal 0.3s ease-out;
+  }
+  .playing-card.empty {
+    border-color: var(--felt-rail);
+  }
+
+  @media (max-width: 640px) {
+    gap: 3px;
+
+    .playing-card {
+      width: 34px;
+      height: 48px;
+      font-size: 15px;
+    }
+  }
+}
+
+.poker-table-pot {
+  padding: 2px 12px;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--felt-rail);
+  border-radius: 999px;
+}
+
+.poker-table-seat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  z-index: 1;
+  transition: opacity 0.2s;
+
+  &.folded {
+    opacity: 0.45;
+  }
+}
+
+.poker-table-cards {
+  display: flex;
+  gap: 4px;
+  min-height: 44px;
+
+  .playing-card {
+    animation: poker-table-deal 0.3s ease-out;
+  }
+  .poker-table-seat.hero & {
+    min-height: 64px;
+  }
+}
+
+.poker-table-box {
+  min-width: 96px;
+  max-width: 140px;
+  box-sizing: border-box;
+  padding: 4px 10px;
+  font-size: 14px;
+  line-height: 1.35;
+  text-align: center;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--text);
+  border-radius: 6px;
+
+  .poker-table-seat.hero & {
+    background: var(--code-bg);
+  }
+  .poker-table-seat.active & {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+
+  @media (max-width: 640px) {
+    min-width: 72px;
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+}
+
+.poker-table-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+
+  span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.poker-table-position {
+  flex: none;
+  padding: 0 5px;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 4px;
+}
+
+.poker-table-stack {
+  font-variant-numeric: tabular-nums;
+}
+
+.poker-table-action {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.poker-table-won {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--win);
+}
+
+/* The hero's hand by name, e.g. "Snowmen". */
+.poker-table-nickname {
+  font-size: 12px;
+  color: var(--text);
+}
+
+.poker-table-bet {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 2;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-h);
+  animation: poker-table-bet 0.25s ease-out;
+
+  span {
+    padding: 0 6px;
+    background: var(--bg);
+    border-radius: 999px;
+  }
+}
+
+.chip-stack ellipse {
+  stroke: var(--felt);
+  stroke-width: 1px;
+}
+
+.poker-table-dealer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #1d1d1f;
+  background: #fff;
+  border: 1px solid #c9c7cc;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--felt);
+}
+
+@keyframes poker-table-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes poker-table-bet {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poker-table *,
+  .poker-table *::before {
+    animation: none !important;
+    transition: none !important;
+  }
+}
