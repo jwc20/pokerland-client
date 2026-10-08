@@ -40,10 +40,11 @@ You need Node.js 20.19+ or 22.12+, and [pokerland-api](https://github.com/jwc20/
 git clone https://github.com/jwc20/pokerland-client.git
 cd pokerland-client
 npm install
+cp .env.example .env
 npm run dev    # http://localhost:5173
 ```
 
-The committed `.env.development` already points the app at <http://localhost:8000>. Create an account at
+The `.env` file, which git ignores, points the app at <http://localhost:8000>. Create an account at
 <http://localhost:5173/register>, copy the client token from Settings, and sign a tracker in to your local API:
 
 ```bash
@@ -107,9 +108,10 @@ routes work on a reload.
 | `staging`    | `npm run deploy:staging`    | workers.dev, with preview URLs       |
 | `production` | `npm run deploy:production` | The custom domain in `wrangler.json` |
 
-- Each mode reads `.env.<mode>`, described in [`.env.example`](.env.example). `VITE_API_BASE_URL` is the API's base
-  URL, and the API must list the app's origin in its `CORS_ALLOWED_ORIGINS`. Only `VITE_` variables reach the app,
-  and they are public, so never put a secret in these files.
+- Each mode reads `.env`, then `.env.<mode>` on top, as [`.env.example`](.env.example) describes. Git ignores them,
+  so each machine and CI makes its own. `VITE_API_BASE_URL` is the API's base URL, and the API must list the app's
+  origin in its `CORS_ALLOWED_ORIGINS`. Only `VITE_` variables reach the app, and they are public, so never put a
+  secret in these files.
 - Sign in to Cloudflare with `npx wrangler login` locally. In CI, set `CLOUDFLARE_API_TOKEN` and
   `CLOUDFLARE_ACCOUNT_ID`.
 - Built assets are cached for a year (`public/_headers`). Each build writes `BUILD_ID` (the build time, unless you
