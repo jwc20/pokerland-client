@@ -66,18 +66,24 @@ pokerland-tracker login --api http://localhost:8000
 
 ```
 src/
-  pages/           Home, Game History, Replay, My game and Settings
+  pages/           Home, Game History, Replay, My game, Practice (its sets, the playbook, coached matches and their
+                   debriefs) and Settings
   components/      the home page's widgets, the hand table, playing cards, the replay's controls and decision panel,
-                   My game's stat tiles and charts, ...
+                   My game's stat tiles and charts, the practice table, action bar and feedback card, the coach's
+                   rail and read card, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
   calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
+  coach.ts         the coached match's stages and what each shows at the table; who a playbook card is for
   decision.ts      the numbers behind each of the hero's decisions: pot odds, MDF, bet sizes, effective stack, SPR, M
   handFormat.ts    amounts, stakes, big blinds, cards, hand nicknames and tag labels
   historyFilters.ts the game history's filters and sort, read from and written to its URL; every link to it
   playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
+  practice.ts      the action bar's bet sizes, a question's amounts in the table's unit, and the practice labels
   replay.ts        turns a hand's events into the replay's steps
+  table.ts         the practice table's geometry: seats on the felt, bets and the dealer button, chips, bb or chips
+  useUnit.ts       the practice table's unit (B flips it) and its four-colour deck, remembered on this device
   winRate.ts       bb/100 with its 95% range, and how many more hands would tell a winner from a loser
   index.css        light and dark colour tokens, and the styles the pages share
 ```
