@@ -1,28 +1,31 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
 import type {
   AttemptRequestRequest,
   AttemptResult,
   PracticeSet,
-  ReasonEnum,
+  PracticeSetKindEnum,
   Spot,
 } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
-import ActionBar from '../components/ActionBar.tsx'
-import { SpotPanel } from '../components/DecisionPanel.tsx'
 import FeedbackCard from '../components/FeedbackCard.tsx'
-import PokerTable from '../components/PokerTable.tsx'
-import ReasonPicker from '../components/ReasonPicker.tsx'
-import { heroM, pendingDecision } from '../decision.ts'
-import { streetLabel } from '../handFormat.ts'
-import { fillAmounts, GRADE_LABELS } from '../practice.ts'
-import { buildReplay } from '../replay.ts'
-import { formatUnit, type Unit } from '../table.ts'
+import SpotQuestion, { type SpotAnswer } from '../components/SpotQuestion.tsx'
+import { fillAmounts, GRADE_LABELS, specAmount } from '../practice.ts'
+import type { Unit } from '../table.ts'
 import { useFourColour, useUnit } from '../useUnit.ts'
 import './PracticeSetPage.css'
 
-const KIND_LABELS = { daily: 'Today’s set', my_hands: 'My hands', generated: 'Generated', match: 'From a match' }
+const KIND_LABELS: Record<PracticeSetKindEnum, string> = {
+  daily: 'Today’s set',
+  my_hands: 'My hands',
+  generated: 'Generated',
+  match: 'From a match',
+  library: 'The library',
+  their_seat: 'Their seat',
+  shared: 'From your classes',
+  test: 'Aptitude test',
+}
 
 /** A practice set, one spot at a time: the table as it stood, the question, then the feedback. */
 function PracticeSetPage() {
@@ -167,38 +170,24 @@ function SpotView({
   last: boolean
 }) {
   const { scenario, attempt } = spot
-  const spec = scenario.spec
-  const amount = (chips = 0) => formatUnit(chips, spec.hand.currency, spec.hand.big_blind, unit)
-  const steps = useMemo(
-    () => buildReplay(spec.hand, (chips = 0) => formatUnit(chips, spec.hand.currency, spec.hand.big_blind, unit)),
-    [spec.hand, unit],
-  )
-  const step = steps[steps.length - 1]
-  const decision = useMemo(() => pendingDecision(spec.hand, steps), [spec.hand, steps])
-  const [panel, setPanel] = useState(true)
-  const [reason, setReason] = useState<ReasonEnum>()
-  const [confidence, setConfidence] = useState<number>()
+  const navigate = useNavigate()
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string>()
   const [again, setAgain] = useState(false)
-  const shownAt = useRef(0)
+  // A spot from one of your own hold'em hands can be played on from its decision, against bots modelled on the others.
+  const playable = scenario.source === 'own_hand' && scenario.spec.hand?.game === "Hold'em No Limit"
 
-  useEffect(() => {
-    shownAt.current = performance.now()
-  }, [])
+  function playOut() {
+    practice.practiceTablesCreate({ scenario: scenario.id }).then(
+      ({ data }) => navigate(`/practice/play/${data.id}`),
+      (err) => setError(errorMessage(err)),
+    )
+  }
 
-  function send(answer: Pick<AttemptRequestRequest, 'action' | 'amount' | 'choice'>) {
+  function send(answer: SpotAnswer) {
     if (sending || attempt) return
     setSending(true)
-    const request: AttemptRequestRequest = {
-      scenario: scenario.id,
-      set: setId,
-      ...answer,
-      reason,
-      confidence,
-      time_taken: Math.round((performance.now() - shownAt.current) / 100) / 10,
-      tz: browserTimeZone(),
-    }
+    const request: AttemptRequestRequest = { scenario: scenario.id, set: setId, ...answer, tz: browserTimeZone() }
     practice.practiceAttemptsCreate(request).then(
       ({ data }) => onAnswered(data),
       (err) => {
@@ -215,67 +204,24 @@ function SpotView({
     )
   }
 
-  // 1 to 4 answer a choice.
-  const onKeyDown = useEffectEvent((event: KeyboardEvent) => {
-    const target = event.target as HTMLElement
-    if (attempt || spec.question.kind !== 'choice' || target.closest('input, select, textarea')) return
-    const index = Number(event.key) - 1
-    if (index >= 0 && index < (spec.question.options?.length ?? 0)) {
-      event.preventDefault()
-      send({ choice: index })
-    }
-  })
-  useEffect(() => {
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [])
-
   const result = attempt?.answer.result
   return (
-    <div className="practice-spot">
-      <div className="practice-spot-heading">
-        <p className="practice-spot-count">
-          Spot {number} of {total} · {streetLabel(step.street)}
-          {spot.review && ' · coming back for another look'}
-        </p>
-        <h2 className="practice-prompt">{fillAmounts(spec.question.prompt, spec.question.amounts, amount)}</h2>
-      </div>
-
-      <div className={spec.panel && panel && decision ? 'practice-spot-main with-panel' : 'practice-spot-main'}>
-        <div className="practice-spot-table">
-          <PokerTable
-            step={step}
-            hand={spec.hand}
-            labels={spec.labels}
-            unit={unit}
-            revealed={spec.revealed}
-            actor={attempt ? undefined : spec.hand.hero}
-            fourColour={fourColour}
-          />
-          <p className="practice-spot-log" aria-live="polite">
-            {streetLabel(step.street)} – {step.text}
-          </p>
-          <details className="practice-spot-history">
-            <summary>Hand log</summary>
-            <ol>
-              {steps.slice(1).map((past, i) => (
-                <li key={i}>
-                  {streetLabel(past.street)} – {past.text}
-                </li>
-              ))}
-            </ol>
-          </details>
-        </div>
-        {spec.panel && decision && panel && <SpotPanel decision={decision} hand={spec.hand} m={heroM(spec.hand)} />}
-      </div>
-
+    <SpotQuestion
+      scenario={scenario}
+      heading={`Spot ${number} of ${total}${spot.review ? ' · coming back for another look' : ''}`}
+      unit={unit}
+      fourColour={fourColour}
+      study
+      answered={Boolean(attempt)}
+      busy={sending}
+      onAnswer={send}
+    >
       {error && (
         <p className="error-message" role="alert">
           {error}
         </p>
       )}
-
-      {attempt ? (
+      {attempt && (
         <FeedbackCard
           scenario={scenario}
           attempt={attempt}
@@ -288,80 +234,28 @@ function SpotView({
               <button type="button" className="link-button" disabled={again} onClick={againLater}>
                 {again ? 'It will come back tomorrow' : 'Again later'}
               </button>
-              {result && (
+              {result?.hand && (
                 <Link className="link-button" to={`/games/${result.hand}?step=${result.step}`}>
                   Open the replay
                 </Link>
               )}
+              {playable && (
+                <button type="button" className="link-button" onClick={playOut}>
+                  Play it out
+                </button>
+              )}
             </>
           }
         />
-      ) : spec.question.kind === 'choice' ? (
-        <div className="practice-choices" role="group" aria-label="Answers">
-          {(spec.question.options ?? []).map((option, i) => (
-            <button key={option} type="button" disabled={sending} onClick={() => send({ choice: i })}>
-              <span className="practice-choice-key">{i + 1}</span>
-              {option}
-            </button>
-          ))}
-        </div>
-      ) : (
-        spec.legal && (
-          <div className="practice-answer">
-            <ReasonPicker value={reason} onChange={setReason} />
-            <Confidence value={confidence} onChange={setConfidence} />
-            <ActionBar
-              legal={spec.legal}
-              pot={step.seats.reduce((sum, seat) => sum + seat.bet, step.pot)}
-              currency={spec.hand.currency}
-              bigBlind={spec.hand.big_blind}
-              unit={unit}
-              allInOnly={spec.question.all_in_only}
-              disabled={sending}
-              onAct={(action, amount) => send({ action, amount })}
-            />
-          </div>
-        )
       )}
-
-      {spec.panel && decision && (
-        <button type="button" className="link-button practice-panel-toggle" onClick={() => setPanel(!panel)}>
-          {panel ? 'Hide the numbers' : 'Show the numbers'}
-        </button>
-      )}
-    </div>
-  )
-}
-
-/** How sure you are, 1 to 5: kept with the answer, for the spots no answer can check. */
-function Confidence({ value, onChange }: { value?: number; onChange: (value?: number) => void }) {
-  return (
-    <fieldset className="practice-confidence">
-      <legend>
-        How sure? <span>(optional)</span>
-      </legend>
-      {[1, 2, 3, 4, 5].map((level) => (
-        <label key={level}>
-          <input
-            type="radio"
-            name="confidence"
-            checked={value === level}
-            onChange={() => onChange(level)}
-            onClick={() => value === level && onChange(undefined)}
-          />
-          {level}
-        </label>
-      ))}
-    </fieldset>
+    </SpotQuestion>
   )
 }
 
 /** A spot's question with its amounts in the unit chosen. */
 function promptText(spot: Spot, unit: Unit) {
-  const { hand, question } = spot.scenario.spec
-  return fillAmounts(question.prompt, question.amounts, (chips) =>
-    formatUnit(chips, hand.currency, hand.big_blind, unit),
-  )
+  const { spec } = spot.scenario
+  return fillAmounts(spec.question.prompt, spec.question.amounts, (chips) => specAmount(spec, unit, chips))
 }
 
 /** The set once every spot is answered: each spot's grade, and where to go next. */

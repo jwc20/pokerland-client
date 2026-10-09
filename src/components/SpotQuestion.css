@@ -1,0 +1,167 @@
+/* A practice spot as it is asked: the prompt, the table (or a toy game's setup), and the ways to answer. */
+.practice-spot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.practice-spot-count {
+  font-size: 14px;
+}
+
+.practice-prompt {
+  margin: 2px 0 0;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+/* The table, with the decision panel beside it; below it on narrow screens. */
+.practice-spot-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px 24px;
+
+  @media (min-width: 901px) {
+    &.with-panel {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+  }
+}
+
+.practice-spot-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.practice-spot-log {
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+/* A spot with no table, such as a toy game: its setup in words. */
+.practice-spot-setup {
+  max-width: 760px;
+  margin: 6px 0 10px;
+  padding: 14px 18px;
+  font-size: 16px;
+  color: var(--text-h);
+  background: var(--social-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
+.practice-spot-history {
+  font-size: 14px;
+
+  summary {
+    width: max-content;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  ol {
+    margin: 6px 0 0;
+    padding-left: 22px;
+  }
+}
+
+.practice-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.practice-confidence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    float: left;
+    margin-right: 6px;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-h);
+
+    span {
+      font-weight: 400;
+      color: var(--text);
+    }
+  }
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--text-h);
+    cursor: pointer;
+  }
+  input {
+    margin: 0;
+    accent-color: var(--accent);
+  }
+}
+
+/* A choice of four, as quick to tap as to press 1 to 4. */
+.practice-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+  }
+}
+
+.practice-choice-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.practice-panel-toggle {
+  align-self: flex-start;
+}

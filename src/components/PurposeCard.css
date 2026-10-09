@@ -1,0 +1,29 @@
+.purpose-card-line {
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.purpose-table {
+  font-variant-numeric: tabular-nums;
+
+  /* The row's purpose, not a header cell's grey. */
+  tbody th {
+    font-weight: 600;
+    background: none;
+    border-bottom: none;
+  }
+  td:not(:first-of-type) {
+    text-align: right;
+  }
+  thead th:nth-child(n + 3) {
+    text-align: right;
+  }
+}
+
+.purpose-table-caption {
+  padding: 8px 12px;
+  font-size: 13px;
+  text-align: left;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}

@@ -157,3 +157,9 @@ export function buildReplay(
 export function holeCardCount(hand: Pick<HandDetail, 'game'>): number {
   return /Omaha/.test(hand.game) ? 4 : 2
 }
+
+/** The street the money went in on: that of the hand's last decision, after which the board only ran out. */
+export function lastDecisionStreet(hand: Pick<HandDetail, 'events'>): string | undefined {
+  const moves = new Set<HandEvent['type']>(['fold', 'check', 'call', 'bet', 'raise'])
+  return hand.events.findLast((event) => moves.has(event.type))?.street
+}

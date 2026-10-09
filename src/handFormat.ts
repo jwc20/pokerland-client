@@ -29,6 +29,11 @@ export function gameLabel(hand: Stakes): string {
   return `${hand.game} (${stakesLabel(hand)})`
 }
 
+/** A share from 0 to 1 as a whole percentage: "62%". */
+export function formatShare(share: number): string {
+  return share.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 })
+}
+
 /** A result in big blinds to a tenth: "+12.5 bb", "-3 bb". */
 export function formatBb(bb: number, signed = true): string {
   return `${bb.toLocaleString(undefined, { maximumFractionDigits: 1, signDisplay: signed ? 'exceptZero' : 'auto' })} bb`

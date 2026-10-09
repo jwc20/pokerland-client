@@ -50,10 +50,13 @@ function ReplayTimeline({
 }) {
   const segments = streetSegments(steps)
   const count = steps.length
+  // Where a step sits along the bar, in percent: the first at the start, the last at the end.
+  const at = (i: number) => (count > 1 ? (i / (count - 1)) * 100 : 0)
 
   function seek(event: PointerEvent<HTMLDivElement>) {
     const box = event.currentTarget.getBoundingClientRect()
-    onSeek(Math.floor(((event.clientX - box.left) / box.width) * count))
+    const share = Math.min(1, Math.max(0, (event.clientX - box.left) / box.width))
+    onSeek(Math.round(share * (count - 1)))
   }
 
   return (
@@ -89,7 +92,8 @@ function ReplayTimeline({
             style={{ flexGrow: segment.length }}
           />
         ))}
-        <span className="timeline-marker" style={{ left: `${(index / count) * 100}%` }} />
+        {/* Shifted by its own share of its width, so it stays inside the bar at either end. */}
+        <span className="timeline-marker" style={{ left: `${at(index)}%`, transform: `translateX(-${at(index)}%)` }} />
       </div>
       <div className="timeline-marks">
         {steps.map((step, i) => {
@@ -100,7 +104,7 @@ function ReplayTimeline({
               key={i}
               type="button"
               className={i === index ? 'timeline-mark current' : 'timeline-mark'}
-              style={{ left: `${((i + 0.5) / count) * 100}%` }}
+              style={{ left: `${at(i)}%` }}
               title={step.text}
               aria-label={`Go to: ${step.text}`}
               onClick={() => onSeek(i)}

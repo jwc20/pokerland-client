@@ -1,5 +1,7 @@
-import type { HandTag } from '../api/generated/data-contracts.ts'
-import { tagLabel } from '../handFormat.ts'
+import { useEffect, useState } from 'react'
+import { sessions } from '../api/client.ts'
+import type { HandTag, NoteTag, ReviewStateEnum, Session } from '../api/generated/data-contracts.ts'
+import { formatBb, tagLabel } from '../handFormat.ts'
 import {
   narrowed,
   RESULT_LABELS,
@@ -9,6 +11,9 @@ import {
   type HistorySort,
   type HistoryStat,
 } from '../historyFilters.ts'
+import { LEAK_INFO } from '../leaks.ts'
+import { REVIEW_LABELS } from '../notes.ts'
+import { formatMinutes, sessionTimes } from '../sessions.ts'
 import { STAT_INFO } from '../playerStats.ts'
 
 const TAG_GROUPS = [
@@ -31,10 +36,13 @@ const STREETS = [
 function HistoryFilterBar({
   filters,
   tags,
+  noteTags,
   onChange,
 }: {
   filters: HistoryFilters
   tags?: HandTag[]
+  /** The user's own tags from their notes, such as "cooler". */
+  noteTags?: NoteTag[]
   onChange: (update: (filters: HistoryFilters) => HistoryFilters) => void
 }) {
   const set = (changes: Partial<HistoryFilters>) => onChange((latest) => ({ ...latest, ...changes }))
@@ -126,6 +134,37 @@ function HistoryFilterBar({
           </label>
         )}
         <label>
+          Review
+          <select
+            value={filters.review ?? ''}
+            onChange={(event) => set({ review: (event.target.value || undefined) as ReviewStateEnum | undefined })}
+          >
+            <option value="">Any hand</option>
+            {Object.entries(REVIEW_LABELS).map(([value, text]) => (
+              <option key={value} value={value}>
+                {text}
+              </option>
+            ))}
+          </select>
+        </label>
+        {noteTags?.length || filters.noteTag ? (
+          <label>
+            Your tag
+            <select value={filters.noteTag ?? ''} onChange={(event) => set({ noteTag: event.target.value || undefined })}>
+              <option value="">Any</option>
+              {noteTags?.map((row) => (
+                <option key={row.tag} value={row.tag}>
+                  {row.tag} ({row.hands.toLocaleString()})
+                </option>
+              ))}
+              {/* A tag from the URL that the list doesn't have still shows as chosen. */}
+              {filters.noteTag && !noteTags?.some((row) => row.tag === filters.noteTag) && (
+                <option value={filters.noteTag}>{filters.noteTag}</option>
+              )}
+            </select>
+          </label>
+        ) : null}
+        <label>
           Sort
           <select
             value={filters.sort ?? 'newest'}
@@ -144,6 +183,17 @@ function HistoryFilterBar({
           </button>
         )}
       </div>
+      {filters.session && (
+        <SessionHint id={filters.session} onClear={() => set({ session: undefined })} />
+      )}
+      {filters.leak && (
+        <p className="card-hint">
+          <strong>{LEAK_INFO[filters.leak].label}</strong>: showing the hands where you broke the rule.{' '}
+          <button type="button" className="link-button" onClick={() => set({ leak: undefined })}>
+            Show every hand
+          </button>
+        </p>
+      )}
       {stat && (
         <p className="card-hint">
           <strong>{stat.label}</strong>: {stat.hint}{' '}
@@ -155,6 +205,38 @@ function HistoryFilterBar({
         </p>
       )}
     </div>
+  )
+}
+
+/** Which session the history shows: its day, times and result, once they load. */
+function SessionHint({ id, onClear }: { id: number; onClear: () => void }) {
+  const [session, setSession] = useState<{ id: number; row?: Session }>()
+  useEffect(() => {
+    let active = true
+    sessions.sessionsRetrieve({ id }).then(
+      ({ data }) => {
+        if (active) setSession({ id, row: data })
+      },
+      () => {
+        if (active) setSession({ id }) // the hands still show; the hint names the session by number
+      },
+    )
+    return () => {
+      active = false
+    }
+  }, [id])
+  const row = session?.id === id ? session.row : undefined
+  return (
+    <p className="card-hint">
+      <strong>A session</strong>:{' '}
+      {row
+        ? `${new Date(row.start).toLocaleDateString(undefined, { dateStyle: 'medium' })}, ${sessionTimes(row.start, row.end)} ` +
+          `(${formatMinutes(row.minutes)}): ${row.hands.toLocaleString()} hands, ${formatBb(row.net_bb)}.`
+        : `number ${id}.`}{' '}
+      <button type="button" className="link-button" onClick={onClear}>
+        Show every hand
+      </button>
+    </p>
   )
 }
 

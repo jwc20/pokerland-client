@@ -1,0 +1,178 @@
+.spot-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  text-align: left;
+  background: var(--social-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.spot-builder-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.spot-builder-count {
+  font-size: 15px;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.spot-builder-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spot-builder-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* A condition: what it says, then its controls. */
+.spot-builder-chip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+
+  .link-button {
+    font-size: 14px;
+  }
+  .excluded & {
+    border-color: var(--text);
+  }
+}
+
+.spot-builder-text {
+  flex: 1 1 200px;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.spot-builder-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-border);
+  border-radius: 6px;
+}
+
+.spot-builder-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-h);
+
+  .link-button {
+    font-size: 14px;
+    font-weight: 400;
+  }
+}
+
+.spot-builder-editor {
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  .card-hint {
+    flex-basis: 100%;
+    font-size: 14px;
+  }
+  .error-message {
+    font-size: 13px;
+  }
+}
+
+.spot-builder-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  label {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-h);
+  }
+  input {
+    height: auto;
+  }
+}
+
+.spot-builder-hands {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  .range-grid {
+    max-width: 420px;
+  }
+}
+
+.spot-builder-add {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  .link-button {
+    font-size: 15px;
+  }
+}
+
+.spot-builder-picker select {
+  font: inherit;
+  font-size: 15px;
+  height: 38px;
+  padding: 0 10px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.spot-builder-save {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+
+  .button {
+    height: 38px;
+  }
+}
+
+.spot-builder-link code {
+  overflow-wrap: anywhere;
+}

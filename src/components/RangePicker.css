@@ -1,0 +1,86 @@
+/* The grid beside its controls; on narrow screens the controls go under it. */
+.range-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) minmax(220px, 1fr);
+  gap: 16px 24px;
+  align-items: start;
+  text-align: left;
+
+  @media (max-width: 760px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.range-picker-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  .button {
+    align-self: flex-start;
+  }
+}
+
+.range-picker-share {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.range-picker-anchors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    margin-bottom: 6px;
+    padding: 0;
+    font-size: 14px;
+    color: var(--text);
+  }
+  button {
+    padding: 4px 10px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text-h);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.range-picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+
+  input {
+    padding: 6px 8px;
+    font: inherit;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+
+    &[aria-invalid='true'] {
+      border-color: var(--status-critical);
+    }
+  }
+}

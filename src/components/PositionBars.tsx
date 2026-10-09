@@ -8,13 +8,22 @@ import './PositionBars.css'
  * 95% range drawn across it once it has the hands for one. Money flows to late
  * position, so you would expect the button highest and the blinds below zero
  * [MIT 3]. With `positionUrl`, each row links to its position's hands.
+ *
+ * Any groups of hands can take the positions' place, as the sessions page's
+ * do: `labelOf` names a group's key and `heading` its column in the table.
  */
 function PositionBars({
   groups,
   positionUrl,
+  labelOf = (key) => key,
+  heading = 'Position',
+  labelWidth = 52,
 }: {
-  groups: StatGroup[]
+  groups: Pick<StatGroup, 'key' | 'hands' | 'net_bb' | 'bb_stdev'>[]
   positionUrl?: (position: string) => string
+  labelOf?: (key: string) => string
+  heading?: string
+  labelWidth?: number
 }) {
   const rows = groups.flatMap((group) => {
     const result = winRate(group)
@@ -22,24 +31,27 @@ function PositionBars({
   })
   if (!rows.length) return <p className="card-hint">No hands yet.</p>
 
-  // The scale runs from the lowest rate or range end to the highest, taking in zero.
-  const ends = rows.flatMap(({ rate, range }) => (range ? [rate, range.low, range.high] : [rate]))
+  // The scale runs from the lowest rate or range end to the highest, taking in zero. Once any group has the
+  // hands for a range, those groups set it: a group of three hands can be at +800 bb/100, and would flatten the
+  // rest. A faded bar beyond the scale stops at its end.
+  const ranged = rows.filter((row) => row.range)
+  const ends = (ranged.length ? ranged : rows).flatMap(({ rate, range }) => (range ? [rate, range.low, range.high] : [rate]))
   const from = Math.min(0, ...ends)
   const to = Math.max(0, ...ends)
   const margin = (to - from || 1) * 0.04
-  const at = (value: number) => ((value - from + margin) / (to - from + 2 * margin)) * 100
+  const at = (value: number) => ((Math.min(to, Math.max(from, value)) - from + margin) / (to - from + 2 * margin)) * 100
   const zero = at(0)
 
   return (
     <figure className="position-bars">
-      <div className="position-bars-grid">
+      <div className="position-bars-grid" style={{ gridTemplateColumns: `${labelWidth}px minmax(0, 1fr) auto auto` }}>
         {rows.map(({ group, rate, range }) => {
           const side = rate > 0 ? 'above' : rate < 0 ? 'below' : 'even'
           const rangeText = range ? `95% range ${formatRate(range.low)} to ${formatRate(range.high)}` : 'too few hands for a range'
-          const summary = `${group.key}: ${formatRate(rate)} bb/100 over ${group.hands.toLocaleString()} hands, ${rangeText}`
+          const summary = `${labelOf(group.key)}: ${formatRate(rate)} bb/100 over ${group.hands.toLocaleString()} hands, ${rangeText}`
           const cells = (
             <>
-              <span className="position-bars-label">{group.key}</span>
+              <span className="position-bars-label">{labelOf(group.key)}</span>
               <span className="position-bars-plot" aria-hidden="true">
                 <span className="position-bars-zero" style={{ left: `${zero}%` }} />
                 <span
@@ -86,14 +98,14 @@ function PositionBars({
       </div>
       <figcaption>
         The line across each bar is its 95% range; faded bars have fewer than {RANGE_MIN_HANDS} hands, too few for
-        one.
+        one, and stop at the scale's ends.
       </figcaption>
       <details className="position-bars-table">
         <summary>Show as a table</summary>
         <table>
           <thead>
             <tr>
-              <th scope="col">Position</th>
+              <th scope="col">{heading}</th>
               <th scope="col">Hands</th>
               <th scope="col">bb/100</th>
               <th scope="col">95% range</th>
@@ -102,7 +114,7 @@ function PositionBars({
           <tbody>
             {rows.map(({ group, rate, range }) => (
               <tr key={group.key}>
-                <th scope="row">{group.key}</th>
+                <th scope="row">{labelOf(group.key)}</th>
                 <td>{group.hands.toLocaleString()}</td>
                 <td>{formatRate(rate)}</td>
                 <td>{range ? `${formatRate(range.low)} to ${formatRate(range.high)}` : 'Too few hands'}</td>

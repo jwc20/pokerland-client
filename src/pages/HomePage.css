@@ -34,12 +34,30 @@
 .home-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'main rail'
+    'main left';
   align-items: start;
   gap: 16px;
 
   @media (max-width: 900px) {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+    grid-template-areas: 'main' 'rail' 'left';
   }
+}
+
+.home-main {
+  grid-area: main;
+}
+
+.home-rail {
+  grid-area: rail;
+}
+
+.home-rail-left {
+  grid-area: left;
 }
 
 .home-column {
@@ -50,23 +68,27 @@
 }
 
 /*
- * With room for it, the gauge and the streak calendar leave the page's column
- * for a rail beside it, level with the top of the page, and the column and the
- * rail are centred together.
+ * With room for both, the page's column stays centred like every other page's,
+ * and two rails sit outside its borders, level with the top of the page: the
+ * gauge and the streak calendar on the right, the discipline card on the left.
  */
-@media (min-width: 1540px) {
-  #root:has(.home-rail) {
-    margin-left: calc((100% - 1126px - 360px) / 2);
+@media (min-width: 1880px) {
+  .home-grid {
+    display: block;
   }
 
-  .home-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .home-rail,
+  .home-rail-left {
+    position: absolute;
+    top: 0;
+    width: 320px;
   }
 
   .home-rail {
-    position: absolute;
-    top: 0;
     left: calc(100% + 57px); /* 40px outside the column's border, past the page's 16px padding */
-    width: 320px;
+  }
+
+  .home-rail-left {
+    right: calc(100% + 57px);
   }
 }

@@ -1,0 +1,138 @@
+.preflop {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+}
+
+.preflop-header p {
+  max-width: 720px;
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+.preflop-situations {
+  flex-wrap: wrap;
+}
+
+/* The grid with its summary beside it, or under it when there's no room. */
+.preflop-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) minmax(220px, 1fr);
+  align-items: start;
+  gap: 20px 28px;
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.preflop-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  code {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.preflop-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin: 0;
+
+  dt {
+    font-size: 13px;
+    color: var(--text);
+  }
+  dd {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-h);
+
+    span {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text);
+    }
+  }
+}
+
+.preflop-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+  }
+  input {
+    font: inherit;
+    font-size: 15px;
+    height: 38px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+  .button {
+    align-self: flex-start;
+  }
+}
+
+.preflop-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+
+  .link-button {
+    font-size: 15px;
+
+    &:disabled {
+      color: var(--text);
+      cursor: default;
+      text-decoration: none;
+    }
+  }
+}
+
+.preflop-saved {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  list-style: none;
+
+  code {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+  .link-button {
+    font-size: 14px;
+  }
+}

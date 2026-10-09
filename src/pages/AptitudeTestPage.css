@@ -1,0 +1,116 @@
+.aptitude-test {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.aptitude-runner,
+.aptitude-report {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.aptitude-runner-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+  }
+}
+
+.aptitude-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+
+  progress {
+    width: 160px;
+    height: 8px;
+    accent-color: var(--accent);
+  }
+}
+
+.aptitude-report {
+  max-width: 980px;
+
+  header h1 {
+    margin: 0 0 6px;
+  }
+}
+
+.aptitude-words {
+  margin: 0;
+  padding-left: 34px !important;
+  font-size: 15px;
+
+  li + li {
+    margin-top: 4px;
+  }
+}
+
+.aptitude-next-button {
+  align-self: flex-start;
+}
+
+.aptitude-spots {
+  margin: 0;
+  padding-left: 0 !important;
+  list-style: none;
+
+  > li {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 0;
+
+    & + li {
+      border-top: 1px solid var(--border);
+    }
+  }
+}
+
+/* A spot in the report: its question, your grade and the answer's basis, and the button to its feedback. */
+.aptitude-spot-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content max-content max-content;
+  align-items: baseline;
+  gap: 6px 14px;
+  font-size: 15px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+}
+
+.aptitude-spot-prompt {
+  color: var(--text-h);
+}
+
+.aptitude-spot-grade {
+  font-size: 14px;
+  font-weight: 600;
+
+  &.good {
+    color: var(--win);
+  }
+  &.poor {
+    color: var(--loss);
+  }
+}
+
+.aptitude-spot-basis {
+  font-size: 13px;
+}

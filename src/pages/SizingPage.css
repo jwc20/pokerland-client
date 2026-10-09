@@ -1,0 +1,225 @@
+.sizing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  text-align: left;
+
+  h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+}
+
+.sizing-header p {
+  max-width: 720px;
+  margin-top: 8px;
+  font-size: 16px;
+  color: var(--text-h);
+}
+
+/* The ordinal ramp: weakest lightest on the light background, darkest on the dark one. */
+.sizing-strength-1 {
+  fill: var(--strength-1);
+  background: var(--strength-1);
+}
+.sizing-strength-2 {
+  fill: var(--strength-2);
+  background: var(--strength-2);
+}
+.sizing-strength-3 {
+  fill: var(--strength-3);
+  background: var(--strength-3);
+}
+.sizing-strength-4 {
+  fill: var(--strength-4);
+  background: var(--strength-4);
+}
+.sizing-strength-5 {
+  fill: var(--strength-5);
+  background: var(--strength-5);
+}
+
+.sizing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.sizing-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border-radius: 3px;
+}
+
+/* A chart per street, side by side when they fit. */
+.sizing-streets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px 28px;
+}
+
+.sizing-street {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+
+  figcaption {
+    font-size: 15px;
+    color: var(--text);
+
+    strong {
+      color: var(--text-h);
+    }
+  }
+}
+
+.sizing-chart {
+  position: relative;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+.sizing-grid {
+  line {
+    stroke: var(--border);
+    stroke-width: 1;
+  }
+  text {
+    font-size: 11px;
+    fill: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.sizing-baseline {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+.sizing-hit {
+  fill: transparent;
+}
+
+.sizing-column {
+  outline: none;
+
+  &.active .sizing-hit,
+  &:focus-visible .sizing-hit {
+    fill: var(--accent-bg);
+  }
+}
+
+.sizing-total {
+  font-size: 12px;
+  fill: var(--text-h);
+  font-variant-numeric: tabular-nums;
+}
+
+.sizing-axis {
+  font-size: 12px;
+  fill: var(--text);
+}
+
+.sizing-tip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 9px;
+  font-size: 13px;
+  color: var(--text);
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+
+  strong {
+    color: var(--text-h);
+  }
+  .current {
+    color: var(--text-h);
+  }
+}
+
+/* A tooltip row's key: a short stroke of the strength's colour. */
+.sizing-key {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  margin-right: 6px;
+  vertical-align: 3px;
+  border-radius: 2px;
+}
+
+.sizing-tell {
+  font-size: 15px;
+  color: var(--text-h);
+
+  a {
+    color: var(--accent);
+  }
+}
+
+.sizing-table summary {
+  width: max-content;
+  font-size: 14px;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.sizing-flags {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-h);
+  }
+  a {
+    font-size: 15px;
+    color: var(--accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.sizing-flag-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.sizing-flag-count {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.sizing-source {
+  white-space: nowrap;
+}

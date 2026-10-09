@@ -92,3 +92,26 @@
     color: var(--accent);
   }
 }
+
+.match-new-playbook {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  > span {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+  select {
+    font: inherit;
+    font-size: 15px;
+    max-width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+}

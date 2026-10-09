@@ -2,7 +2,9 @@ import { useMemo, type ReactNode } from 'react'
 import type { HandDetail, HandEvent } from '../api/generated/data-contracts.ts'
 import { heroDecisions, heroM, mZone, type Decision, type Price } from '../decision.ts'
 import { formatAmount, formatBb, streetLabel } from '../handFormat.ts'
+import type { PurposeControl } from '../notes.ts'
 import type { ReplayStep } from '../replay.ts'
+import PurposePicker from './PurposePicker.tsx'
 import './DecisionPanel.css'
 
 type Stakes = Pick<HandDetail, 'currency' | 'big_blind'>
@@ -20,18 +22,21 @@ const CHEVRONS = { previous: 'M10 3 5 8l5 5', next: 'm6 3 5 5-5 5' }
 /**
  * The numbers behind the hero's decision at this point of the replay, or their
  * last one before it: the price they faced, the size they chose, and their
- * stack and position. The arrows step between their decisions.
+ * stack and position. The arrows step between their decisions. With
+ * `purposes`, a bet or raise asks why it was made (E1).
  */
 function DecisionPanel({
   hand,
   steps,
   index,
   onSeek,
+  purposes,
 }: {
   hand: HandDetail
   steps: ReplayStep[]
   index: number
   onSeek: (index: number) => void
+  purposes?: PurposeControl
 }) {
   const decisions = useMemo(() => heroDecisions(hand, steps), [hand, steps])
   if (!hand.hero) return null
@@ -42,6 +47,8 @@ function DecisionPanel({
   // At the decision, or at the step that shows what the hero did.
   const now = decision && (index === decision.step || index === decision.step + 1)
   const m = heroM(hand)
+  // The step after the decision shows the move, so a bet's step is one more than its decision's.
+  const bet = decision && purposes?.bets.find((candidate) => candidate.step === decision.step + 1)
 
   return (
     <aside className={now ? 'decision now' : 'decision'} aria-label="Your decisions">
@@ -75,7 +82,21 @@ function DecisionPanel({
       </header>
 
       {decision ? (
-        <DecisionFacts decision={decision} hand={hand} m={m} />
+        <DecisionFacts
+          decision={decision}
+          hand={hand}
+          m={m}
+          extra={
+            bet &&
+            purposes && (
+              <PurposePicker
+                name={`purpose-${bet.bet}`}
+                value={purposes.of(bet.bet)}
+                onChange={(purpose) => purposes.onChange(bet.bet, purpose)}
+              />
+            )
+          }
+        />
       ) : (
         <p className="decision-section">You had no decisions to make in this hand.</p>
       )}
@@ -135,7 +156,18 @@ function DecisionHelp({ m }: { m?: number }) {
   )
 }
 
-function DecisionFacts({ decision, hand, m }: { decision: Decision; hand: Stakes; m?: number }) {
+function DecisionFacts({
+  decision,
+  hand,
+  m,
+  extra,
+}: {
+  decision: Decision
+  hand: Stakes
+  m?: number
+  /** Below the move: in the replay, why the hero bet. */
+  extra?: ReactNode
+}) {
   const money = (amount = 0) => formatAmount(amount, hand.currency)
   const bb = (amount = 0) => formatBb(amount / hand.big_blind, false)
   const chips = (amount = 0) => `${money(amount)} (${bb(amount)})`
@@ -175,6 +207,7 @@ function DecisionFacts({ decision, hand, m }: { decision: Decision; hand: Stakes
               )}
             </dl>
           )}
+          {extra}
         </section>
       )}
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { errorMessage, hands } from '../api/client.ts'
-import type { HandSummary, HandTag, HandsListParams } from '../api/generated/data-contracts.ts'
+import { errorMessage, hands, review } from '../api/client.ts'
+import type { HandSummary, HandTag, HandsListParams, NoteTag } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
 import HandTable from '../components/HandTable.tsx'
 import HistoryFilterBar from '../components/HistoryFilterBar.tsx'
@@ -22,6 +22,10 @@ function listParams(filters: HistoryFilters): HandsListParams {
     stat: filters.stat,
     did: filters.stat ? filters.did : undefined,
     result: filters.result,
+    review: filters.review,
+    note_tag: filters.noteTag,
+    leak: filters.leak,
+    session: filters.session,
     sort: filters.sort,
     tz: browserTimeZone(),
   }
@@ -36,6 +40,7 @@ function GameHistoryPage() {
   const search = searchParams.toString()
   const filters = useMemo(() => readHistoryFilters(new URLSearchParams(search)), [search])
   const tags = useTags()
+  const noteTags = useNoteTags()
 
   return (
     <section className="game-history">
@@ -54,6 +59,7 @@ function GameHistoryPage() {
       <HistoryFilterBar
         filters={filters}
         tags={tags}
+        noteTags={noteTags}
         onChange={(update) => {
           // The URL as it is now: React Router renders a navigation later, so `filters` may be a change behind.
           const latest = readHistoryFilters(new URLSearchParams(window.location.search))
@@ -76,6 +82,24 @@ function useTags() {
         if (active) setTags(data)
       },
       () => {}, // the filters offer "Any" alone
+    )
+    return () => {
+      active = false
+    }
+  }, [])
+  return tags
+}
+
+/** The user's own tags from their notes, for the filter's choices; none until they load, or if they don't. */
+function useNoteTags() {
+  const [tags, setTags] = useState<NoteTag[]>()
+  useEffect(() => {
+    let active = true
+    review.reviewRetrieve().then(
+      ({ data }) => {
+        if (active) setTags(data.tags)
+      },
+      () => {}, // the filter shows only a tag already in the URL
     )
     return () => {
       active = false

@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react'
 import type { AttemptResult, Feedback, Move, PracticeActionEnum, Scenario } from '../api/generated/data-contracts.ts'
 import { formatBb } from '../handFormat.ts'
-import { ACTION_LABELS, evText, fillAmounts, GRADE_LABELS, GRADING_INFO, percent } from '../practice.ts'
-import { formatUnit, type Unit } from '../table.ts'
+import { ACTION_LABELS, evText, fillAmounts, GRADE_LABELS, GRADING_INFO, percent, specAmount } from '../practice.ts'
+import { shareText } from '../rangePresets.ts'
+import { parseRange } from '../ranges.ts'
+import type { Unit } from '../table.ts'
+import RangeGrid from './RangeGrid.tsx'
 import './FeedbackCard.css'
 
 // A grade wears its status colour beside an icon and its name, never the colour alone.
@@ -22,11 +25,11 @@ function FeedbackCard({
   scenario: Scenario
   attempt: AttemptResult
   unit: Unit
-  actions: ReactNode
+  actions?: ReactNode
 }) {
   const answer = attempt.answer
   const spec = scenario.spec
-  const amount = (chips: number) => formatUnit(chips, spec.hand.currency, spec.hand.big_blind, unit)
+  const amount = (chips: number) => specAmount(spec, unit, chips)
   const grading = GRADING_INFO[attempt.grading]
   return (
     <section className={`feedback-card ${attempt.grade}`} aria-labelledby="feedback-grade" aria-live="polite">
@@ -45,6 +48,8 @@ function FeedbackCard({
       <div className="feedback-card-body">
         {spec.question.kind === 'choice' ? (
           <ChoiceAnswer options={spec.question.options ?? []} chosen={attempt.choice} answer={answer} amount={amount} />
+        ) : spec.question.kind === 'range' ? (
+          <RangeAnswer attempt={attempt} answer={answer} />
         ) : (
           <ActionAnswer attempt={attempt} answer={answer} amount={amount} />
         )}
@@ -52,7 +57,7 @@ function FeedbackCard({
         {answer.assumptions && <p className="feedback-card-note">Assuming: {answer.assumptions}</p>}
         <p className="feedback-card-note">{grading.hint}</p>
 
-        <Numbers answer={answer} amount={amount} />
+        {spec.question.kind !== 'range' && <Numbers answer={answer} amount={amount} />}
 
         {answer.you_did && answer.result && (
           <div className="feedback-card-history">
@@ -62,9 +67,18 @@ function FeedbackCard({
             </p>
           </div>
         )}
+        {answer.they_did && answer.player && answer.result && (
+          <div className="feedback-card-history">
+            <h3>In the hand</h3>
+            <p>
+              {answer.player} {moveText(answer.they_did, amount)}. The hand went{' '}
+              {handResult(answer.result.net_bb, answer.player)}.
+            </p>
+          </div>
+        )}
       </div>
 
-      <footer className="feedback-card-actions">{actions}</footer>
+      {actions && <footer className="feedback-card-actions">{actions}</footer>}
     </section>
   )
 }
@@ -170,6 +184,7 @@ function ActionAnswer({
           <footer>[{answer.rule.source.join('; ')}]</footer>
         </blockquote>
       )}
+      {answer.chart && answer.hand && <ChartCell chart={answer.chart} hand={answer.hand} />}
       {attempt.grading === 'reflection' && (
         <p>
           No rule settles this spot, so there is nothing to grade it against: weigh the numbers below, and what
@@ -177,6 +192,106 @@ function ActionAnswer({
         </p>
       )}
     </>
+  )
+}
+
+/** A range answer beside the stated range: the shares, the combos they have in common, and both on the grid. */
+function RangeAnswer({ attempt, answer }: { attempt: AttemptResult; answer: Feedback }) {
+  const yours = parseRange(attempt.hand_range)
+  const stated = parseRange(answer.range ?? '')
+  const overlap = attempt.overlap
+  return (
+    <>
+      <dl className="feedback-card-compare">
+        <div>
+          <dt>Your range</dt>
+          <dd>{yours.size ? shareText(yours) : 'No hands'}</dd>
+        </div>
+        <div>
+          <dt>The stated range</dt>
+          <dd>{shareText(stated)}</dd>
+        </div>
+        {attempt.score !== null && (
+          <div>
+            <dt>Overlap</dt>
+            <dd>{percent(attempt.score)}</dd>
+          </div>
+        )}
+      </dl>
+      {overlap && (
+        <p>
+          {overlap.both.toLocaleString()} combos in both, {overlap.extra.toLocaleString()} only in yours and{' '}
+          {overlap.missed.toLocaleString()} only in the stated range: the overlap is the combos in both ÷ those in
+          either.
+        </p>
+      )}
+      <div className="feedback-card-grid">
+        <RangeGrid
+          mode="selection"
+          selected={yours}
+          reference={stated}
+          label="Your range, filled, against the stated range, ringed"
+          legend={
+            <>
+              <span>
+                <span className="range-grid-swatch picked" aria-hidden="true" />
+                Your range
+              </span>
+              <span>
+                <span className="range-grid-swatch reference" aria-hidden="true" />
+                The stated range
+              </span>
+            </>
+          }
+        />
+      </div>
+      <p className="feedback-card-formula">
+        <code>{answer.range}</code>
+      </p>
+      {answer.explanation && <p>{answer.explanation}</p>}
+      {answer.their_hand && answer.player && (
+        <p>
+          {yours.has(answer.their_hand)
+            ? `${answer.player}’s ${answer.their_hand} was in your range too.`
+            : `${answer.player}’s ${answer.their_hand} wasn’t in your range.`}
+        </p>
+      )}
+    </>
+  )
+}
+
+/** The chart a preflop spot is graded by: its tier's hands on the grid, with yours ringed. */
+function ChartCell({ chart, hand }: { chart: NonNullable<Feedback['chart']>; hand: string }) {
+  return (
+    <div className="feedback-card-chart">
+      <h3>
+        {chart.label}: {chart.tier_label.toLowerCase()}
+      </h3>
+      <p>
+        <code>{chart.range}</code>: {chart.claimed} in the lecture, {(chart.share * 100).toFixed(1)}% of hands
+        exactly [{chart.tier_source}]. {chart.applies_to}.
+      </p>
+      <div className="feedback-card-grid">
+        <RangeGrid
+          mode="selection"
+          selected={parseRange(chart.range)}
+          reference={new Set([hand])}
+          label={`The chart's hands, filled, with your hand, ${hand}, ringed`}
+          legend={
+            <>
+              <span>
+                <span className="range-grid-swatch picked" aria-hidden="true" />
+                The chart plays it
+              </span>
+              <span>
+                <span className="range-grid-swatch reference" aria-hidden="true" />
+                Your hand: {hand}
+              </span>
+            </>
+          }
+        />
+      </div>
+    </div>
   )
 }
 
@@ -231,10 +346,12 @@ function moveText(move: Move, amount: (chips: number) => string) {
   }
 }
 
-function handResult(bb: number) {
-  if (bb > 0) return `your way: you won ${formatBb(bb, false)}`
-  if (bb < 0) return `against you: you lost ${formatBb(-bb, false)}`
-  return 'level: you broke even'
+/** How a hand went for you, or for the player whose seat a spot was in. */
+function handResult(bb: number, player?: string) {
+  const [way, against, who] = player ? ['their way', 'against them', player] : ['your way', 'against you', 'you']
+  if (bb > 0) return `${way}: ${who} won ${formatBb(bb, false)}`
+  if (bb < 0) return `${against}: ${who} lost ${formatBb(-bb, false)}`
+  return `level: ${who} broke even`
 }
 
 export default FeedbackCard
