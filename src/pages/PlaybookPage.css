@@ -61,3 +61,73 @@
   gap: 12px;
   align-items: start;
 }
+
+.playbook-chooser {
+  display: inline-flex;
+  flex-direction: column;
+  align-self: flex-start;
+  max-width: 100%;
+  gap: 4px;
+  margin-bottom: 14px;
+  font-size: 14px;
+
+  select {
+    font: inherit;
+    font-size: 15px;
+    min-width: 0;
+    max-width: 100%;
+    height: 38px;
+    padding: 0 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+}
+
+.playbook-note {
+  margin: 0;
+  font-size: 15px;
+}
+
+.playbook-actions-row {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+
+  .playbook-note {
+    flex: 1 1 320px;
+    align-self: center;
+  }
+}
+
+.playbook-inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+
+  input,
+  select {
+    font: inherit;
+    font-size: 15px;
+    min-width: min(280px, 80vw);
+    height: 38px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.playbook-danger {
+  color: var(--loss) !important;
+}

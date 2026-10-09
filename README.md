@@ -67,12 +67,13 @@ pokerland-tracker login --api http://localhost:8000
 
 ```
 src/
-  pages/           Home, Game History, Replay, My game, Sessions, Practice (its sets, the playbook, coached matches
-                   and their debriefs) and Settings (with the coach presets)
+  pages/           Home, Game History, Replay, My game, Sessions, Practice (its sets, the aptitude test, play it out,
+                   the playbooks and their editor, coached matches and their debriefs), Classes (a class's playbooks,
+                   shared hands, people and progress) and Settings (with the coach presets)
   components/      the home page's widgets and review queue, the hand table, playing cards, the replay's controls,
                    decision panel and notes panel, My game's stat tiles, charts and its discipline, purpose and rake
                    cards, sparklines, the practice table, action bar and feedback card, the coach's rail and read
-                   card, ...
+                   card, the playbook's card editor, sharing a hand with a class, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
@@ -83,6 +84,7 @@ src/
   historyFilters.ts the game history's filters and sort, read from and written to its URL; every link to it
   leaks.ts         the preflop discipline checks' names and rules, as the user's coach presets set them
   notes.ts         the notes panel's words: bet purposes, review states, the hero's bets in a hand
+  playbooks.ts     a coach's playbook cards as the editor holds them, and back as the API checks them
   playerStats.ts   when a statistic has chances enough to show, and the player types of the style quadrant
   practice.ts      the action bar's bet sizes, a question's amounts in the table's unit, and the practice labels
   rake.ts          rake and results per 100 hands, by kind of cash game

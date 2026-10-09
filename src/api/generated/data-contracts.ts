@@ -69,6 +69,22 @@ export type UnitEnum = "percent" | "ratio" | "number";
 export type TextureEnum = "monotone" | "paired" | "wet" | "dry";
 
 /**
+ * * `mixed` - mixed
+ * * `tag` - tag
+ * * `lag` - lag
+ * * `station` - station
+ * * `rock` - rock
+ * * `mine` - mine
+ */
+export type TableOpponentsEnum =
+  | "mixed"
+  | "tag"
+  | "lag"
+  | "station"
+  | "rock"
+  | "mine";
+
+/**
  * * `tag` - tag
  * * `lag` - lag
  * * `station` - station
@@ -81,8 +97,7 @@ export type StyleEnum = "tag" | "lag" | "station" | "rock";
  * * `preflop` - preflop
  * * `flop` - flop
  * * `turn` - turn
- * *
- * `river` - river
+ * * `river` - river
  */
 export type StreetEnum = "preflop" | "flop" | "turn" | "river";
 
@@ -90,8 +105,17 @@ export type StreetEnum = "preflop" | "flop" | "turn" | "river";
  * * `own_hand` - One of your hands
  * * `generated` - Generated
  * * `match` - A coached match
+ * * `library` - The library
+ * * `their_seat` - An opponent's seat in one of your hands
+ * * `shared` - A hand shared with your class
  */
-export type SourceEnum = "own_hand" | "generated" | "match";
+export type SourceEnum =
+  | "own_hand"
+  | "generated"
+  | "match"
+  | "library"
+  | "their_seat"
+  | "shared";
 
 /**
  * * `small` - small
@@ -159,8 +183,9 @@ export type RaiseKindEnum = "bet" | "raise";
 /**
  * * `action` - action
  * * `choice` - choice
+ * * `range` - range
  */
-export type QuestionKindEnum = "action" | "choice";
+export type QuestionKindEnum = "action" | "choice" | "range";
 
 /**
  * * `open_bb` - open_bb
@@ -211,8 +236,20 @@ export type PracticeSkillEnum =
  * * `my_hands` - My hands
  * * `generated` - Generated
  * * `match` - From a match
+ * * `library` - The library
+ * * `their_seat` - Their seat
+ * * `shared` - From your classes
+ * * `test` - Aptitude test
  */
-export type PracticeSetKindEnum = "daily" | "my_hands" | "generated" | "match";
+export type PracticeSetKindEnum =
+  | "daily"
+  | "my_hands"
+  | "generated"
+  | "match"
+  | "library"
+  | "their_seat"
+  | "shared"
+  | "test";
 
 /**
  * * `fold` - fold
@@ -292,8 +329,22 @@ export type NoteAuthorEnum = "coach" | "user";
 /**
  * * `my_hands` - my_hands
  * * `generated` - generated
+ * * `library` - library
+ * * `their_seat` - their_seat
+ * * `shared` - shared
  */
-export type NewSetKindEnum = "my_hands" | "generated";
+export type NewSetKindEnum =
+  | "my_hands"
+  | "generated"
+  | "library"
+  | "their_seat"
+  | "shared";
+
+/**
+ * * `coach` - Coach
+ * * `member` - Member
+ */
+export type MemberRoleEnum = "coach" | "member";
 
 /**
  * * `mystery` - Mystery
@@ -367,6 +418,12 @@ export type LeakKeyEnum =
  * * `postflop` - postflop
  */
 export type LeakGroupEnum = "preflop" | "postflop";
+
+/**
+ * * `coach` - coach
+ * * `member` - member
+ */
+export type LeagueRoleEnum = "coach" | "member";
 
 /**
  * * `names` - names
@@ -447,13 +504,6 @@ export type HandClassEnum = "nothing" | "draw" | "showdown_value" | "strong";
 export type GradeEnum = "good" | "acceptable" | "poor" | "ungraded";
 
 /**
- * * `arithmetic` - arithmetic
- * * `postflop` - postflop
- * * `push_fold` - push_fold
- */
-export type GeneratedSkillEnum = "arithmetic" | "postflop" | "push_fold";
-
-/**
  * * `overbet_bluff` - overbet_bluff
  * * `small_on_wet` - small_on_wet
  * * `same_chips_barrel` - same_chips_barrel
@@ -496,6 +546,14 @@ export type EvidenceEnum = "thin" | "strong";
  */
 export type ConfidenceEnum = "low" | "medium" | "high";
 
+/**
+ * * `choice` - choice
+ * * `bool` - bool
+ * * `number` - number
+ * * `line` - line
+ */
+export type ConditionKindEnum = "choice" | "bool" | "number" | "line";
+
 export type BlankEnum = "";
 
 /**
@@ -531,6 +589,12 @@ export type AttemptResultGradingEnum =
   | "reference"
   | "rule"
   | "reflection";
+
+/**
+ * * `playbook` - A playbook
+ * * `hand` - A hand
+ */
+export type AssignmentKindEnum = "playbook" | "hand";
 
 export interface Accepted {
   /**
@@ -657,14 +721,79 @@ export interface AllIn {
   net_bb: number;
 }
 
+/** The course's memory aid nearest a stated share of hands [MIT 4], and how much of the answer it holds. */
+export interface Anchor {
+  percent: number;
+  range: string;
+  /**
+   * Combos in both ÷ combos in either.
+   * @format double
+   */
+  overlap: number;
+}
+
+/** A shared hand as the class sees it: anonymized, so its stakes and when, but no names, table or number. */
+export interface AssignedHand {
+  /** Your own hand's id, for its replay; null for others'. */
+  own_hand: number | null;
+  game: string;
+  stakes: string;
+  /** @format date-time */
+  played_at: string;
+  write_up: string;
+}
+
+export interface AssignedPlaybook {
+  id: number;
+  name: string;
+  version: number;
+  description: string;
+}
+
+/** A playbook or hand before a class. */
+export interface Assignment {
+  id: number;
+  kind: AssignmentKindEnum;
+  /** Who assigned or shared it. */
+  by_name: string;
+  playbook: AssignedPlaybook | null;
+  hand: AssignedHand | null;
+  note: string;
+  /** @format date-time */
+  created: string;
+  /** You put it there, or you're a coach. */
+  can_withdraw: boolean;
+}
+
+export interface AssignmentRequestRequest {
+  /**
+   * * `playbook` - A playbook
+   * * `hand` - A hand
+   */
+  kind: AssignmentKindEnum;
+  /** A playbook of your own: coaches only. */
+  playbook?: number;
+  /** One of your hands, shared anonymized: by your live link to it if you have one, else a new one. */
+  hand?: number;
+  /**
+   * @maxLength 500
+   * @default ""
+   */
+  note?: string;
+}
+
+/** An answer to a spot: a choice, a range of hands, or a move. */
 export interface AttemptRequestRequest {
-  scenario: number;
-  set?: number | null;
   /**
    * @min 0
    * @max 3
    */
   choice?: number;
+  /**
+   * A range question: the hands, in range notation.
+   * @maxLength 2000
+   */
+  hand_range?: string;
   /**
    * * `fold` - fold
    * * `check` - check
@@ -706,6 +835,8 @@ export interface AttemptRequestRequest {
    * @default "UTC"
    */
   tz?: string;
+  scenario: number;
+  set?: number | null;
 }
 
 /** A graded answer, with the spot's answer. A reflection is not graded: its grade is "ungraded". */
@@ -713,6 +844,9 @@ export interface AttemptResult {
   id: number;
   scenario: number;
   choice: number | null;
+  hand_range: string;
+  /** A range answer: how it met the stated range. */
+  overlap: Overlap | null;
   action: string;
   amount: number | null;
   reason: string;
@@ -754,6 +888,14 @@ export interface Barrel {
   check_raise: Stat;
   /** river: the third barrel's sizes. */
   sizes: SizeCount[];
+}
+
+/** The opponent of yours a bot was modelled on, from their statistics in your hands. */
+export interface BasedOn {
+  id: number;
+  name: string;
+  /** Hands with you behind the model. */
+  hands: number;
 }
 
 export interface BeatenBy {
@@ -848,6 +990,27 @@ export interface BookRule {
   ci_high: number | null;
 }
 
+/** The published chart a preflop spot is graded by, and the tier of it the spot is in (practice.charts). */
+export interface Chart {
+  key: string;
+  label: string;
+  /** The stacks and table the chart is for. */
+  applies_to: string;
+  source: string;
+  tier: string;
+  /** The tier's hands, in range notation. */
+  range: string;
+  tier_label: string;
+  /** What the lecture calls its size, rounded for teaching. */
+  claimed: string;
+  tier_source: string;
+  /**
+   * Its exact share of all 1,326 combos.
+   * @format double
+   */
+  share: number;
+}
+
 export interface ChunkAck {
   acked_offset: number;
 }
@@ -859,6 +1022,24 @@ export interface ChunkRejected {
 
 export interface ClientToken {
   client_token: string;
+}
+
+/** Something a card's test can ask of a decision. */
+export interface Condition {
+  key: string;
+  /**
+   * * `choice` - choice
+   * * `bool` - bool
+   * * `number` - number
+   * * `line` - line
+   */
+  kind: ConditionKindEnum;
+  label: string;
+  choices?: string[];
+  /** @format double */
+  low?: number;
+  /** @format double */
+  high?: number;
 }
 
 export interface Config {
@@ -1043,19 +1224,46 @@ export interface Feedback {
   /** The chips of each amount the text writes as "{a0}", "{a1}", ... */
   amounts?: Record<string, number>;
   best?: PracticeActionEnum[];
+  /** A chart's spot: moves worth half credit, such as limping a hand the chart raises. */
+  acceptable?: PracticeActionEnum[];
   /** Each option's EV in bb. */
   ev_bb?: Record<string, number>;
   /** @format double */
   equity?: number;
   /** @format double */
   equity_needed?: number;
-  /** The stated range the answer assumes. */
+  /** The stated range the answer assumes, or a range question's answer. */
   range?: string;
+  /** A preflop spot: the chart and tier it is graded by. */
+  chart?: Chart;
+  /** A preflop spot: your hand, as the chart names it. */
+  hand?: string;
+  /** A preflop spot: whether the chart plays your hand. */
+  in_range?: boolean;
+  /**
+   * A range question: the range's share of all combos.
+   * @format double
+   */
+  share?: number;
+  /** A range question: the share stated with the spot. */
+  percent?: number;
+  /** The course's memory aid nearest a stated share of hands [MIT 4], and how much of the answer it holds. */
+  anchor?: Anchor;
   assumptions?: string;
   advice?: Advice | null;
   rule?: RuleCard | null;
   /** Your own hand: what you did at the time. */
   you_did?: Move;
+  /** Their seat: the player whose seat it was. */
+  player?: string;
+  /** Their seat: what they did at the time. */
+  they_did?: Move;
+  /** Their range: the cards they showed. */
+  their_cards?: string[];
+  /** Their range: those cards as a hand, 97s. */
+  their_hand?: string;
+  /** Their range: their hand was in the stated range. */
+  in_stated?: boolean;
   result?: HandResult;
   /** The numbers behind a decision, as practice.spots works them out. Amounts are chips. */
   context?: Numbers;
@@ -1093,10 +1301,12 @@ export interface Fix {
 export interface GeneratedSkill {
   /**
    * * `arithmetic` - arithmetic
+   * * `preflop` - preflop
    * * `postflop` - postflop
    * * `push_fold` - push_fold
+   * * `hand_reading` - hand_reading
    */
-  skill: GeneratedSkillEnum;
+  skill: PracticeSkillEnum;
   label: string;
 }
 
@@ -1332,8 +1542,8 @@ export interface HandPlayer {
 }
 
 export interface HandResult {
-  /** The hand's id, for its replay. */
-  hand: number;
+  /** The hand's id, for its replay; null for a hand shared with your class. */
+  hand: number | null;
   /** The event the decision is. */
   step: number;
   /**
@@ -1532,6 +1742,15 @@ export interface JWT {
   refresh_expiration: string;
 }
 
+export interface JoinRequest {
+  /**
+   * The class's invite code; spaces, dashes and case don't matter.
+   * @minLength 1
+   * @maxLength 32
+   */
+  code: string;
+}
+
 export interface KnownHand {
   name: string;
   cards: string[];
@@ -1548,6 +1767,59 @@ export interface Label {
   vpip: number;
   aggression: number;
   hands: number;
+}
+
+/** A class you're in. */
+export interface League {
+  id: number;
+  name: string;
+  /** Who made it. */
+  owner_name: string;
+  /**
+   * Your role in it.
+   *
+   * * `coach` - coach
+   * * `member` - member
+   */
+  role: LeagueRoleEnum;
+  /** Everyone in it, coaches included. */
+  member_count: number;
+  /** Playbooks and hands before it now. */
+  assignment_count: number;
+  /** @format date-time */
+  created: string;
+}
+
+export interface LeagueCreateRequest {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  name: string;
+}
+
+/** A class: its playbooks and hands, and who's in it. A coach also sees its invite code and every member. */
+export interface LeagueDetail {
+  id: number;
+  name: string;
+  owner_name: string;
+  /**
+   * Your role in it.
+   *
+   * * `coach` - coach
+   * * `member` - member
+   */
+  role: LeagueRoleEnum;
+  /** Coaches only; null for a member. */
+  invite_code: string | null;
+  /** You show the coaches your practice progress. */
+  shares_progress: boolean;
+  member_count: number;
+  /** Coaches see everyone; a member sees the coaches and themselves. */
+  members: Member[];
+  assignments: Assignment[];
+  /** @format date-time */
+  created: string;
 }
 
 /** A leak check over the hero's hands: how often they broke one of the lectures' rules of thumb (B3). */
@@ -1874,6 +2146,28 @@ export interface Me {
   username: string;
 }
 
+/** Someone in a class. Coaches see everyone; a member sees the coaches. */
+export interface Member {
+  id: number;
+  name: string;
+  role: MemberRoleEnum;
+  shares_progress: boolean;
+  /** @format date-time */
+  joined: string;
+  you: boolean;
+  /** Made the class: always a coach, and can't leave it. */
+  owner: boolean;
+}
+
+/** What a coach sees of a member who shares their progress: totals only, never their hands. */
+export interface MemberProgress {
+  /** Their membership's id. */
+  member: number;
+  name: string;
+  skills: SkillScore[];
+  playbooks: PlaybookProgress[];
+}
+
 /** A move as the playbook's rules read it. Amounts are chips. */
 export interface Move {
   /**
@@ -1917,20 +2211,32 @@ export interface Moved {
   end: number;
 }
 
+export interface Named {
+  key: string;
+  label: string;
+}
+
 export interface NewSetRequest {
   /**
+   * Your own decisions, generated spots for one skill, worked examples from the lectures, your opponents' decisions in your hands, from their seat, or decisions in hands shared with your classes.
+   *
    * * `my_hands` - my_hands
    * * `generated` - generated
+   * * `library` - library
+   * * `their_seat` - their_seat
+   * * `shared` - shared
    */
   kind: NewSetKindEnum;
   /**
    * A generated set's skill.
    *
    * * `arithmetic` - arithmetic
+   * * `preflop` - preflop
    * * `postflop` - postflop
    * * `push_fold` - push_fold
+   * * `hand_reading` - hand_reading
    */
-  skill?: GeneratedSkillEnum;
+  skill?: PracticeSkillEnum;
   /**
    * @minLength 1
    * @default "UTC"
@@ -2198,6 +2504,16 @@ export interface OutsDecision {
   rule: number | null;
 }
 
+/** How a range answer met the stated range, in combos. */
+export interface Overlap {
+  /** In your range and the stated one. */
+  both: number;
+  /** In your range only. */
+  extra: number;
+  /** In the stated range only. */
+  missed: number;
+}
+
 export interface PaginatedHandSummaryList {
   /**
    * @format uri
@@ -2304,6 +2620,21 @@ export interface PatchedHandShareRequest {
   revoked?: boolean;
 }
 
+export interface PatchedLeagueUpdateRequest {
+  /**
+   * @minLength 1
+   * @maxLength 80
+   */
+  name?: string;
+  /** A new invite code: the old one stops working. Nobody already in it is affected. */
+  new_invite?: boolean;
+}
+
+export interface PatchedMembershipUpdateRequest {
+  /** Show the class's coaches your practice accuracy, playbook stages and by-the-book rates. Never your hands. */
+  shares_progress?: boolean;
+}
+
 /** The user's own label for an opponent (empty for the automatic one) and their note on them. */
 export interface PatchedOpponentUpdateRequest {
   manual_label?: OpponentLabelEnum | BlankEnum;
@@ -2406,6 +2737,14 @@ export interface PatchedPresetsUpdateRequest {
   deep_bb?: number | null;
 }
 
+export interface PatchedRoleRequest {
+  /**
+   * * `coach` - coach
+   * * `member` - member
+   */
+  role?: LeagueRoleEnum;
+}
+
 /** A range the user built and named, in range notation: "TT+, AQs+, AKo". */
 export interface PatchedSavedRangeRequest {
   /**
@@ -2492,7 +2831,43 @@ export interface PickedHand {
   kind: PickedHandKindEnum;
 }
 
-/** A named, versioned list of rule cards: a house preset, or one a user or coach wrote. */
+/** A Play it out table as you see it: the hand so far, your moves when it is your turn, and who the bots are. */
+export interface PlayTable {
+  id: number;
+  hand_number: number;
+  hands_played: number;
+  small_blind: number;
+  big_blind: number;
+  /** A hand up to a decision, in the stored hands' replay format: what the client's buildReplay draws. */
+  hand: TableHand;
+  hand_over: boolean;
+  /** @format double */
+  hand_net_bb: number | null;
+  /** Your moves, when it is your turn. */
+  legal: Legal | null;
+  seats: TableSeat[];
+  /**
+   * Your chips won since you sat down, in big blinds, rebuys aside.
+   * @format double
+   */
+  result_bb: number;
+  /** A table played on from a spot: where it stands. */
+  spot: TableSpot | null;
+}
+
+export interface PlayTableSummary {
+  id: number;
+  /** @format date-time */
+  created: string;
+  /** @format date-time */
+  updated: string;
+  /** Hands dealt. */
+  hands: number;
+  players: number;
+  from_spot: boolean;
+}
+
+/** A named, versioned list of rule cards: a house preset, one of your own, or one a coach assigned your class. */
 export interface Playbook {
   id: number;
   /** @pattern ^[-a-zA-Z0-9_]+$ */
@@ -2505,9 +2880,26 @@ export interface Playbook {
   /** A house preset, rather than one a user wrote. */
   house: boolean;
   rule_count: number;
+  /** Who wrote it; null for a house preset. */
+  author: string | null;
+  /** Your own: you can edit it and assign it to your classes. */
+  mine: boolean;
+  /** Your own: the classes it is assigned to now. */
+  classes: string[];
+  archived: boolean;
 }
 
-/** A named, versioned list of rule cards: a house preset, or one a user or coach wrote. */
+/** A playbook of your own, to edit: a copy of one you can read. */
+export interface PlaybookCopyRequest {
+  copy_of: number;
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+}
+
+/** A named, versioned list of rule cards: a house preset, one of your own, or one a coach assigned your class. */
 export interface PlaybookDetail {
   id: number;
   /** @pattern ^[-a-zA-Z0-9_]+$ */
@@ -2520,8 +2912,49 @@ export interface PlaybookDetail {
   /** A house preset, rather than one a user wrote. */
   house: boolean;
   rule_count: number;
+  /** Who wrote it; null for a house preset. */
+  author: string | null;
+  /** Your own: you can edit it and assign it to your classes. */
+  mine: boolean;
+  /** Your own: the classes it is assigned to now. */
+  classes: string[];
+  archived: boolean;
   rules: RuleCard[];
   families: FamilyStage[];
+  /** This is its latest version: the one to edit. */
+  latest: boolean;
+}
+
+export interface PlaybookProgress {
+  playbook: number;
+  name: string;
+  /** Their stage in each of its rule families. */
+  families: FamilyStage[];
+  /** One member's: how often their own hands kept each of its rules. */
+  book?: BookRule[];
+}
+
+/** Your playbook's next version: its name and description, and every card, checked as the rule engine reads it. */
+export interface PlaybookVersionRequest {
+  /**
+   * @minLength 1
+   * @maxLength 100
+   */
+  name: string;
+  /** @maxLength 1000 */
+  description: string;
+  /** The cards, in order: RuleCard's fields. */
+  rules: Record<string, any>[];
+}
+
+/** What a coach's cards can say: the tests, families, scopes, reads, actions and exceptions the engine knows. */
+export interface PlaybookVocabulary {
+  conditions: Condition[];
+  families: Named[];
+  scopes: Named[];
+  reads: Named[];
+  actions: string[];
+  unless: Named[];
 }
 
 export interface PracticeDay {
@@ -2555,6 +2988,23 @@ export interface PracticeSet {
   /** @format date-time */
   finished: string | null;
   spots: Spot[];
+}
+
+/** What to practise next: the weakest skill whose range is narrow enough to trust, else the weakest tested. */
+export interface PractiseNext {
+  /**
+   * * `arithmetic` - arithmetic
+   * * `preflop` - preflop
+   * * `postflop` - postflop
+   * * `push_fold` - push_fold
+   * * `hand_reading` - hand_reading
+   */
+  skill: PracticeSkillEnum;
+  label: string;
+  /** Its range is narrow enough to trust. */
+  trusted: boolean;
+  /** Generated sets can drill it. */
+  generated: boolean;
 }
 
 /** A threshold of the leak checks: the user's value, the course value, and the range it may be set in. */
@@ -2681,10 +3131,11 @@ export interface PurposeStat {
 
 export interface Question {
   /**
-   * What to do, or a choice of four.
+   * What to do, a choice of up to four, or a range of hands picked on the grid.
    *
    * * `action` - action
    * * `choice` - choice
+   * * `range` - range
    */
   kind: QuestionKindEnum;
   prompt: string;
@@ -2699,6 +3150,16 @@ export interface Question {
   all_in_only?: boolean;
   /** The chips of each amount the text writes as "{a0}", "{a1}", ... */
   amounts?: Record<string, number>;
+}
+
+/** A Glicko rating (practice.ratings): 1,500 to start, its deviation the uncertainty, and its 95% range. */
+export interface Rating {
+  rating: number;
+  deviation: number;
+  low: number;
+  high: number;
+  /** Graded answers it rests on. */
+  attempts: number;
 }
 
 export interface Read {
@@ -2870,6 +3331,14 @@ export interface RuleCard {
    */
   read?: ReadEnum;
   source: string[];
+  /** The test the card runs: {condition: value}. */
+  when?: Record<string, any>;
+  /** Spots it leaves out. */
+  unless?: string[];
+  /** What it says to do: a branch, or a list of branches each with its own test. */
+  then?: any;
+  /** "exact" for a card that works the price out. */
+  basis?: string;
 }
 
 /** A range the user built and named, in range notation: "TT+, AQs+, AKo". */
@@ -2932,8 +3401,14 @@ export interface Scenario {
 
 /** What the client draws and asks; the answer stays on the server until an attempt. */
 export interface ScenarioSpec {
-  /** A hand up to a decision, in the stored hands' replay format: what the client's buildReplay draws. */
-  hand: TableHand;
+  /** Null for a spot with no table, such as a toy game. */
+  hand: TableHand | null;
+  /** A spot with no table: its setup, in words. */
+  setup?: string;
+  /** A library spot: the example's name. */
+  title?: string;
+  /** A library spot: the lectures it comes from. */
+  credit?: string;
   /**
    * Seats show names in the user's own hands, positions otherwise.
    *
@@ -3154,6 +3629,8 @@ export interface SkillScore {
   ci_low: number | null;
   /** @format double */
   ci_high: number | null;
+  /** Its rating against the spots' difficulty, once its range is narrow enough to show. */
+  rating: Rating | null;
 }
 
 /** A spot in a set, and the answer given to it in the set, if any. */
@@ -3396,6 +3873,76 @@ export interface TableHand {
   events: HandEvent[];
 }
 
+export interface TableMoveRequest {
+  /**
+   * * `fold` - fold
+   * * `check` - check
+   * * `call` - call
+   * * `bet` - bet
+   * * `raise` - raise
+   */
+  action: PracticeActionEnum;
+  /**
+   * A bet or raise: the bet it makes.
+   * @min 1
+   */
+  amount?: number;
+}
+
+export interface TableSeat {
+  seat: number;
+  name: string;
+  hero: boolean;
+  /** What the bot is: a style, or who it was modelled on. */
+  label: string;
+  /** A style bot's style; empty for a modelled one. */
+  style: string;
+  based_on: BasedOn | null;
+}
+
+/** Where a table played on from a spot stands. */
+export interface TableSpot {
+  scenario: number;
+  /** Your hand it plays on, for its replay. */
+  hand: number;
+  /** The decision it started from. */
+  step: number;
+  /** The others still replay what they did, your line matching theirs. */
+  on_script: boolean;
+}
+
+/** A new Play it out table: from a deal, or one of your hands played on from a spot's decision. */
+export interface TableStartRequest {
+  /** A spot from one of your own hands: play that hand on from its decision. Else a fresh deal. */
+  scenario?: number;
+  /**
+   * A fresh deal: seats, yours too.
+   * @min 2
+   * @max 9
+   * @default 6
+   */
+  seats?: number;
+  /**
+   * A fresh deal: bots of one style, a mix, or modelled on your own opponents with the most hands.
+   *
+   * * `mixed` - mixed
+   * * `tag` - tag
+   * * `lag` - lag
+   * * `station` - station
+   * * `rock` - rock
+   * * `mine` - mine
+   * @default "mixed"
+   */
+  opponents?: TableOpponentsEnum;
+  /**
+   * A fresh deal: stacks.
+   * @min 20
+   * @max 250
+   * @default 100
+   */
+  stack_bb?: number;
+}
+
 export interface Tag {
   tag: string;
   label: string;
@@ -3408,6 +3955,151 @@ export interface TagStakes {
   big_blind: number;
 }
 
+/** An answer to the spot a test is asking. Its grade waits for the end of the test. */
+export interface TestAnswerRequest {
+  /**
+   * @min 0
+   * @max 3
+   */
+  choice?: number;
+  /**
+   * A range question: the hands, in range notation.
+   * @maxLength 2000
+   */
+  hand_range?: string;
+  /**
+   * * `fold` - fold
+   * * `check` - check
+   * * `call` - call
+   * * `bet` - bet
+   * * `raise` - raise
+   */
+  action?: PracticeActionEnum;
+  /**
+   * A bet or raise: the bet it makes.
+   * @min 1
+   */
+  amount?: number;
+  /**
+   * * `value` - value
+   * * `bluff` - bluff
+   * * `draw` - draw
+   * * `protect` - protect
+   * * `bluff_catch` - bluff_catch
+   * * `price` - price
+   * * `trap` - trap
+   * * `give_up` - give_up
+   * * `cant_say` - cant_say
+   */
+  reason?: ReasonEnum;
+  /**
+   * @min 1
+   * @max 5
+   */
+  confidence?: number;
+  /**
+   * @format double
+   * @min 0
+   */
+  time_taken?: number;
+  /**
+   * The time zone the user's days are counted in.
+   * @minLength 1
+   * @default "UTC"
+   */
+  tz?: string;
+  scenario: number;
+}
+
+/** An aptitude test once it is over: how well you decided in these spots, skill by skill. */
+export interface TestReport {
+  id: number;
+  planned: number;
+  answered: number;
+  /** @format date-time */
+  started: string;
+  /** @format date-time */
+  finished: string;
+  /**
+   * Time taken over the answers.
+   * @format double
+   */
+  minutes: number | null;
+  skills: TestSkill[];
+  spots: TestReportSpot[];
+  next: PractiseNext | null;
+}
+
+export interface TestReportSpot {
+  position: number;
+  scenario: Scenario;
+  /** Your answer, its grade, and the spot's answer and basis. */
+  attempt: AttemptResult;
+}
+
+/** A skill in the report: its accuracy in the test with its 95% range, its rating then, and the result in words. */
+export interface TestSkill {
+  /**
+   * * `arithmetic` - arithmetic
+   * * `preflop` - preflop
+   * * `postflop` - postflop
+   * * `push_fold` - push_fold
+   * * `hand_reading` - hand_reading
+   */
+  skill: PracticeSkillEnum;
+  label: string;
+  /** Spots in the test that tested it. */
+  spots: number;
+  /**
+   * Good answers, weighted: a rule of thumb counts half.
+   * @format double
+   */
+  did: number;
+  /** @format double */
+  could: number;
+  /** @format double */
+  pct: number | null;
+  /** @format double */
+  ci_low: number | null;
+  /** @format double */
+  ci_high: number | null;
+  /** The rating as it stood when the test ended. */
+  rating: Rating | null;
+  /** Its range is narrow enough to show the rating. */
+  rating_shown: boolean;
+  /** The result in words, with its sample: "12 spots: too few to be sure". */
+  words: string;
+}
+
+export interface TestSpot {
+  position: number;
+  scenario: Scenario;
+}
+
+/** A test as it goes: how far it has got, and the spot it asks now, without any answers. */
+export interface TestState {
+  id: number;
+  /** Spots in the test. */
+  planned: number;
+  answered: number;
+  /** @format date-time */
+  started: string;
+  /** @format date-time */
+  finished: string | null;
+  /** The spot to answer now; null once the test is over. */
+  spot: TestSpot | null;
+}
+
+export interface TestSummary {
+  id: number;
+  planned: number | null;
+  answered: number;
+  /** @format date-time */
+  started: string;
+  /** @format date-time */
+  finished: string | null;
+}
+
 /** How a board reads (tracker.parsing.facts.board_texture). */
 export interface Texture {
   paired: boolean;
@@ -3418,6 +4110,15 @@ export interface Texture {
   high_card: string;
   /** 0 (dry) to 3: a flush draw or flush, and a straight's ranks. */
   wetness: number;
+}
+
+export interface TimeZoneQueryRequest {
+  /**
+   * The IANA time zone the user's days are counted in; UTC if left out.
+   * @minLength 1
+   * @default "UTC"
+   */
+  tz?: string;
 }
 
 /** One of the hero's hands in a tournament, for the stack chart (D2). */
@@ -3945,6 +4646,76 @@ export type HandsDaysRetrieveData = HandCalendar;
 
 export type HandsTagsListData = HandTag[];
 
+export type LeaguesListData = League[];
+
+export type LeaguesCreateData = LeagueDetail;
+
+export interface LeaguesRetrieveParams {
+  id: number;
+}
+
+export type LeaguesRetrieveData = LeagueDetail;
+
+export interface LeaguesPartialUpdateParams {
+  id: number;
+}
+
+export type LeaguesPartialUpdateData = LeagueDetail;
+
+export interface LeaguesAssignmentsCreateParams {
+  id: number;
+}
+
+export type LeaguesAssignmentsCreateData = Assignment;
+
+export interface LeaguesAssignmentsDestroyParams {
+  assignmentPk: number;
+  id: number;
+}
+
+export type LeaguesAssignmentsDestroyData = any;
+
+export interface LeaguesMePartialUpdateParams {
+  id: number;
+}
+
+export type LeaguesMePartialUpdateData = LeagueDetail;
+
+export interface LeaguesMeDestroyParams {
+  id: number;
+}
+
+export type LeaguesMeDestroyData = any;
+
+export interface LeaguesMembersPartialUpdateParams {
+  id: number;
+  memberPk: number;
+}
+
+export type LeaguesMembersPartialUpdateData = Member;
+
+export interface LeaguesMembersDestroyParams {
+  id: number;
+  memberPk: number;
+}
+
+export type LeaguesMembersDestroyData = any;
+
+export interface LeaguesProgressListParams {
+  id: number;
+}
+
+export type LeaguesProgressListData = MemberProgress[];
+
+export interface LeaguesProgressRetrieveParams {
+  id: number;
+  memberPk: number;
+}
+
+export type LeaguesProgressRetrieveData = MemberProgress;
+
+export type LeaguesJoinCreateData = LeagueDetail;
+
 export interface LeaksListParams {
   /**
    * The checks before the flop (B3's discipline checks), or after it (B5's leak alerts).
@@ -4135,11 +4906,27 @@ export type PracticeMatchesResignCreateData = MatchState;
 
 export type PracticePlaybooksListData = Playbook[];
 
+export type PracticePlaybooksCreateData = PlaybookDetail;
+
 export interface PracticePlaybooksRetrieveParams {
   id: number;
 }
 
 export type PracticePlaybooksRetrieveData = PlaybookDetail;
+
+export interface PracticePlaybooksUpdateParams {
+  id: number;
+}
+
+export type PracticePlaybooksUpdateData = PlaybookDetail;
+
+export interface PracticePlaybooksDestroyParams {
+  id: number;
+}
+
+export type PracticePlaybooksDestroyData = any;
+
+export type PracticePlaybooksVocabularyRetrieveData = PlaybookVocabulary;
 
 export interface PracticeProfileRetrieveParams {
   /**
@@ -4172,6 +4959,56 @@ export interface PracticeSetsTodayRetrieveParams {
 }
 
 export type PracticeSetsTodayRetrieveData = PracticeSet;
+
+export type PracticeTablesListData = PlayTableSummary[];
+
+export type PracticeTablesCreateData = PlayTable;
+
+export interface PracticeTablesRetrieveParams {
+  id: number;
+}
+
+export type PracticeTablesRetrieveData = PlayTable;
+
+export interface PracticeTablesActCreateParams {
+  id: number;
+}
+
+export type PracticeTablesActCreateData = PlayTable;
+
+export interface PracticeTablesNextCreateParams {
+  id: number;
+}
+
+export type PracticeTablesNextCreateData = PlayTable;
+
+export type PracticeTestsListData = TestSummary[];
+
+export type PracticeTestsCreateData = TestState;
+
+export interface PracticeTestsRetrieveParams {
+  id: number;
+}
+
+export type PracticeTestsRetrieveData = TestReport;
+
+export interface PracticeTestsAnswerCreateParams {
+  id: number;
+}
+
+export type PracticeTestsAnswerCreateData = TestState;
+
+export interface PracticeTestsEndCreateParams {
+  id: number;
+}
+
+export type PracticeTestsEndCreateData = TestState;
+
+export interface PracticeTestsNextRetrieveParams {
+  id: number;
+}
+
+export type PracticeTestsNextRetrieveData = TestState;
 
 export interface PublicSharesRetrieveParams {
   slug: string;

@@ -18,6 +18,8 @@ import type {
   MatchStartRequest,
   NewSetRequest,
   NoteRequestRequest,
+  PlaybookCopyRequest,
+  PlaybookVersionRequest,
   PracticeAttemptsCreateData,
   PracticeHandsByTheBookRetrieveData,
   PracticeHandsByTheBookRetrieveParams,
@@ -41,9 +43,15 @@ import type {
   PracticeMatchesResignCreateParams,
   PracticeMatchesRetrieveData,
   PracticeMatchesRetrieveParams,
+  PracticePlaybooksCreateData,
+  PracticePlaybooksDestroyData,
+  PracticePlaybooksDestroyParams,
   PracticePlaybooksListData,
   PracticePlaybooksRetrieveData,
   PracticePlaybooksRetrieveParams,
+  PracticePlaybooksUpdateData,
+  PracticePlaybooksUpdateParams,
+  PracticePlaybooksVocabularyRetrieveData,
   PracticeProfileRetrieveData,
   PracticeProfileRetrieveParams,
   PracticeReviewsCreateData,
@@ -52,7 +60,29 @@ import type {
   PracticeSetsRetrieveParams,
   PracticeSetsTodayRetrieveData,
   PracticeSetsTodayRetrieveParams,
+  PracticeTablesActCreateData,
+  PracticeTablesActCreateParams,
+  PracticeTablesCreateData,
+  PracticeTablesListData,
+  PracticeTablesNextCreateData,
+  PracticeTablesNextCreateParams,
+  PracticeTablesRetrieveData,
+  PracticeTablesRetrieveParams,
+  PracticeTestsAnswerCreateData,
+  PracticeTestsAnswerCreateParams,
+  PracticeTestsCreateData,
+  PracticeTestsEndCreateData,
+  PracticeTestsEndCreateParams,
+  PracticeTestsListData,
+  PracticeTestsNextRetrieveData,
+  PracticeTestsNextRetrieveParams,
+  PracticeTestsRetrieveData,
+  PracticeTestsRetrieveParams,
   ReviewRequestRequest,
+  TableMoveRequest,
+  TableStartRequest,
+  TestAnswerRequest,
+  TimeZoneQueryRequest,
 } from "./data-contracts.ts";
 import { HttpClient, type RequestParams } from "./http-client.ts";
 
@@ -321,7 +351,7 @@ export class Practice<
       ...params,
     });
   /**
-   * @description The playbooks the signed-in user can play by: the house presets and their own.
+   * @description The playbooks the signed-in user can play by: the house presets, their own and their classes'; and a new one of their own, a copy of one of those, to edit.
    *
    * @tags practice
    * @name PracticePlaybooksList
@@ -337,7 +367,28 @@ export class Practice<
       ...params,
     });
   /**
-   * @description A playbook's rule cards, and the signed-in user's stage in each of its rule families.
+   * @description The playbooks the signed-in user can play by: the house presets, their own and their classes'; and a new one of their own, a copy of one of those, to edit.
+   *
+   * @tags practice
+   * @name PracticePlaybooksCreate
+   * @request POST:/api/practice/playbooks/
+   * @secure
+   */
+  practicePlaybooksCreate = (
+    data: PlaybookCopyRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticePlaybooksCreateData, any>({
+      path: `/api/practice/playbooks/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description A playbook's rule cards, and the signed-in user's stage in each of its rule families; for one of their own, its next version, or putting it away.
    *
    * @tags practice
    * @name PracticePlaybooksRetrieve
@@ -350,6 +401,62 @@ export class Practice<
   ) =>
     this.request<PracticePlaybooksRetrieveData, any>({
       path: `/api/practice/playbooks/${id}/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description A playbook's rule cards, and the signed-in user's stage in each of its rule families; for one of their own, its next version, or putting it away.
+   *
+   * @tags practice
+   * @name PracticePlaybooksUpdate
+   * @request PUT:/api/practice/playbooks/{id}/
+   * @secure
+   */
+  practicePlaybooksUpdate = (
+    { id }: PracticePlaybooksUpdateParams,
+    data: PlaybookVersionRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticePlaybooksUpdateData, any>({
+      path: `/api/practice/playbooks/${id}/`,
+      method: "PUT",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description A playbook's rule cards, and the signed-in user's stage in each of its rule families; for one of their own, its next version, or putting it away.
+   *
+   * @tags practice
+   * @name PracticePlaybooksDestroy
+   * @request DELETE:/api/practice/playbooks/{id}/
+   * @secure
+   */
+  practicePlaybooksDestroy = (
+    { id }: PracticePlaybooksDestroyParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticePlaybooksDestroyData, any>({
+      path: `/api/practice/playbooks/${id}/`,
+      method: "DELETE",
+      secure: true,
+      ...params,
+    });
+  /**
+   * @description What a coach's cards can say: every test the rule engine runs, with its kind of value, and the families, scopes, reads, actions and exceptions it knows.
+   *
+   * @tags practice
+   * @name PracticePlaybooksVocabularyRetrieve
+   * @request GET:/api/practice/playbooks/vocabulary/
+   * @secure
+   */
+  practicePlaybooksVocabularyRetrieve = (params: RequestParams = {}) =>
+    this.request<PracticePlaybooksVocabularyRetrieveData, any>({
+      path: `/api/practice/playbooks/vocabulary/`,
       method: "GET",
       secure: true,
       format: "json",
@@ -397,7 +504,7 @@ export class Practice<
       ...params,
     });
   /**
-   * @description A new set of one mode: decisions from the user's own hands, or generated spots for one skill.
+   * @description A new set of one mode: decisions from the user's own hands, generated spots for one skill, the library, the user's opponents' decisions from their seat, or decisions in hands shared with their classes.
    *
    * @tags practice
    * @name PracticeSetsCreate
@@ -449,6 +556,219 @@ export class Practice<
       path: `/api/practice/sets/today/`,
       method: "GET",
       query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The signed-in user's Play it out tables, the latest first; and a new one, from a deal or from a spot.
+   *
+   * @tags practice
+   * @name PracticeTablesList
+   * @request GET:/api/practice/tables/
+   * @secure
+   */
+  practiceTablesList = (params: RequestParams = {}) =>
+    this.request<PracticeTablesListData, any>({
+      path: `/api/practice/tables/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The signed-in user's Play it out tables, the latest first; and a new one, from a deal or from a spot.
+   *
+   * @tags practice
+   * @name PracticeTablesCreate
+   * @request POST:/api/practice/tables/
+   * @secure
+   */
+  practiceTablesCreate = (
+    data: TableStartRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTablesCreateData, any>({
+      path: `/api/practice/tables/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description A Play it out table as it stands.
+   *
+   * @tags practice
+   * @name PracticeTablesRetrieve
+   * @request GET:/api/practice/tables/{id}/
+   * @secure
+   */
+  practiceTablesRetrieve = (
+    { id }: PracticeTablesRetrieveParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTablesRetrieveData, any>({
+      path: `/api/practice/tables/${id}/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Your move; the bots answer, until it is your turn again or the hand is over.
+   *
+   * @tags practice
+   * @name PracticeTablesActCreate
+   * @request POST:/api/practice/tables/{id}/act/
+   * @secure
+   */
+  practiceTablesActCreate = (
+    { id }: PracticeTablesActCreateParams,
+    data: TableMoveRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTablesActCreateData, any>({
+      path: `/api/practice/tables/${id}/act/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Deals the next hand once the last is over; a busted stack buys in again.
+   *
+   * @tags practice
+   * @name PracticeTablesNextCreate
+   * @request POST:/api/practice/tables/{id}/next/
+   * @secure
+   */
+  practiceTablesNextCreate = (
+    { id }: PracticeTablesNextCreateParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTablesNextCreateData, any>({
+      path: `/api/practice/tables/${id}/next/`,
+      method: "POST",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The signed-in user's aptitude tests, the latest first; and a new one: 24 graded spots, about 12 minutes.
+   *
+   * @tags practice
+   * @name PracticeTestsList
+   * @request GET:/api/practice/tests/
+   * @secure
+   */
+  practiceTestsList = (params: RequestParams = {}) =>
+    this.request<PracticeTestsListData, any>({
+      path: `/api/practice/tests/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The signed-in user's aptitude tests, the latest first; and a new one: 24 graded spots, about 12 minutes.
+   *
+   * @tags practice
+   * @name PracticeTestsCreate
+   * @request POST:/api/practice/tests/
+   * @secure
+   */
+  practiceTestsCreate = (
+    data: TimeZoneQueryRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTestsCreateData, any>({
+      path: `/api/practice/tests/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description A test's report, once it is over: accuracy and rating by skill, every spot with its answer, strengths and gaps in words, and what to practise next.
+   *
+   * @tags practice
+   * @name PracticeTestsRetrieve
+   * @request GET:/api/practice/tests/{id}/
+   * @secure
+   */
+  practiceTestsRetrieve = (
+    { id }: PracticeTestsRetrieveParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTestsRetrieveData, any>({
+      path: `/api/practice/tests/${id}/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Answers the spot a test is asking. Nothing about the answer comes back until the test is over: only the next spot.
+   *
+   * @tags practice
+   * @name PracticeTestsAnswerCreate
+   * @request POST:/api/practice/tests/{id}/answer/
+   * @secure
+   */
+  practiceTestsAnswerCreate = (
+    { id }: PracticeTestsAnswerCreateParams,
+    data: TestAnswerRequest,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTestsAnswerCreateData, any>({
+      path: `/api/practice/tests/${id}/answer/`,
+      method: "POST",
+      body: data,
+      secure: true,
+      type: "application/json",
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Ends a test early: the report covers the spots answered.
+   *
+   * @tags practice
+   * @name PracticeTestsEndCreate
+   * @request POST:/api/practice/tests/{id}/end/
+   * @secure
+   */
+  practiceTestsEndCreate = (
+    { id }: PracticeTestsEndCreateParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTestsEndCreateData, any>({
+      path: `/api/practice/tests/${id}/end/`,
+      method: "POST",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The spot a test asks now, without its answer; none once the test is over.
+   *
+   * @tags practice
+   * @name PracticeTestsNextRetrieve
+   * @request GET:/api/practice/tests/{id}/next/
+   * @secure
+   */
+  practiceTestsNextRetrieve = (
+    { id }: PracticeTestsNextRetrieveParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<PracticeTestsNextRetrieveData, any>({
+      path: `/api/practice/tests/${id}/next/`,
+      method: "GET",
       secure: true,
       format: "json",
       ...params,

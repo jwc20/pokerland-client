@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
-import type { GeneratedSkillEnum, PracticeProfile, PracticeSet } from '../api/generated/data-contracts.ts'
+import type { PracticeProfile, PracticeSet, PracticeSkillEnum } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
 import SkillBars from '../components/SkillBars.tsx'
 import { GENERATED_HINTS, GRADE_LABELS } from '../practice.ts'
@@ -30,8 +30,9 @@ function PracticePage() {
   const navigate = useNavigate()
   const [loaded, setLoaded] = useState<{ profile: PracticeProfile; today: PracticeSet }>()
   const [error, setError] = useState<string>()
-  const [skill, setSkill] = useState<GeneratedSkillEnum>('arithmetic')
+  const [skill, setSkill] = useState<PracticeSkillEnum>('arithmetic')
   const [starting, setStarting] = useState(false)
+  const [notice, setNotice] = useState<string>()
 
   useEffect(() => {
     let active = true
@@ -48,10 +49,21 @@ function PracticePage() {
     }
   }, [])
 
-  function start(kind: 'my_hands' | 'generated') {
+  function start(kind: 'my_hands' | 'generated' | 'library' | 'their_seat' | 'shared') {
     setStarting(true)
+    setNotice(undefined)
     practice.practiceSetsCreate({ kind, skill: kind === 'generated' ? skill : undefined, tz: browserTimeZone() }).then(
-      ({ data }) => navigate(`/practice/set/${data.id}`),
+      ({ data }) => {
+        if (kind === 'shared' && data.spots.length === 0) {
+          setStarting(false)
+          setNotice(
+            'No hands to practise from your classes yet: a hand comes in a day after it was played, once someone ' +
+              'in one of your classes shares it from its replay.',
+          )
+          return
+        }
+        navigate(`/practice/set/${data.id}`)
+      },
       (err) => {
         setStarting(false)
         setError(errorMessage(err))
@@ -97,11 +109,40 @@ function PracticePage() {
                 </div>
                 <div className="practice-mode">
                   <div>
+                    <h3>Their seat</h3>
+                    <p>
+                      Your opponents’ decisions in your hands, when their cards were shown: play them from their
+                      chair, and read their range from their line before their cards turn over.
+                    </p>
+                  </div>
+                  <button type="button" className="button" disabled={starting} onClick={() => start('their_seat')}>
+                    Play 8
+                  </button>
+                </div>
+                <div className="practice-mode">
+                  <div>
+                    <h3>From your classes</h3>
+                    <p>
+                      Hands shared with <Link to="/classes">your classes</Link>, anonymized: play the sharer’s
+                      decisions from their seat, then see what the playbook says and what they did.
+                    </p>
+                    {notice && (
+                      <p className="practice-notice" role="status">
+                        {notice}
+                      </p>
+                    )}
+                  </div>
+                  <button type="button" className="button" disabled={starting} onClick={() => start('shared')}>
+                    Play 8
+                  </button>
+                </div>
+                <div className="practice-mode">
+                  <div>
                     <h3>Generated</h3>
                     <p>{GENERATED_HINTS[skill]}</p>
                     <select
                       value={skill}
-                      onChange={(event) => setSkill(event.target.value as GeneratedSkillEnum)}
+                      onChange={(event) => setSkill(event.target.value as PracticeSkillEnum)}
                       aria-label="Skill"
                     >
                       {loaded.profile.generated.map((option) => (
@@ -114,6 +155,42 @@ function PracticePage() {
                   <button type="button" className="button" disabled={starting} onClick={() => start('generated')}>
                     Play 8
                   </button>
+                </div>
+                <div className="practice-mode">
+                  <div>
+                    <h3>Aptitude test</h3>
+                    <p>
+                      24 graded spots across every skill, at about your level, and a report at the end: accuracy and
+                      rating by skill, with their ranges.
+                    </p>
+                  </div>
+                  <Link className="button" to="/practice/test">
+                    Open
+                  </Link>
+                </div>
+                <div className="practice-mode">
+                  <div>
+                    <h3>Library</h3>
+                    <p>
+                      Worked examples from the lectures: pot odds, M, the AKQ game, push-or-fold and the bubble, each
+                      credited to its lecture.
+                    </p>
+                  </div>
+                  <button type="button" className="button" disabled={starting} onClick={() => start('library')}>
+                    Play 8
+                  </button>
+                </div>
+                <div className="practice-mode">
+                  <div>
+                    <h3>Play it out</h3>
+                    <p>
+                      Whole hands against bots at a table of two to nine: styles, or bots modelled on your own
+                      opponents. Practice in rhythm, outside every score.
+                    </p>
+                  </div>
+                  <Link className="button" to="/practice/play/new">
+                    Sit down
+                  </Link>
                 </div>
                 <div className="practice-mode">
                   <div>

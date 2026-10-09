@@ -1,0 +1,24 @@
+.play-new-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+  select {
+    height: 34px;
+    padding: 0 8px;
+    font: inherit;
+    font-weight: 400;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+  }
+}

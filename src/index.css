@@ -514,3 +514,59 @@ code {
   white-space: nowrap;
   border: 0;
 }
+
+/* A form's labelled inputs in a grid that wraps: two or three across on a wide screen, one on a phone. */
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 16px;
+  align-items: end;
+
+  > label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  input:not([type='checkbox']):not([type='radio']),
+  select,
+  textarea {
+    font: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 7px 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+}
+
+.fields-wide {
+  grid-column: 1 / -1;
+}
+
+.fields .fields-check,
+.fields-check {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--text-h);
+
+  input {
+    margin: 0;
+    accent-color: var(--accent);
+  }
+}

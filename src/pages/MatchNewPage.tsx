@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
-import type { MatchCoachEnum, MatchOpponentEnum, MatchSummary } from '../api/generated/data-contracts.ts'
+import type { MatchCoachEnum, MatchOpponentEnum, MatchSummary, Playbook } from '../api/generated/data-contracts.ts'
 import { STAGES } from '../coach.ts'
 import { formatDateTime } from '../handFormat.ts'
 import { STYLE_LABELS } from '../practice.ts'
@@ -21,6 +21,10 @@ const OPPONENTS: { value: MatchOpponentEnum; label: string; hint: string }[] = [
  */
 function MatchNewPage() {
   const navigate = useNavigate()
+  // ?playbook=N, as a class's page links to its playbook; the house one otherwise.
+  const [params] = useSearchParams()
+  const [playbook, setPlaybook] = useState<number | undefined>(Number(params.get('playbook')) || undefined)
+  const [playbooks, setPlaybooks] = useState<Playbook[]>()
   const [opponent, setOpponent] = useState<MatchOpponentEnum>('mystery')
   const [coach, setCoach] = useState<MatchCoachEnum>('progress')
   const [recent, setRecent] = useState<MatchSummary[]>()
@@ -35,6 +39,12 @@ function MatchNewPage() {
       },
       () => {}, // the page works without them
     )
+    practice.practicePlaybooksList().then(
+      ({ data }) => {
+        if (active) setPlaybooks(data)
+      },
+      () => {}, // without them, the match is played by the house playbook
+    )
     return () => {
       active = false
     }
@@ -42,7 +52,7 @@ function MatchNewPage() {
 
   function start() {
     setStarting(true)
-    practice.practiceMatchesCreate({ opponent, coach }).then(
+    practice.practiceMatchesCreate({ opponent, coach, playbook }).then(
       ({ data }) => navigate(`/practice/match/${data.id}`),
       (err) => {
         setStarting(false)
@@ -82,6 +92,23 @@ function MatchNewPage() {
           </label>
         ))}
       </fieldset>
+
+      {playbooks && playbooks.length > 1 && (
+        <label className="match-new-playbook">
+          <span>Playbook the coach teaches</span>
+          <select
+            value={playbook ?? playbooks.find((row) => row.house)?.id ?? ''}
+            onChange={(event) => setPlaybook(Number(event.target.value))}
+          >
+            {playbooks.map((row) => (
+              <option key={row.id} value={row.id}>
+                {row.name}
+                {row.house ? ' (house)' : row.mine ? ' (yours)' : ` (from ${row.author})`}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
 
       <fieldset className="match-new-choices">
         <legend>Coach</legend>

@@ -1,0 +1,132 @@
+.play {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+}
+
+.play-table {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.play-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+
+    span {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--text);
+    }
+  }
+  p {
+    margin: 0;
+    font-size: 15px;
+  }
+  .win {
+    color: var(--win);
+  }
+  .loss {
+    color: var(--loss);
+  }
+}
+
+.play-notice {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: var(--social-bg);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+}
+
+/* The table, with the decision panel beside it when asked for; below it on narrow screens. */
+.play-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px 24px;
+
+  @media (min-width: 901px) {
+    &.with-panel {
+      grid-template-columns: minmax(0, 1fr) 300px;
+    }
+  }
+}
+
+.play-felt {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.play-log {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-h);
+}
+
+.play-history {
+  font-size: 14px;
+
+  summary {
+    width: max-content;
+    color: var(--accent);
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+  ol {
+    margin: 6px 0 0;
+    padding-left: 22px;
+  }
+}
+
+.play-over {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+
+  p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-h);
+  }
+  .win {
+    color: var(--win);
+  }
+  .loss {
+    color: var(--loss);
+  }
+}
+
+.play-seats {
+  width: 100%;
+
+  ul {
+    margin: 0;
+    padding-left: 34px !important;
+    font-size: 15px;
+
+    li + li {
+      margin-top: 4px;
+    }
+  }
+}

@@ -239,6 +239,9 @@
   &.call {
     background: var(--chip-2);
   }
+  &.picked {
+    background: var(--accent);
+  }
   &.reference {
     box-shadow: inset 0 0 0 2px var(--text-h);
   }

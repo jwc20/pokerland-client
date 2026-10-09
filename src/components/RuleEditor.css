@@ -1,0 +1,217 @@
+.rule-editor {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  text-align: left;
+}
+
+.rule-editor-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0;
+    font-size: 18px;
+  }
+}
+
+.rule-editor-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  font-size: 14px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 999px;
+}
+
+.rule-editor-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+
+  .link-button {
+    font-size: 14px;
+  }
+  .link-button:disabled {
+    color: var(--text);
+    opacity: 0.5;
+    cursor: default;
+    text-decoration: none;
+  }
+}
+
+.rule-editor-remove {
+  color: var(--loss) !important;
+}
+
+.rule-editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0; /* a fieldset is as wide as its content otherwise, and overflows a phone */
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+
+  legend {
+    padding: 0 6px;
+    font-weight: 600;
+    color: var(--text-h);
+  }
+  > .link-button {
+    align-self: flex-start;
+    font-size: 14px;
+  }
+}
+
+.rule-editor-hint {
+  margin: 0;
+  font-size: 14px;
+}
+
+.rule-editor-unless,
+.rule-editor-accepts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  font-size: 14px;
+}
+
+.rule-editor-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.rule-editor-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 0 10px 4px;
+  border-bottom: 1px dashed var(--border);
+
+  > .link-button {
+    align-self: flex-start;
+    font-size: 14px;
+  }
+}
+
+.rule-editor-if {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rule-editor-if-label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-h);
+}
+
+.test-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-editor-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 220px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 14px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    > :nth-child(2) {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+}
+
+.test-editor-label {
+  color: var(--text-h);
+}
+
+.test-editor-unknown {
+  color: var(--loss);
+}
+
+.test-editor-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.test-editor-range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  input {
+    width: 90px;
+  }
+}
+
+.test-editor-range input,
+.test-editor-line,
+.test-editor-add select {
+  font: inherit;
+  font-size: 14px;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+}
+
+.test-editor-add {
+  align-self: flex-start;
+  max-width: 100%;
+
+  select {
+    max-width: 100%;
+  }
+}
+
+.test-editor-row .segmented {
+  justify-self: start;
+
+  button {
+    font-size: 14px;
+    padding: 4px 12px;
+  }
+}

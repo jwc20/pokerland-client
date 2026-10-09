@@ -1,12 +1,13 @@
 import type {
-  GeneratedSkillEnum,
   GradeEnum,
   Legal,
   PracticeActionEnum,
   PracticeSkillEnum,
   ReasonEnum,
   ScenarioGradingEnum,
+  ScenarioSpec,
 } from './api/generated/data-contracts.ts'
+import { formatUnit, type Unit } from './table.ts'
 
 /** A bet size the action bar offers: its label, and the total it makes the bet. */
 export interface Preset {
@@ -83,25 +84,32 @@ export const GRADE_LABELS: Record<GradeEnum, string> = {
 
 /** How each grading kind works its answer out, as the feedback card names it (pokerland-practice-mode.md, 5). */
 export const GRADING_INFO: Record<ScenarioGradingEnum, { label: string; hint: string }> = {
-  exact: { label: 'Exact', hint: 'Worked out from the numbers on the table, and any range stated with the spot.' },
-  reference: { label: 'Reference range', hint: 'A published chart of which hands to play.' },
+  exact: { label: 'Exact', hint: 'Worked out from the numbers in the spot, and any range stated with it.' },
+  reference: {
+    label: 'Reference range',
+    hint: 'A published chart of which hands to play, or a range stated with the spot.',
+  },
   rule: { label: 'Rule of thumb', hint: 'A playbook card applied to the spot. It counts at half weight.' },
   reflection: { label: 'Reflection', hint: 'Spots like this have no answer to check against: it isn’t graded.' },
 }
 
 export const SKILL_HINTS: Record<PracticeSkillEnum, string> = {
   arithmetic: 'Pot odds, the equity a call needs, MDF, how often a bluff must work, M.',
-  preflop: 'Your own decisions before the flop, graded by the playbook where a card applies.',
+  preflop: 'Opening ranges from the course’s chart, and your own decisions before the flop, graded by the playbook.',
   postflop: 'Your own decisions after the flop, and all-ins against a shown hand.',
   push_fold: 'Short stacks: shove or fold, call or fold, against a stated range.',
-  hand_reading: 'Which hands a line represents.',
+  hand_reading: 'Which hands a line represents: a share of hands, picked on the grid.',
 }
 
 /** What each generated set drills. */
-export const GENERATED_HINTS: Record<GeneratedSkillEnum, string> = {
+export const GENERATED_HINTS: Record<PracticeSkillEnum, string> = {
   arithmetic: 'A bet to face, or one of yours: the equity a call needs, pot odds, MDF, how often a bluff must work.',
+  preflop:
+    'A full table in a tournament’s value zone: open or fold from early and middle position, or face a raise, ' +
+    'graded by the MIT course’s chart.',
   postflop: 'An all-in from a hand that is shown, against your draw: call or fold, with every card to come counted.',
   push_fold: 'Ten big blinds or so: shove or fold, or call a shove, against a range stated with the spot.',
+  hand_reading: 'A player opens or re-raises with a stated share of hands: pick those hands on the grid.',
 }
 
 /** The reasons the picker offers for a move, by the moves they fit (pokerland-practice-mode-additional.md, 4.3). */
@@ -134,4 +142,9 @@ export function percent(share: number): string {
 /** "+1.8 bb", "−0.6 bb": an EV in big blinds, to a tenth. */
 export function evText(bb: number): string {
   return `${bb.toLocaleString(undefined, { maximumFractionDigits: 2, signDisplay: 'exceptZero' })} bb`
+}
+
+/** An amount in a spot, in the unit chosen: its table's chips or money, or plain chips for a spot with no table. */
+export function specAmount(spec: ScenarioSpec, unit: Unit, chips = 0): string {
+  return spec.hand ? formatUnit(chips, spec.hand.currency, spec.hand.big_blind, unit) : chips.toLocaleString()
 }

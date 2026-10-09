@@ -8,6 +8,7 @@ import NotesPanel from '../components/NotesPanel.tsx'
 import PlayingCard from '../components/PlayingCard.tsx'
 import ReplayControls from '../components/ReplayControls.tsx'
 import ReplayTimeline from '../components/ReplayTimeline.tsx'
+import ShareWithClass from '../components/ShareWithClass.tsx'
 import { formatAmount, formatBb, formatDateTime, formatShare, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
 import { heroBets, purposeOf, streetsReached, type PurposeControl } from '../notes.ts'
 import { buildReplay, holeCardCount, lastDecisionStreet, type ReplaySeat } from '../replay.ts'
@@ -187,6 +188,8 @@ function Replay({ hand }: { hand: HandDetail }) {
           onSeek={player.seek}
         />
       )}
+
+      {hand.hero && <ShareWithClass hand={hand.id} />}
 
       <details className="replay-phh">
         <summary>PHH notation</summary>
