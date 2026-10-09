@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
 import { errorMessage, stats } from '../api/client.ts'
 import type { HandTag, StatGroup, StatSet, StatsListParams } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { inViewerTimeZone } from '../calendar.ts'
 import DisciplineCard from '../components/DisciplineCard.tsx'
 import MyGameTabs from '../components/MyGameTabs.tsx'
@@ -52,26 +53,11 @@ async function loadReport(filters: StatsListParams): Promise<Report> {
 function MyGamePage() {
   const scope = useScope()
   const tags = useHandTags()
-  // Remembers which filters it holds, so a change shows as loading.
-  const [loaded, setLoaded] = useState<{ key: string; report?: Report; error?: string }>()
   const { key } = scope
-
-  useEffect(() => {
-    let active = true
-    loadReport(apiScope(new URLSearchParams(key))).then(
-      (report) => {
-        if (active) setLoaded({ key, report })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // The last filters' report stays on screen, faded, until the next one arrives; an upload refreshes it.
+  const filters = apiScope(new URLSearchParams(key))
+  const query = useQuery(queries.stats.report('my-game', filters, () => loadReport(filters)))
+  const current = query.error ? { error: errorMessage(query.error) } : query.data && { report: query.data }
   return (
     <section className="my-game">
       <header className="my-game-header">
@@ -91,7 +77,9 @@ function MyGamePage() {
           {current.error}
         </p>
       ) : current?.report ? (
-        <ReportView report={current.report} base={scope.base} tags={tags} />
+        <div className={query.isPlaceholderData ? 'my-game-report is-updating' : 'my-game-report'}>
+          <ReportView report={current.report} base={scope.base} tags={tags} />
+        </div>
       ) : (
         <p>Loading…</p>
       )}

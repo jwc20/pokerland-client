@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router'
-import { hands, spots as spotsApi } from './api/client.ts'
-import type { HandTag, SavedSpot } from './api/generated/data-contracts.ts'
+import { changes } from './api/changes.ts'
+import { queries } from './api/queries.ts'
 import type { HistoryFilters } from './historyFilters.ts'
 
 /** The API's parameters for a page's hands: one tag, days, and a saved spot or a spec of conditions. */
@@ -64,39 +64,16 @@ export function useScope() {
   return { params, tag, since, until, spot, spec, base, query, key: params.toString(), setFilters, clear, narrowed }
 }
 
-/** The user's position, game, stakes and format tags; none until they load, or if they don't. */
+/** The user's position, game, stakes and format tags; none until they load, or if they don't (the filters then
+ * offer all hands alone). */
 export function useHandTags() {
-  const [tags, setTags] = useState<HandTag[]>()
-  useEffect(() => {
-    let active = true
-    hands.handsTagsList().then(
-      ({ data }) => {
-        if (active) setTags(data)
-      },
-      () => {}, // the filters offer all hands alone
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-  return tags
+  return useQuery(queries.hands.tags()).data
 }
 
-/** The user's saved spots, and a way to load them again after one is saved or deleted. */
+/** The user's saved spots (none to offer until they load, or if they don't), and telling the app one was saved: the
+ * list and every result filtered by that spot are fetched again. */
 export function useSavedSpots() {
-  const [spots, setSpots] = useState<SavedSpot[]>()
-  const [version, setVersion] = useState(0)
-  useEffect(() => {
-    let active = true
-    spotsApi.spotsList().then(
-      ({ data }) => {
-        if (active) setSpots(data)
-      },
-      () => {}, // no saved spots to offer
-    )
-    return () => {
-      active = false
-    }
-  }, [version])
-  return { spots, reload: () => setVersion((n) => n + 1) }
+  const client = useQueryClient()
+  const spots = useQuery(queries.spots.list()).data
+  return { spots, changed: (id: number) => void changes.spot(client, id) }
 }

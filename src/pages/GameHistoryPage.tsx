@@ -1,17 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { errorMessage, hands, review } from '../api/client.ts'
-import type { HandSummary, HandTag, HandsListParams, NoteTag } from '../api/generated/data-contracts.ts'
+import { errorMessage } from '../api/client.ts'
+import type { HandsListParams } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
 import HandTable from '../components/HandTable.tsx'
 import HistoryFilterBar from '../components/HistoryFilterBar.tsx'
 import { historyParams, narrowed, readHistoryFilters, type HistoryFilters } from '../historyFilters.ts'
 import './GameHistoryPage.css'
-
-/** The cursor in a page's `next` link, which the generated client takes as a parameter. */
-function cursorOf(url: string) {
-  return new URL(url).searchParams.get('cursor') ?? undefined
-}
 
 /** The API's parameters for the filters; days are the viewer's, as the home page's calendar counts them. */
 function listParams(filters: HistoryFilters): HandsListParams {
@@ -39,8 +36,9 @@ function GameHistoryPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const search = searchParams.toString()
   const filters = useMemo(() => readHistoryFilters(new URLSearchParams(search)), [search])
-  const tags = useTags()
-  const noteTags = useNoteTags()
+  // The filters offer "Any" alone until the tags load, or if they don't, and only a note tag already in the URL.
+  const tags = useQuery(queries.hands.tags()).data
+  const noteTags = useQuery(queries.review()).data?.tags
 
   return (
     <section className="game-history">
@@ -66,88 +64,18 @@ function GameHistoryPage() {
           setSearchParams(historyParams(update(latest)), { replace: true })
         }}
       />
-      {/* Keyed, so other filters start again from the first page. */}
-      <HandList key={search} filters={filters} />
+      <HandList filters={filters} />
     </section>
   )
 }
 
-/** The user's tags, for the filters' choices; until they load, or if they don't, none. */
-function useTags() {
-  const [tags, setTags] = useState<HandTag[]>()
-  useEffect(() => {
-    let active = true
-    hands.handsTagsList().then(
-      ({ data }) => {
-        if (active) setTags(data)
-      },
-      () => {}, // the filters offer "Any" alone
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-  return tags
-}
-
-/** The user's own tags from their notes, for the filter's choices; none until they load, or if they don't. */
-function useNoteTags() {
-  const [tags, setTags] = useState<NoteTag[]>()
-  useEffect(() => {
-    let active = true
-    review.reviewRetrieve().then(
-      ({ data }) => {
-        if (active) setTags(data.tags)
-      },
-      () => {}, // the filter shows only a tag already in the URL
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-  return tags
-}
-
+/** The hands, a page at a time ("Load more"). Other filters start again from the first page; until it arrives, the
+ * last filters' hands stay on screen, faded. */
 function HandList({ filters }: { filters: HistoryFilters }) {
-  // The page keys this list by its URL, so the filters it starts with are its own.
-  const [params] = useState(() => listParams(filters))
-  const [rows, setRows] = useState<HandSummary[]>()
-  const [next, setNext] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [loadingMore, setLoadingMore] = useState(false)
-
-  useEffect(() => {
-    let active = true
-    hands.handsList(params).then(
-      ({ data }) => {
-        if (!active) return
-        setRows(data.results)
-        setNext(data.next ?? null)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [params])
-
-  async function loadMore() {
-    if (!next) return
-    setLoadingMore(true)
-    setError(null)
-    try {
-      // The client builds the query from its parameters, so the filters go along with the cursor.
-      const { data } = await hands.handsList({ ...params, cursor: cursorOf(next) })
-      setRows((current) => [...(current ?? []), ...data.results])
-      setNext(data.next ?? null)
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setLoadingMore(false)
-    }
-  }
+  const query = useInfiniteQuery(queries.hands.list(listParams(filters)))
+  const rows = useMemo(() => query.data?.pages.flatMap((page) => page.results), [query.data])
+  const error = query.error ? errorMessage(query.error) : null
+  const loadingMore = query.isFetchingNextPage
 
   return (
     <>
@@ -160,7 +88,9 @@ function HandList({ filters }: { filters: HistoryFilters }) {
             : 'No hands yet. Play a hand with the tracker running and it shows up here.'}
         </p>
       ) : (
-        <HandTable hands={rows} />
+        <div className={query.isPlaceholderData ? 'is-updating' : undefined} aria-busy={query.isPlaceholderData}>
+          <HandTable hands={rows} />
+        </div>
       )}
 
       {error && (
@@ -168,8 +98,13 @@ function HandList({ filters }: { filters: HistoryFilters }) {
           {error}
         </p>
       )}
-      {next && (
-        <button type="button" className="button game-history-more" onClick={loadMore} disabled={loadingMore}>
+      {query.hasNextPage && !query.isPlaceholderData && (
+        <button
+          type="button"
+          className="button game-history-more"
+          onClick={() => void query.fetchNextPage()}
+          disabled={loadingMore}
+        >
           {loadingMore ? 'Loading…' : 'Load more'}
         </button>
       )}

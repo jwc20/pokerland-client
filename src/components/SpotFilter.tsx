@@ -17,7 +17,7 @@ export interface SpotParams {
  * spot. `onChange` sets the URL's parameters.
  */
 function SpotFilter({ value, onChange }: { value: SpotParams; onChange: (changes: SpotParams) => void }) {
-  const { spots, reload } = useSavedSpots()
+  const { spots, changed } = useSavedSpots()
   const [open, setOpen] = useState(Boolean(value.spec))
   const editing = spots?.find((spot) => spot.id === value.spotEdit)
   const chosen = spots?.find((spot) => spot.id === value.spot)
@@ -33,7 +33,7 @@ function SpotFilter({ value, onChange }: { value: SpotParams; onChange: (changes
   }
 
   function saved(spot: SavedSpot) {
-    reload()
+    changed(spot.id)
     setOpen(false)
     onChange({ spot: spot.id, spec: undefined, spotEdit: undefined })
   }

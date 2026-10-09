@@ -1,8 +1,10 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import './index.css'
 import App from './App.tsx'
+import { queryClient } from './api/queryClient.ts'
 import AuthProvider from './auth/AuthProvider.tsx'
 import UpdateBanner from './UpdateBanner.tsx'
 
@@ -17,11 +19,13 @@ window.addEventListener('vite:preloadError', (event) => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
     <UpdateBanner />
   </StrictMode>,
 )

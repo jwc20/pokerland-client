@@ -1,7 +1,10 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, leagues } from '../api/client.ts'
 import type { League } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import './ShareWithClass.css'
 
 /**
@@ -10,40 +13,37 @@ import './ShareWithClass.css'
  * the class's page.
  */
 function ShareWithClass({ hand }: { hand: number }) {
-  const [classes, setClasses] = useState<League[]>()
+  const client = useQueryClient()
   const [open, setOpen] = useState(false)
-  const [chosen, setChosen] = useState<number | ''>('')
+  // The user's classes, asked for once the form opens; with one, it is chosen already.
+  const classesQuery = useQuery({ ...queries.leagues.list(), enabled: open })
+  const classes = classesQuery.data
+  const [picked, setPicked] = useState<number | ''>('')
+  const chosen = picked !== '' ? picked : classes?.length === 1 ? classes[0].id : ''
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string>()
+  const [shareError, setShareError] = useState<string>()
+  const error = shareError ?? (classesQuery.error ? errorMessage(classesQuery.error) : undefined)
   const [shared, setShared] = useState<League>()
 
   function toggle() {
     setOpen(!open)
     setShared(undefined)
-    if (!classes) {
-      leagues.leaguesList().then(
-        ({ data }) => {
-          setClasses(data)
-          if (data.length === 1) setChosen(data[0].id)
-        },
-        (err) => setError(errorMessage(err)),
-      )
-    }
   }
 
   async function share(event: FormEvent) {
     event.preventDefault()
     if (chosen === '') return
     setBusy(true)
-    setError(undefined)
+    setShareError(undefined)
     try {
       await leagues.leaguesAssignmentsCreate({ id: chosen }, { kind: 'hand', hand, note: note.trim() })
+      void changes.league(client) // the class's hands and count
       setShared(classes?.find((league) => league.id === chosen))
       setNote('')
       setOpen(false)
     } catch (err) {
-      setError(errorMessage(err))
+      setShareError(errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -73,7 +73,7 @@ function ShareWithClass({ hand }: { hand: number }) {
               <select
                 value={chosen}
                 required
-                onChange={(event) => setChosen(event.target.value ? Number(event.target.value) : '')}
+                onChange={(event) => setPicked(event.target.value ? Number(event.target.value) : '')}
               >
                 <option value="">Choose a class…</option>
                 {classes.map((league) => (

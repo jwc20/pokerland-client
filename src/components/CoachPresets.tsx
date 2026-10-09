@@ -1,6 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
+import { changes } from '../api/changes.ts'
 import { errorMessage, leaks } from '../api/client.ts'
 import type { PatchedPresetsUpdateRequest, Preset } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { useScrollToHash } from '../useScrollToHash.ts'
 import './CoachPresets.css'
 
@@ -12,50 +15,40 @@ const number = (value: number) => value.toLocaleString(undefined, { maximumFract
  * the user can change, and put back.
  */
 function CoachPresets() {
-  const [rows, setRows] = useState<Preset[]>()
+  const client = useQueryClient()
+  const presetsQuery = queries.leaks.presets()
+  const query = useQuery(presetsQuery)
+  const rows = query.data
   // What the user has typed, by preset, until it is saved.
   const [draft, setDraft] = useState<Partial<Record<Preset['key'], string>>>({})
-  const [error, setError] = useState<string>()
+  const [saveError, setSaveError] = useState<string>()
   const [status, setStatus] = useState<'saving' | 'saved'>()
+  const error = saveError ?? (query.error ? errorMessage(query.error) : undefined)
   useScrollToHash('coach-presets', rows !== undefined)
 
-  useEffect(() => {
-    let active = true
-    leaks.leaksPresetsList().then(
-      ({ data }) => {
-        if (active) setRows(data)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
-  async function save(changes: PatchedPresetsUpdateRequest) {
+  async function save(update: PatchedPresetsUpdateRequest) {
     setStatus('saving')
-    setError(undefined)
+    setSaveError(undefined)
     try {
-      const { data } = await leaks.leaksPresetsPartialUpdate(changes)
-      setRows(data)
+      const { data } = await leaks.leaksPresetsPartialUpdate(update)
+      client.setQueryData(presetsQuery.queryKey, data)
+      void changes.leaks(client) // the checks hold you to these thresholds
       setDraft({})
       setStatus('saved')
     } catch (err) {
-      setError(errorMessage(err))
+      setSaveError(errorMessage(err))
       setStatus(undefined)
     }
   }
 
   function submit(event: FormEvent) {
     event.preventDefault()
-    const changes: PatchedPresetsUpdateRequest = {}
+    const update: PatchedPresetsUpdateRequest = {}
     for (const row of rows ?? []) {
       const typed = draft[row.key]
-      if (typed !== undefined && typed !== '' && Number(typed) !== row.value) changes[row.key] = Number(typed)
+      if (typed !== undefined && typed !== '' && Number(typed) !== row.value) update[row.key] = Number(typed)
     }
-    void save(changes)
+    void save(update)
   }
 
   const changed = Object.entries(draft).some(([key, typed]) => {

@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
+import { queries } from '../api/queries.ts'
 import type {
   AttemptRequestRequest,
   AttemptResult,
@@ -30,26 +33,14 @@ const KIND_LABELS: Record<PracticeSetKindEnum, string> = {
 /** A practice set, one spot at a time: the table as it stood, the question, then the feedback. */
 function PracticeSetPage() {
   const { id = '' } = useParams()
-  // Remembers which id it holds, so a different set in the URL shows as loading.
-  const [loaded, setLoaded] = useState<{ id: string; set?: PracticeSet; error?: string }>()
-
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    practice.practiceSetsRetrieve({ id: Number(id) }).then(
-      ({ data }) => {
-        if (active) setLoaded({ id, set: data })
-      },
-      (err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  const valid = /^\d+$/.test(id)
+  // The set as the server has it on each visit: the player below takes it from there.
+  const query = useQuery({ ...queries.practice.set(Number(id)), enabled: valid })
+  const current: { set?: PracticeSet; error?: string } | undefined = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data && { set: query.data }
   return (
     <section className="practice-set">
       <Link className="back-link" to="/practice">
@@ -171,6 +162,7 @@ function SpotView({
 }) {
   const { scenario, attempt } = spot
   const navigate = useNavigate()
+  const client = useQueryClient()
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string>()
   const [again, setAgain] = useState(false)
@@ -179,7 +171,10 @@ function SpotView({
 
   function playOut() {
     practice.practiceTablesCreate({ scenario: scenario.id }).then(
-      ({ data }) => navigate(`/practice/play/${data.id}`),
+      ({ data }) => {
+        void changes.practiceList(client, 'tables')
+        navigate(`/practice/play/${data.id}`)
+      },
       (err) => setError(errorMessage(err)),
     )
   }
@@ -189,7 +184,10 @@ function SpotView({
     setSending(true)
     const request: AttemptRequestRequest = { scenario: scenario.id, set: setId, ...answer, tz: browserTimeZone() }
     practice.practiceAttemptsCreate(request).then(
-      ({ data }) => onAnswered(data),
+      ({ data }) => {
+        void changes.answer(client)
+        onAnswered(data)
+      },
       (err) => {
         setSending(false)
         setError(errorMessage(err))
@@ -199,7 +197,10 @@ function SpotView({
 
   function againLater() {
     practice.practiceReviewsCreate({ scenario: scenario.id, tz: browserTimeZone() }).then(
-      () => setAgain(true),
+      () => {
+        void changes.answer(client) // the profile counts the reviews due
+        setAgain(true)
+      },
       (err) => setError(errorMessage(err)),
     )
   }

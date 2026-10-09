@@ -1,8 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
 import type { HttpResponse } from '../api/generated/http-client.ts'
 import type { PlaybookDetail, PlaybookVocabulary } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import RuleEditor from '../components/RuleEditor.tsx'
 import { blankCard, fromEditable, LIMITS, MAX_CARDS, toEditable, type EditableCard } from '../playbooks.ts'
 import './PlaybookEditPage.css'
@@ -28,40 +31,35 @@ function saveErrors(err: unknown): string[] {
  */
 function PlaybookEditPage() {
   const id = Number(useParams().id)
-  const navigate = useNavigate()
-  const [playbook, setPlaybook] = useState<PlaybookDetail>()
-  const [vocabulary, setVocabulary] = useState<PlaybookVocabulary>()
-  const [draft, setDraft] = useState<Draft>()
-  const [loadError, setLoadError] = useState<string>()
-  const [errors, setErrors] = useState<string[]>([])
-  const [saving, setSaving] = useState(false)
+  const playbookQuery = useQuery(queries.practice.playbook(id))
+  const vocabularyQuery = useQuery(queries.practice.vocabulary())
+  const failed = playbookQuery.error ?? vocabularyQuery.error
 
-  useEffect(() => {
-    let active = true
-    Promise.all([practice.practicePlaybooksRetrieve({ id }), practice.practicePlaybooksVocabularyRetrieve()]).then(
-      ([{ data: found }, { data: words }]) => {
-        if (!active) return
-        setPlaybook(found)
-        setVocabulary(words)
-        setDraft({ name: found.name, description: found.description, cards: found.rules.map(toEditable) })
-      },
-      (err) => {
-        if (active) setLoadError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  if (loadError) {
+  if (failed) {
     return (
       <p className="error-message" role="alert">
-        {loadError}
+        {errorMessage(failed)}
       </p>
     )
   }
-  if (!playbook || !vocabulary || !draft) return <p>Loading…</p>
+  const playbook = playbookQuery.data
+  const vocabulary = vocabularyQuery.data
+  if (!playbook || !vocabulary) return <p>Loading…</p>
+  // Keyed, so the draft starts from this playbook's cards once, and a refetch never resets what is being typed.
+  return <PlaybookEditor key={playbook.id} playbook={playbook} vocabulary={vocabulary} />
+}
+
+function PlaybookEditor({ playbook, vocabulary }: { playbook: PlaybookDetail; vocabulary: PlaybookVocabulary }) {
+  const navigate = useNavigate()
+  const client = useQueryClient()
+  const [draft, setDraft] = useState<Draft>(() => ({
+    name: playbook.name,
+    description: playbook.description,
+    cards: playbook.rules.map(toEditable),
+  }))
+  const [errors, setErrors] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+
   if (!playbook.mine || !playbook.latest) {
     return (
       <section className="playbook-edit">
@@ -88,7 +86,6 @@ function PlaybookEditPage() {
 
   async function save(event: FormEvent) {
     event.preventDefault()
-    if (!draft || !playbook) return
     setSaving(true)
     setErrors([])
     try {
@@ -96,6 +93,7 @@ function PlaybookEditPage() {
         { id: playbook.id },
         { name: draft.name.trim(), description: draft.description.trim(), rules: draft.cards.map(fromEditable) },
       )
+      void changes.playbook(client) // its new version, and the classes that move to it
       navigate(`/practice/playbook/${data.id}`)
     } catch (err) {
       setErrors(saveErrors(err))

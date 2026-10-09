@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
-import type { TestSummary } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
 import { formatDateTime } from '../handFormat.ts'
 import './AptitudePage.css'
@@ -12,27 +14,19 @@ import './AptitudePage.css'
  */
 function AptitudePage() {
   const navigate = useNavigate()
-  const [tests, setTests] = useState<TestSummary[]>()
+  const client = useQueryClient()
+  const tests = useQuery(queries.practice.tests()).data // the page works without them
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string>()
 
-  useEffect(() => {
-    let active = true
-    practice.practiceTestsList().then(
-      ({ data }) => {
-        if (active) setTests(data)
-      },
-      () => {}, // the page works without them
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
+  /** A new test: a POST that makes one, so it is sent each time, never shared with another request. */
   function start() {
     setStarting(true)
     practice.practiceTestsCreate({ tz: browserTimeZone() }).then(
-      ({ data }) => navigate(`/practice/test/${data.id}`),
+      ({ data }) => {
+        void changes.practiceList(client, 'tests')
+        navigate(`/practice/test/${data.id}`)
+      },
       (err) => {
         setStarting(false)
         setError(errorMessage(err))

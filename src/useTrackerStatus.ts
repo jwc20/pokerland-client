@@ -1,35 +1,14 @@
-import { useEffect, useState } from 'react'
-import { errorMessage, tracker } from './api/client.ts'
-import type { TrackerStatus } from './api/generated/data-contracts.ts'
+import { useQuery } from '@tanstack/react-query'
+import { errorMessage } from './api/client.ts'
+import { queries } from './api/queries.ts'
 
-/** Fetches what the user's trackers have uploaded; refreshes while the page is open. */
-export function useTrackerStatus(refreshMs = 30_000) {
-  const [status, setStatus] = useState<TrackerStatus>()
-  const [error, setError] = useState<string | null>(null)
+/** How often the tracker status is asked for while a page is open and visible. */
+export const TRACKER_POLL_MS = 30_000
 
-  useEffect(() => {
-    let active = true
-    function load() {
-      tracker.trackerStatusRetrieve().then(
-        ({ data }) => {
-          if (!active) return
-          setStatus(data)
-          setError(null)
-        },
-        (err) => {
-          if (active) setError(errorMessage(err))
-        },
-      )
-    }
-    load()
-    const timer = setInterval(load, refreshMs)
-    return () => {
-      active = false
-      clearInterval(timer)
-    }
-  }, [refreshMs])
-
-  return { status, error }
+/** What the user's trackers have uploaded, refreshed while the page is open: one query, shared with UploadWatcher. */
+export function useTrackerStatus() {
+  const query = useQuery({ ...queries.tracker.status(), refetchInterval: TRACKER_POLL_MS })
+  return { status: query.data, error: query.error ? errorMessage(query.error) : null }
 }
 
 export function formatAgo(iso: string) {
@@ -39,4 +18,3 @@ export function formatAgo(iso: string) {
   if (seconds < 86_400) return `${Math.floor(seconds / 3600)} h ago`
   return `${Math.floor(seconds / 86_400)} d ago`
 }
-

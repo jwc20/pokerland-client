@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { errorMessage, sessions } from '../api/client.ts'
-import type { Session, SessionPatterns } from '../api/generated/data-contracts.ts'
-import { browserTimeZone, inViewerTimeZone } from '../calendar.ts'
+import { errorMessage } from '../api/client.ts'
+import type { Session } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
+import { browserTimeZone } from '../calendar.ts'
 import PositionBars from '../components/PositionBars.tsx'
 import { formatBb, formatDateTime } from '../handFormat.ts'
 import { historyUrl } from '../historyFilters.ts'
@@ -55,39 +57,21 @@ function SessionsPage() {
       </div>
 
       <Patterns since={since} until={until} />
-      {/* Keyed, so other days start the list again from the latest. */}
-      <SessionList key={`${since}:${until}`} since={since} until={until} />
+      <SessionList since={since} until={until} />
     </section>
   )
 }
 
 function Patterns({ since, until }: { since: string; until: string }) {
-  const key = `${since}:${until}`
-  const [loaded, setLoaded] = useState<{ key: string; patterns?: SessionPatterns; error?: string }>()
-
-  useEffect(() => {
-    const [from, to] = key.split(':')
-    let active = true
-    inViewerTimeZone((tz) => sessions.sessionsPatternsRetrieve({ since: from || undefined, until: to || undefined, tz })).then(
-      ({ data }) => {
-        if (active) setLoaded({ key, patterns: data })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // Other days keep the last patterns on screen, faded, until theirs arrive; an upload refreshes them.
+  const query = useQuery(queries.sessions.patterns({ since: since || undefined, until: until || undefined }))
+  const current = query.error ? { error: errorMessage(query.error) } : query.data && { patterns: query.data }
   return (
     <section className="card" aria-labelledby="sessions-patterns">
       <h2 id="sessions-patterns" className="card-header">
         When you play well
       </h2>
-      <div className="card-body">
+      <div className={query.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
         <p className="card-hint">
           bb/100 in each, with its 95% range. Ranges this wide are the honest answer: it takes many hands to tell.
         </p>
@@ -122,57 +106,24 @@ function Patterns({ since, until }: { since: string; until: string }) {
   )
 }
 
-/** The cursor in a page's `next` link, which the generated client takes as a parameter. */
-function cursorOf(url: string) {
-  return new URL(url).searchParams.get('cursor') ?? undefined
-}
-
+/** The sessions, the latest first, a page at a time. Other days start again from the latest; until they arrive,
+ * the last days' sessions stay on screen, faded. */
 function SessionList({ since, until }: { since: string; until: string }) {
-  const [rows, setRows] = useState<Session[]>()
-  const [next, setNext] = useState<string | null>(null)
-  const [error, setError] = useState<string>()
-  const [loadingMore, setLoadingMore] = useState(false)
-  // The list keeps the filters it was made with: the page keys it by them.
-  const [query] = useState(() => ({ since: since || undefined, until: until || undefined, tz: browserTimeZone() }))
-
-  useEffect(() => {
-    let active = true
-    sessions.sessionsList(query).then(
-      ({ data }) => {
-        if (!active) return
-        setRows(data.results)
-        setNext(data.next ?? null)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [query])
-
-  async function loadMore() {
-    if (!next) return
-    setLoadingMore(true)
-    setError(undefined)
-    try {
-      const { data } = await sessions.sessionsList({ ...query, cursor: cursorOf(next) })
-      setRows((current) => [...(current ?? []), ...data.results])
-      setNext(data.next ?? null)
-    } catch (err) {
-      setError(errorMessage(err))
-    } finally {
-      setLoadingMore(false)
-    }
-  }
+  const query = useInfiniteQuery(
+    queries.sessions.list({ since: since || undefined, until: until || undefined, tz: browserTimeZone() }),
+  )
+  const rows: Session[] | undefined = useMemo(() => query.data?.pages.flatMap((page) => page.results), [query.data])
+  const error = query.error ? errorMessage(query.error) : undefined
+  const loadingMore = query.isFetchingNextPage
+  const next = query.hasNextPage && !query.isPlaceholderData
+  const loadMore = () => void query.fetchNextPage()
 
   return (
     <section className="card" aria-labelledby="sessions-list">
       <h2 id="sessions-list" className="card-header">
         Your sessions
       </h2>
-      <div className="card-body">
+      <div className={query.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
         {rows === undefined ? (
           !error && <p>Loading…</p>
         ) : rows.length === 0 ? (

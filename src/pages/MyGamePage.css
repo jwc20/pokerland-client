@@ -104,3 +104,10 @@
   text-align: right;
   color: var(--text);
 }
+
+/* The report's sections, laid out as the page's own, so they can fade together while other filters load. */
+.my-game-report {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { errorMessage, users } from '../api/client.ts'
+import { useQuery } from '@tanstack/react-query'
+import { errorMessage } from '../api/client.ts'
+import { queries } from '../api/queries.ts'
 import CoachPresets from '../components/CoachPresets.tsx'
 import CopyButton from '../components/CopyButton.tsx'
 import TrackerDownloads from '../components/TrackerDownloads.tsx'
@@ -7,23 +8,9 @@ import TrackerStatus from '../components/TrackerStatus.tsx'
 import './SettingsPage.css'
 
 function SettingsPage() {
-  const [clientToken, setClientToken] = useState<string>()
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    let active = true
-    users.usersMeClientTokenRetrieve().then(
-      ({ data }) => {
-        if (active) setClientToken(data.client_token)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
+  const query = useQuery(queries.clientToken())
+  const clientToken = query.data?.client_token
+  const error = query.error ? errorMessage(query.error) : null
 
   return (
     <div className="settings">

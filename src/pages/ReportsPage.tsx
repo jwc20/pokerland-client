@@ -1,7 +1,9 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { errorMessage, stats } from '../api/client.ts'
-import type { Barrel, LinesReport, LineSpot, Stat, StatGroup } from '../api/generated/data-contracts.ts'
+import type { Barrel, LinesReport, LineSpot, Stat, StatGroup, StatsListParams } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { inViewerTimeZone } from '../calendar.ts'
 import MyGameTabs from '../components/MyGameTabs.tsx'
 import PositionBars from '../components/PositionBars.tsx'
@@ -63,6 +65,19 @@ interface Report {
   lines: LinesReport
 }
 
+/** The report's groupings and lines, in the viewer's time zone, or UTC if the API doesn't know it. */
+async function loadReport(filters: StatsListParams): Promise<Report> {
+  const [situations, depths, zones, lines] = await inViewerTimeZone((tz) =>
+    Promise.all([
+      stats.statsList({ ...filters, group_by: 'situation', tz }),
+      stats.statsList({ ...filters, group_by: 'stack_depth', tz }),
+      stats.statsList({ ...filters, group_by: 'm_zone', tz }),
+      stats.statsLinesRetrieve({ ...filters, tz }),
+    ]),
+  )
+  return { situations: situations.data, depths: depths.data, zones: zones.data, lines: lines.data }
+}
+
 /** A share as a percentage with its bar, or a dash with too few chances. */
 function Share({ stat }: { stat: Stat }) {
   if (!enough(stat)) {
@@ -88,35 +103,11 @@ function Share({ stat }: { stat: Stat }) {
 function ReportsPage() {
   const scope = useScope()
   const tags = useHandTags()
-  const [loaded, setLoaded] = useState<{ key: string; report?: Report; error?: string }>()
   const { key } = scope
-
-  useEffect(() => {
-    const filters = apiScope(new URLSearchParams(key))
-    let active = true
-    inViewerTimeZone((tz) =>
-      Promise.all([
-        stats.statsList({ ...filters, group_by: 'situation', tz }),
-        stats.statsList({ ...filters, group_by: 'stack_depth', tz }),
-        stats.statsList({ ...filters, group_by: 'm_zone', tz }),
-        stats.statsLinesRetrieve({ ...filters, tz }),
-      ]),
-    ).then(
-      ([situations, depths, zones, lines]) => {
-        if (active) {
-          setLoaded({ key, report: { situations: situations.data, depths: depths.data, zones: zones.data, lines: lines.data } })
-        }
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // The last filters' report stays on screen, faded, until the next one arrives; an upload refreshes it.
+  const filters = apiScope(new URLSearchParams(key))
+  const query = useQuery(queries.stats.report('situations', filters, () => loadReport(filters)))
+  const current = query.error ? { error: errorMessage(query.error) } : query.data && { report: query.data }
   return (
     <section className="reports">
       <header className="reports-header">
@@ -133,7 +124,9 @@ function ReportsPage() {
           {current.error}
         </p>
       ) : current?.report ? (
-        <ReportView report={current.report} base={scope.base} />
+        <div className={query.isPlaceholderData ? 'reports-report is-updating' : 'reports-report'}>
+          <ReportView report={current.report} base={scope.base} />
+        </div>
       ) : (
         <p>Loading…</p>
       )}

@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { errorMessage, review } from '../api/client.ts'
-import type { ReviewQueue as Queue } from '../api/generated/data-contracts.ts'
+import { errorMessage } from '../api/client.ts'
+import { queries } from '../api/queries.ts'
 import { historyUrl } from '../historyFilters.ts'
 import HandTable from './HandTable.tsx'
 import './ReviewQueue.css'
@@ -12,31 +12,15 @@ import './ReviewQueue.css'
  * shows while none wait.
  */
 function ReviewQueue() {
-  const [loaded, setLoaded] = useState<{ queue?: Queue; error?: string }>()
-
-  useEffect(() => {
-    let active = true
-    review.reviewRetrieve().then(
-      ({ data }) => {
-        if (active) setLoaded({ queue: data })
-      },
-      (err) => {
-        if (active) setLoaded({ error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
-  if (loaded?.error) {
+  const query = useQuery(queries.review())
+  if (query.error) {
     return (
       <p className="error-message" role="alert">
-        {loaded.error}
+        {errorMessage(query.error)}
       </p>
     )
   }
-  const queue = loaded?.queue
+  const queue = query.data
   if (!queue || queue.to_review === 0) return null
   const count = `${queue.to_review.toLocaleString()} ${queue.to_review === 1 ? 'hand' : 'hands'} to review`
   return (

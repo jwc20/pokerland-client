@@ -1,26 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
 import type { PracticeProfile, PracticeSet, PracticeSkillEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
 import SkillBars from '../components/SkillBars.tsx'
 import { GENERATED_HINTS, GRADE_LABELS } from '../practice.ts'
 import './PracticePage.css'
-
-/** The practice profile and today's set, by days in the viewer's time zone, or UTC if the API doesn't know it. */
-async function loadPractice(): Promise<{ profile: PracticeProfile; today: PracticeSet }> {
-  const load = (tz: string) =>
-    Promise.all([practice.practiceProfileRetrieve({ tz }), practice.practiceSetsTodayRetrieve({ tz })])
-  let responses
-  try {
-    responses = await load(browserTimeZone())
-  } catch (err) {
-    if (!(err instanceof Response && err.status === 400)) throw err
-    responses = await load('UTC')
-  }
-  const [{ data: profile }, { data: today }] = responses
-  return { profile, today }
-}
 
 /**
  * Practice: today's short set, the modes to drill one kind of spot, and accuracy by skill with its range. Your
@@ -28,30 +15,24 @@ async function loadPractice(): Promise<{ profile: PracticeProfile; today: Practi
  */
 function PracticePage() {
   const navigate = useNavigate()
-  const [loaded, setLoaded] = useState<{ profile: PracticeProfile; today: PracticeSet }>()
-  const [error, setError] = useState<string>()
+  // The profile and today's set, by days in the viewer's time zone: fetched afresh on every visit, as answers move
+  // them on. Today's set is made by the server the first time it is asked for.
+  const profileQuery = useQuery(queries.practice.profile())
+  const todayQuery = useQuery(queries.practice.today())
+  const loaded: { profile: PracticeProfile; today: PracticeSet } | undefined =
+    profileQuery.data && todayQuery.data ? { profile: profileQuery.data, today: todayQuery.data } : undefined
+  const [startError, setStartError] = useState<string>()
+  const failed = profileQuery.error ?? todayQuery.error
+  const error = startError ?? (failed ? errorMessage(failed) : undefined)
   const [skill, setSkill] = useState<PracticeSkillEnum>('arithmetic')
   const [starting, setStarting] = useState(false)
   const [notice, setNotice] = useState<string>()
 
-  useEffect(() => {
-    let active = true
-    loadPractice().then(
-      (data) => {
-        if (active) setLoaded(data)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
+  /** A new set of one mode: a POST that makes one, so it is sent each time, never shared with another request. */
   function start(kind: 'my_hands' | 'generated' | 'library' | 'their_seat' | 'shared') {
     setStarting(true)
     setNotice(undefined)
+    setStartError(undefined)
     practice.practiceSetsCreate({ kind, skill: kind === 'generated' ? skill : undefined, tz: browserTimeZone() }).then(
       ({ data }) => {
         if (kind === 'shared' && data.spots.length === 0) {
@@ -66,7 +47,7 @@ function PracticePage() {
       },
       (err) => {
         setStarting(false)
-        setError(errorMessage(err))
+        setStartError(errorMessage(err))
       },
     )
   }

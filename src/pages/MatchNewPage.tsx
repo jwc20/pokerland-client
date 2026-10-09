@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
-import type { MatchCoachEnum, MatchOpponentEnum, MatchSummary, Playbook } from '../api/generated/data-contracts.ts'
+import type { MatchCoachEnum, MatchOpponentEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { STAGES } from '../coach.ts'
 import { formatDateTime } from '../handFormat.ts'
 import { STYLE_LABELS } from '../practice.ts'
@@ -24,36 +27,23 @@ function MatchNewPage() {
   // ?playbook=N, as a class's page links to its playbook; the house one otherwise.
   const [params] = useSearchParams()
   const [playbook, setPlaybook] = useState<number | undefined>(Number(params.get('playbook')) || undefined)
-  const [playbooks, setPlaybooks] = useState<Playbook[]>()
+  // Without the playbooks, the match is played by the house playbook; the page works without the recent matches.
+  const playbooks = useQuery(queries.practice.playbooks()).data
+  const recent = useQuery(queries.practice.matches()).data
+  const client = useQueryClient()
   const [opponent, setOpponent] = useState<MatchOpponentEnum>('mystery')
   const [coach, setCoach] = useState<MatchCoachEnum>('progress')
-  const [recent, setRecent] = useState<MatchSummary[]>()
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string>()
 
-  useEffect(() => {
-    let active = true
-    practice.practiceMatchesList().then(
-      ({ data }) => {
-        if (active) setRecent(data)
-      },
-      () => {}, // the page works without them
-    )
-    practice.practicePlaybooksList().then(
-      ({ data }) => {
-        if (active) setPlaybooks(data)
-      },
-      () => {}, // without them, the match is played by the house playbook
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
+  /** A new match: a POST that makes one, so it is sent each time, never shared with another request. */
   function start() {
     setStarting(true)
     practice.practiceMatchesCreate({ opponent, coach, playbook }).then(
-      ({ data }) => navigate(`/practice/match/${data.id}`),
+      ({ data }) => {
+        void changes.practiceList(client, 'matches')
+        navigate(`/practice/match/${data.id}`)
+      },
       (err) => {
         setStarting(false)
         setError(errorMessage(err))

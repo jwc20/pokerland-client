@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
-import { sessions } from '../api/client.ts'
-import type { HandTag, NoteTag, ReviewStateEnum, Session } from '../api/generated/data-contracts.ts'
+import { useQuery } from '@tanstack/react-query'
+import type { HandTag, NoteTag, ReviewStateEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { formatBb, tagLabel } from '../handFormat.ts'
 import {
   narrowed,
@@ -210,22 +210,8 @@ function HistoryFilterBar({
 
 /** Which session the history shows: its day, times and result, once they load. */
 function SessionHint({ id, onClear }: { id: number; onClear: () => void }) {
-  const [session, setSession] = useState<{ id: number; row?: Session }>()
-  useEffect(() => {
-    let active = true
-    sessions.sessionsRetrieve({ id }).then(
-      ({ data }) => {
-        if (active) setSession({ id, row: data })
-      },
-      () => {
-        if (active) setSession({ id }) // the hands still show; the hint names the session by number
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-  const row = session?.id === id ? session.row : undefined
+  // Until it loads, or if it doesn't, the hint names the session by number: the hands still show.
+  const row = useQuery(queries.sessions.detail(id)).data
   return (
     <p className="card-hint">
       <strong>A session</strong>:{' '}

@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { SignedInOnly, SignedOutOnly } from './auth/guards.tsx'
 import SignInForm from './auth/SignInForm.tsx'
+import { useAuth } from './auth/useAuth.ts'
 import Navbar from './components/Navbar.tsx'
+import UploadWatcher from './components/UploadWatcher.tsx'
 import AptitudePage from './pages/AptitudePage.tsx'
 import AptitudeTestPage from './pages/AptitudeTestPage.tsx'
 import ClassesPage from './pages/ClassesPage.tsx'
@@ -24,8 +26,10 @@ import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
 
 function App() {
+  const { user } = useAuth()
   return (
     <>
+      {user && <UploadWatcher key={user.pk} />}
       <Navbar />
       <main className="page">
         <Routes>
