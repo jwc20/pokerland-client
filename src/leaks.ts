@@ -11,12 +11,20 @@ export function presetValues(rows: Preset[]): Presets {
 const number = (value: number) => value.toLocaleString(undefined, { maximumFractionDigits: 1 })
 const bb = (value: number) => `${number(value)} bb`
 
-/** Each check's name, its rule as the presets set it, and the lectures it comes from. */
-export const LEAK_INFO: Record<LeakKeyEnum, { label: string; rule: (p: Presets) => string; source: string }> = {
+/**
+ * Each check's name, its rule as the presets set it, and the lectures it comes from. The leak alerts (B5) number
+ * theirs as the feature ideas do, and say why each mistake costs.
+ */
+export const LEAK_INFO: Record<
+  LeakKeyEnum,
+  { label: string; rule: (p: Presets) => string; source: string; detector?: number; why?: string }
+> = {
   open_limp: {
     label: 'Open-limps',
     rule: () => 'Never open-limp: raise or fold when the pot is folded to you.',
     source: 'JHU 3; JHU 4',
+    detector: 8,
+    why: 'A limp gives up the pot you could take at once, and lets the big blind in for free.',
   },
   open_size: {
     label: 'Open-raise size',
@@ -41,6 +49,8 @@ export const LEAK_INFO: Record<LeakKeyEnum, { label: string; rule: (p: Presets) 
     label: 'Premiums limped into multiway pots',
     rule: () => 'Raise queens or better and ace-king: don’t limp them into a pot four or more see the flop.',
     source: 'JHU 4',
+    detector: 7,
+    why: 'A big pair wins most often against one or two hands; against five, someone usually flops what beats it.',
   },
   short_buy_in: {
     label: 'Short buy-ins',
@@ -51,6 +61,36 @@ export const LEAK_INFO: Record<LeakKeyEnum, { label: string; rule: (p: Presets) 
     label: 'Hands per orbit',
     rule: (p) => `Play ${number(p.orbit_min)} to ${number(p.orbit_max)} hands an orbit, an orbit being a hand per player.`,
     source: 'JHU 3; JHU 4',
+  },
+  folded_strong: {
+    label: 'Sets and two pair folded on dry boards',
+    rule: () => 'Don’t fold a set, or two pair using both your cards, to a bet on a dry board with no pair.',
+    source: 'JHU 8',
+    detector: 1,
+    why: 'On a dry board little beats a set or both-cards two pair, and a bet there is often a bluff or worse.',
+  },
+  missed_thin_value: {
+    label: 'Thin value missed',
+    rule: () => 'Checked to you on the river in position with a hand that wins at showdown: bet it, for value.',
+    source: 'JHU 9',
+    detector: 3,
+    why: 'A worse hand that would have called pays nothing when you check behind. The value is in the calls.',
+  },
+  multiway_bluff: {
+    label: 'Bluffs into too many players',
+    rule: (p) =>
+      `Don’t bluff into ${number(p.bluff_opponents)} or more opponents, or c-bet into ${number(p.cbet_opponents)} or more.`,
+    source: 'JHU 5',
+    detector: 5,
+    why: 'Each extra player is another chance someone holds enough to call: a bluff has to get through all of them.',
+  },
+  big_pot_small_hand: {
+    label: 'Big pots with small hands',
+    rule: (p) =>
+      `Don’t put ${bb(p.big_pot_bb)} or more in with one pair below top pair when stacks are ${bb(p.deep_bb)} or deeper.`,
+    source: 'MIT 5; JHU 4; JHU 5',
+    detector: 9,
+    why: 'Deep stacks make big pots, and big pots are won by big hands: a small pair is usually beaten when they get there.',
   },
 }
 

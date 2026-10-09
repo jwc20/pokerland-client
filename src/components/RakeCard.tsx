@@ -4,7 +4,7 @@ import { errorMessage, stats } from '../api/client.ts'
 import type { HandTag, StatGroup } from '../api/generated/data-contracts.ts'
 import { formatMonth, inViewerTimeZone } from '../calendar.ts'
 import { formatBb, stakesLabel } from '../handFormat.ts'
-import { historyParams, historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
+import { apiScope, historyParams, historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
 import { formatPaid, RAKE_KINDS, rakeKinds, rakeRates, stakesOf, totalOf, type RakeKind } from '../rake.ts'
 import { formatRate, RANGE_MIN_HANDS } from '../winRate.ts'
 import './RakeCard.css'
@@ -39,7 +39,7 @@ function RakeCard({ base, tags }: { base: HistoryFilters; tags?: HandTag[] }) {
   useEffect(() => {
     if (!key) return
     const query = new URLSearchParams(key)
-    const filters = { tag: query.getAll('tag'), since: query.get('since') || undefined, until: query.get('until') || undefined }
+    const filters = apiScope(query)
     let active = true
     inViewerTimeZone((tz) =>
       Promise.all((['stakes', 'month'] as const).map((group_by) => stats.statsList({ ...filters, group_by, tz }))),

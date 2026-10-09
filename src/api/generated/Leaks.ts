@@ -15,6 +15,8 @@ import type {
   LeaksListParams,
   LeaksPresetsListData,
   LeaksPresetsPartialUpdateData,
+  LeaksReviewedCreateData,
+  LeaksReviewedCreateParams,
   PatchedPresetsUpdateRequest,
 } from "./data-contracts.ts";
 import { HttpClient, type RequestParams } from "./http-client.ts";
@@ -23,7 +25,7 @@ export class Leaks<
   SecurityDataType = unknown,
 > extends HttpClient<SecurityDataType> {
   /**
-   * @description The leak checks over the signed-in user's hands as the hero (B3): how often they broke each rule of thumb.
+   * @description The leak checks over the signed-in user's hands as the hero (B3, B5): how often they broke each rule of thumb, before the flop or after it.
    *
    * @tags leaks
    * @name LeaksList
@@ -35,6 +37,25 @@ export class Leaks<
       path: `/api/leaks/`,
       method: "GET",
       query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Marks one of the leak checks reviewed: the hands that broke it so far stop counting as new (B5).
+   *
+   * @tags leaks
+   * @name LeaksReviewedCreate
+   * @request POST:/api/leaks/{key}/reviewed/
+   * @secure
+   */
+  leaksReviewedCreate = (
+    { key }: LeaksReviewedCreateParams,
+    params: RequestParams = {},
+  ) =>
+    this.request<LeaksReviewedCreateData, any>({
+      path: `/api/leaks/${key}/reviewed/`,
+      method: "POST",
       secure: true,
       format: "json",
       ...params,

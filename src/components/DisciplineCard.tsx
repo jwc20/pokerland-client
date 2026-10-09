@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { errorMessage, leaks } from '../api/client.ts'
 import type { Leak } from '../api/generated/data-contracts.ts'
 import { inViewerTimeZone, monthsUpTo } from '../calendar.ts'
-import { historyParams, historyUrl, type HistoryFilters } from '../historyFilters.ts'
+import { apiScope, historyParams, historyUrl, type HistoryFilters } from '../historyFilters.ts'
 import { LEAK_INFO, leakCount, leakDetails, presetValues, SHORT_LIST, type Presets } from '../leaks.ts'
 import { enough, formatPct } from '../playerStats.ts'
 import { useScrollToHash } from '../useScrollToHash.ts'
@@ -24,7 +24,7 @@ function DisciplineCard({ base = { tags: [] }, short = false }: { base?: History
 
   useEffect(() => {
     const query = new URLSearchParams(key)
-    const filters = { tag: query.getAll('tag'), since: query.get('since') || undefined, until: query.get('until') || undefined }
+    const filters = apiScope(query)
     let active = true
     Promise.all([
       inViewerTimeZone((tz) => leaks.leaksList({ ...filters, group: 'preflop', tz })),

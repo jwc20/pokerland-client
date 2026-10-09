@@ -1,0 +1,8 @@
+/* The spot builder opens under the row of filters, across its whole width. */
+.scope-builder {
+  flex-basis: 100%;
+}
+
+.filter-bar .scope-builder label {
+  color: var(--text-h);
+}

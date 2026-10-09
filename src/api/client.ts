@@ -2,10 +2,17 @@ import { Auth } from './generated/Auth.ts'
 import { Hands } from './generated/Hands.ts'
 import type { ApiConfig, HttpResponse } from './generated/http-client.ts'
 import { Leaks } from './generated/Leaks.ts'
+import { Opponents } from './generated/Opponents.ts'
 import { Practice } from './generated/Practice.ts'
+import { Public } from './generated/Public.ts'
+import { Ranges } from './generated/Ranges.ts'
 import { Review } from './generated/Review.ts'
 import { Sessions } from './generated/Sessions.ts'
+import { Shares } from './generated/Shares.ts'
+import { Spots } from './generated/Spots.ts'
 import { Stats } from './generated/Stats.ts'
+import { Tools } from './generated/Tools.ts'
+import { Tournaments } from './generated/Tournaments.ts'
 import { Tracker } from './generated/Tracker.ts'
 import { Users } from './generated/Users.ts'
 
@@ -52,6 +59,14 @@ export const leaks = new Leaks(apiConfig)
 export const practice = new Practice(apiConfig)
 export const review = new Review(apiConfig)
 export const sessions = new Sessions(apiConfig)
+export const spots = new Spots(apiConfig)
+export const ranges = new Ranges(apiConfig)
+export const opponents = new Opponents(apiConfig)
+export const tournaments = new Tournaments(apiConfig)
+export const tools = new Tools(apiConfig)
+export const shares = new Shares(apiConfig)
+// Shared hands' public pages, which need no sign-in.
+export const publicShares = new Public(config)
 // Only its status endpoint is for the web app; the trackers use the rest with their client token.
 export const tracker = new Tracker(apiConfig)
 

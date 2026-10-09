@@ -12,6 +12,8 @@
 
 import type {
   HandNoteWriteRequest,
+  HandsBoardListData,
+  HandsBoardListParams,
   HandsDaysRetrieveData,
   HandsDaysRetrieveParams,
   HandsListData,
@@ -22,6 +24,8 @@ import type {
   HandsNotesDestroyParams,
   HandsNotesListData,
   HandsNotesListParams,
+  HandsOutsListData,
+  HandsOutsListParams,
   HandsRetrieveData,
   HandsRetrieveParams,
   HandsTagsListData,
@@ -49,7 +53,7 @@ export class Hands<
       ...params,
     });
   /**
-   * @description One of the signed-in user's hands, with what its replay needs.
+   * @description One of the signed-in user's hands, with what its replay needs, its tournament and its opponents' profiles.
    *
    * @tags hands
    * @name HandsRetrieve
@@ -59,6 +63,22 @@ export class Hands<
   handsRetrieve = ({ id }: HandsRetrieveParams, params: RequestParams = {}) =>
     this.request<HandsRetrieveData, any>({
       path: `/api/hands/${id}/`,
+      method: "GET",
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description The board read on each street (A3): what it allows, the nuts, and the hero's hand among every holding left. Worked out the first time it is asked for, then kept with the hand's facts.
+   *
+   * @tags hands
+   * @name HandsBoardList
+   * @request GET:/api/hands/{id}/board/
+   * @secure
+   */
+  handsBoardList = ({ id }: HandsBoardListParams, params: RequestParams = {}) =>
+    this.request<HandsBoardListData, any>({
+      path: `/api/hands/${id}/board/`,
       method: "GET",
       secure: true,
       format: "json",
@@ -118,6 +138,22 @@ export class Hands<
       path: `/api/hands/${id}/notes/${noteId}/`,
       method: "DELETE",
       secure: true,
+      ...params,
+    });
+  /**
+   * @description The hero's outs at each of their decisions on the flop and turn, against the hands shown (A2).
+   *
+   * @tags hands
+   * @name HandsOutsList
+   * @request GET:/api/hands/{id}/outs/
+   * @secure
+   */
+  handsOutsList = ({ id }: HandsOutsListParams, params: RequestParams = {}) =>
+    this.request<HandsOutsListData, any>({
+      path: `/api/hands/${id}/outs/`,
+      method: "GET",
+      secure: true,
+      format: "json",
       ...params,
     });
   /**

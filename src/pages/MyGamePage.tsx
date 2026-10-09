@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { errorMessage, hands, stats } from '../api/client.ts'
+import { Link } from 'react-router'
+import { errorMessage, stats } from '../api/client.ts'
 import type { HandTag, StatGroup, StatSet, StatsListParams } from '../api/generated/data-contracts.ts'
 import { inViewerTimeZone } from '../calendar.ts'
 import DisciplineCard from '../components/DisciplineCard.tsx'
+import MyGameTabs from '../components/MyGameTabs.tsx'
 import PositionBars from '../components/PositionBars.tsx'
 import PurposeCard from '../components/PurposeCard.tsx'
 import RakeCard from '../components/RakeCard.tsx'
+import ScopeFilters from '../components/ScopeFilters.tsx'
 import StatTile, { ShareBar } from '../components/StatTile.tsx'
 import StyleQuadrant from '../components/StyleQuadrant.tsx'
 import WinRateRange from '../components/WinRateRange.tsx'
-import { formatBb, tagLabel } from '../handFormat.ts'
-import { historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
+import { formatBb } from '../handFormat.ts'
+import { apiScope, historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
 import { enough, formatPct, STAT_INFO } from '../playerStats.ts'
+import { useHandTags, useScope } from '../useScope.ts'
 import { formatRate } from '../winRate.ts'
 import './MyGamePage.css'
 
@@ -26,13 +29,6 @@ const POSTFLOP: (keyof StatSet)[] = [
   'aggression',
 ]
 const SHOWDOWN: (keyof StatSet)[] = ['saw_flop', 'went_to_showdown', 'won_at_showdown']
-
-// What the page can narrow the hands to. It groups them by position itself, so those tags are left out.
-const FILTER_GROUPS = [
-  ['format', 'Format'],
-  ['game', 'Game'],
-  ['stakes', 'Stakes'],
-] as const
 
 interface Report {
   all: StatGroup
@@ -49,36 +45,20 @@ async function loadReport(filters: StatsListParams): Promise<Report> {
   return { all: all[0], positions, months }
 }
 
-/** The hero's statistics, style and results by position, for all their hands or a format's, game's, stakes' or days'. */
+/**
+ * The hero's statistics, style and results by position, for all their hands or a format's, game's, stakes', days'
+ * or spot's.
+ */
 function MyGamePage() {
-  const [params, setParams] = useSearchParams()
-  const [tags, setTags] = useState<HandTag[]>()
+  const scope = useScope()
+  const tags = useHandTags()
   // Remembers which filters it holds, so a change shows as loading.
   const [loaded, setLoaded] = useState<{ key: string; report?: Report; error?: string }>()
-  const key = params.toString()
+  const { key } = scope
 
   useEffect(() => {
     let active = true
-    hands.handsTagsList().then(
-      ({ data }) => {
-        if (active) setTags(data)
-      },
-      () => {}, // the filter offers all hands alone
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
-  useEffect(() => {
-    const query = new URLSearchParams(key)
-    let active = true
-    const tag = query.get('tag')
-    loadReport({
-      tag: tag ? [tag] : undefined,
-      since: query.get('since') || undefined,
-      until: query.get('until') || undefined,
-    }).then(
+    loadReport(apiScope(new URLSearchParams(key))).then(
       (report) => {
         if (active) setLoaded({ key, report })
       },
@@ -91,22 +71,7 @@ function MyGamePage() {
     }
   }, [key])
 
-  function setFilter(name: string, value: string) {
-    // The URL as it is now: React Router renders a navigation later, so `params` may be a change behind.
-    const next = new URLSearchParams(window.location.search)
-    if (value) next.set(name, value)
-    else next.delete(name)
-    setParams(next, { replace: true })
-  }
-
   const current = loaded?.key === key ? loaded : undefined
-  // The page's hands as game history filters, which every link to the history starts from.
-  const tag = params.get('tag')
-  const base: HistoryFilters = {
-    tags: tag ? [tag] : [],
-    since: params.get('since') || undefined,
-    until: params.get('until') || undefined,
-  }
   return (
     <section className="my-game">
       <header className="my-game-header">
@@ -117,74 +82,20 @@ function MyGamePage() {
           the hands so far can't say much yet.
         </p>
       </header>
+      <MyGameTabs />
 
-      <Filters tags={tags} params={params} onChange={setFilter} onClear={() => setParams({}, { replace: true })} />
+      <ScopeFilters scope={scope} tags={tags} />
 
       {current?.error ? (
         <p className="error-message" role="alert">
           {current.error}
         </p>
       ) : current?.report ? (
-        <ReportView report={current.report} base={base} tags={tags} />
+        <ReportView report={current.report} base={scope.base} tags={tags} />
       ) : (
         <p>Loading…</p>
       )}
     </section>
-  )
-}
-
-function Filters({
-  tags,
-  params,
-  onChange,
-  onClear,
-}: {
-  tags?: HandTag[]
-  params: URLSearchParams
-  onChange: (name: string, value: string) => void
-  onClear: () => void
-}) {
-  const tag = params.get('tag') ?? ''
-  const since = params.get('since') ?? ''
-  const until = params.get('until') ?? ''
-  return (
-    <div className="filter-bar" role="group" aria-label="Which hands">
-      <label>
-        Hands
-        <select value={tag} onChange={(event) => onChange('tag', event.target.value)}>
-          <option value="">All hands</option>
-          {FILTER_GROUPS.map(([group, label]) => {
-            const options = tags?.filter((candidate) => candidate.group === group) ?? []
-            return (
-              options.length > 0 && (
-                <optgroup key={group} label={label}>
-                  {options.map((option) => (
-                    <option key={option.key} value={option.key}>
-                      {tagLabel(option)} ({option.hands.toLocaleString()})
-                    </option>
-                  ))}
-                </optgroup>
-              )
-            )
-          })}
-          {/* A tag from the URL that the list doesn't have (yet) still shows as chosen. */}
-          {tag && !tags?.some((candidate) => candidate.key === tag) && <option value={tag}>{tag}</option>}
-        </select>
-      </label>
-      <label>
-        From
-        <input type="date" value={since} max={until || undefined} onChange={(event) => onChange('since', event.target.value)} />
-      </label>
-      <label>
-        To
-        <input type="date" value={until} min={since || undefined} onChange={(event) => onChange('until', event.target.value)} />
-      </label>
-      {(tag || since || until) && (
-        <button type="button" className="link-button" onClick={onClear}>
-          Show all hands
-        </button>
-      )}
-    </div>
   )
 }
 

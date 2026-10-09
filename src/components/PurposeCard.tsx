@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { errorMessage, stats } from '../api/client.ts'
 import type { PurposeStat } from '../api/generated/data-contracts.ts'
 import { streetLabel } from '../handFormat.ts'
-import { historyParams, type HistoryFilters } from '../historyFilters.ts'
+import { apiScope, historyParams, type HistoryFilters } from '../historyFilters.ts'
 import { PURPOSE_LABELS } from '../notes.ts'
 import { enough, formatPct, MIN_CHANCES } from '../playerStats.ts'
 import './PurposeCard.css'
@@ -23,11 +23,7 @@ function PurposeCard({ base }: { base: HistoryFilters }) {
     const query = new URLSearchParams(key)
     let active = true
     stats
-      .statsPurposesList({
-        tag: query.getAll('tag'),
-        since: query.get('since') || undefined,
-        until: query.get('until') || undefined,
-      })
+      .statsPurposesList(apiScope(query))
       .then(
         ({ data }) => {
           if (active) setLoaded({ key, rows: data })

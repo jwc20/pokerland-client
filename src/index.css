@@ -45,6 +45,19 @@
   --heat-hands-3: #9d57de;
   --heat-hands-4: #8218c9;
 
+  /* How strong a hand was, weakest to the nuts: one blue, ordinal, validated on the background (sizing tells). */
+  --strength-1: #86b6ef;
+  --strength-2: #5598e7;
+  --strength-3: #2a78d6;
+  --strength-4: #1c5cab;
+  --strength-5: #104281;
+
+  /* M zones and other states: the fixed status scale, always beside a label. */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
@@ -104,6 +117,13 @@
     --heat-hands-2: #794da5;
     --heat-hands-3: #9e66d7;
     --heat-hands-4: #c28efb;
+
+    /* Flipped for the dark background: the weakest nearest it, the strongest brightest. */
+    --strength-1: #184f95;
+    --strength-2: #256abf;
+    --strength-3: #3987e5;
+    --strength-4: #6da7ec;
+    --strength-5: #9ec5f4;
   }
 
   #social .button-icon {
@@ -481,3 +501,16 @@ code {
   }
 }
 
+
+/* Text for screen readers alone, such as a label whose control explains itself on screen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

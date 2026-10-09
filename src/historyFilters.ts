@@ -24,6 +24,12 @@ export interface HistoryFilters {
   leak?: HistoryLeak
   /** The hands of one session, by its id. */
   session?: number
+  /** The hands of one of the user's saved spots, by its id, or of a spec of conditions, as JSON (FND-3). */
+  spot?: number
+  spec?: string
+  /** The hands an opponent was dealt into, and the hands of a tournament, by their ids. */
+  opponent?: number
+  tournament?: number
 }
 
 export const RESULT_LABELS: Record<HistoryResult, string> = { won: 'Won', lost: 'Lost', even: 'Broke even' }
@@ -56,6 +62,10 @@ export function historyParams(filters: Partial<HistoryFilters>): URLSearchParams
   if (filters.noteTag) params.set('note_tag', filters.noteTag)
   if (filters.leak) params.set('leak', filters.leak)
   if (filters.session) params.set('session', String(filters.session))
+  if (filters.spot) params.set('spot', String(filters.spot))
+  if (filters.spec) params.set('spec', filters.spec)
+  if (filters.opponent) params.set('opponent', String(filters.opponent))
+  if (filters.tournament) params.set('tournament', String(filters.tournament))
   if (filters.sort && filters.sort !== 'newest') params.set('sort', filters.sort)
   return params
 }
@@ -76,6 +86,10 @@ export function readHistoryFilters(params: URLSearchParams): HistoryFilters {
     noteTag: params.get('note_tag') || undefined,
     leak: (params.get('leak') || undefined) as HistoryLeak | undefined,
     session: Number(params.get('session')) || undefined,
+    spot: Number(params.get('spot')) || undefined,
+    spec: params.get('spec') || undefined,
+    opponent: Number(params.get('opponent')) || undefined,
+    tournament: Number(params.get('tournament')) || undefined,
   }
 }
 
@@ -90,8 +104,26 @@ export function narrowed(filters: HistoryFilters) {
       filters.review ||
       filters.noteTag ||
       filters.leak ||
-      filters.session,
+      filters.session ||
+      filters.spot ||
+      filters.spec ||
+      filters.opponent ||
+      filters.tournament,
   )
+}
+
+/**
+ * The hands a card counts, as the API's parameters, from the game history query its page's filters make: tags,
+ * days, and a spot or a spec.
+ */
+export function apiScope(query: URLSearchParams) {
+  return {
+    tag: query.getAll('tag'),
+    since: query.get('since') || undefined,
+    until: query.get('until') || undefined,
+    spot: Number(query.get('spot')) || undefined,
+    spec: query.get('spec') || undefined,
+  }
 }
 
 /** The first and last day of a month such as "2026-10", as filters. */
