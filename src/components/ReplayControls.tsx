@@ -1,4 +1,5 @@
 import type { useReplayPlayer } from '../useReplayPlayer.ts'
+import './ReplayControls.css'
 
 const SPEEDS = [0.5, 1, 2, 4]
 

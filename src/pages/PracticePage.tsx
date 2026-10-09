@@ -5,7 +5,9 @@ import { errorMessage, practice } from '../api/client.ts'
 import type { PracticeProfile, PracticeSet, PracticeSkillEnum } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
+import ClassesLink from '../components/ClassesLink.tsx'
 import SkillBars from '../components/SkillBars.tsx'
+import { CLASSES_CLOSED, CLASSES_ENABLED } from '../features.ts'
 import { GENERATED_HINTS, GRADE_LABELS } from '../practice.ts'
 import './PracticePage.css'
 
@@ -104,7 +106,7 @@ function PracticePage() {
                   <div>
                     <h3>From your classes</h3>
                     <p>
-                      Hands shared with <Link to="/classes">your classes</Link>, anonymized: play the sharer’s
+                      Hands shared with <ClassesLink>your classes</ClassesLink>, anonymized: play the sharer’s
                       decisions from their seat, then see what the playbook says and what they did.
                     </p>
                     {notice && (
@@ -113,7 +115,13 @@ function PracticePage() {
                       </p>
                     )}
                   </div>
-                  <button type="button" className="button" disabled={starting} onClick={() => start('shared')}>
+                  <button
+                    type="button"
+                    className="button"
+                    disabled={starting || !CLASSES_ENABLED}
+                    title={CLASSES_ENABLED ? undefined : CLASSES_CLOSED}
+                    onClick={() => start('shared')}
+                  >
                     Play 8
                   </button>
                 </div>

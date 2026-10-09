@@ -576,3 +576,10 @@ code {
   opacity: 0.5;
   transition: opacity 0.2s;
 }
+
+/* A link or button to something not open yet (src/features.ts): shown, but not usable. */
+.link-disabled {
+  color: var(--text);
+  opacity: 0.5;
+  cursor: not-allowed;
+}

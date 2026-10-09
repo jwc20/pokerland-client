@@ -21,7 +21,8 @@
   gap: 4px 20px;
 }
 
-.navbar-links a {
+.navbar-links a,
+.navbar-links .link-disabled {
   font-size: 16px;
   color: var(--text);
   text-decoration: none;

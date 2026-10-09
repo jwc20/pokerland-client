@@ -5,8 +5,10 @@ import { changes } from '../api/changes.ts'
 import { errorMessage, leagues, practice } from '../api/client.ts'
 import type { League, Playbook, PlaybookDetail } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
+import ClassesLink from '../components/ClassesLink.tsx'
 import PlaybookCard from '../components/PlaybookCard.tsx'
 import { FAMILY_ORDER, STAGES } from '../coach.ts'
+import { CLASSES_ENABLED } from '../features.ts'
 import { LIMITS } from '../playbooks.ts'
 import './PlaybookPage.css'
 
@@ -31,7 +33,8 @@ function PlaybookPage() {
   // The playbooks to switch to, and the classes the user coaches; then the chosen playbook (the house one unless an
   // id is given) with the user's stage in each family, and how their own hands kept each rule.
   const playbooksQuery = useQuery(queries.practice.playbooks())
-  const classesQuery = useQuery(queries.leagues.list())
+  // Classes aren't open yet (src/features.ts): until they are, there are none to ask the API for.
+  const classesQuery = useQuery({ ...queries.leagues.list(), enabled: CLASSES_ENABLED })
   const playbooks = playbooksQuery.data
   const chosen = id ?? (playbooks?.find((playbook) => playbook.house) ?? playbooks?.[0])?.id
   const playbookQuery = useQuery({ ...queries.practice.playbook(chosen ?? 0), enabled: chosen !== undefined })
@@ -47,8 +50,8 @@ function PlaybookPage() {
   }
   const playbook = playbookQuery.data
   const book = bookQuery.data
-  if (!playbooks || !classesQuery.data || !playbook || !book) return <p>Loading…</p>
-  const classes = classesQuery.data.filter((league) => league.role === 'coach')
+  if (!playbooks || (CLASSES_ENABLED && !classesQuery.data) || !playbook || !book) return <p>Loading…</p>
+  const classes = (classesQuery.data ?? []).filter((league) => league.role === 'coach')
   const byRule = new Map(book.rules.map((row) => [row.rule, row]))
   const families = [...playbook.families].sort(
     (a, b) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family),
@@ -237,7 +240,7 @@ function PlaybookActions({
             )}
             {classes.length === 0 && (
               <p className="playbook-note">
-                To give it to students, <Link to="/classes">start a class</Link>.
+                To give it to students, <ClassesLink>start a class</ClassesLink>.
               </p>
             )}
           </>

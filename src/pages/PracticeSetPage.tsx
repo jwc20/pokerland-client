@@ -214,6 +214,7 @@ function SpotView({
       fourColour={fourColour}
       study
       answered={Boolean(attempt)}
+      outcome={attempt?.outcome}
       busy={sending}
       onAnswer={send}
     >

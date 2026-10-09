@@ -1,0 +1,49 @@
+.hand-outcome {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  h3 {
+    margin: 0;
+    font-size: 17px;
+    color: var(--text-h);
+  }
+}
+
+.hand-outcome-log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding-left: 22px;
+  font-size: 15px;
+
+  .link-button {
+    font-size: 15px;
+    text-align: left;
+    color: var(--text);
+
+    &[aria-current='step'] {
+      font-weight: 600;
+      color: var(--text-h);
+    }
+  }
+}
+
+.hand-outcome-then {
+  font-size: 14px;
+  color: var(--accent);
+}
+
+.hand-outcome-result {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-h);
+
+  .win {
+    color: var(--win);
+  }
+  .loss {
+    color: var(--loss);
+  }
+}

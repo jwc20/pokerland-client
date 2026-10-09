@@ -4,6 +4,7 @@ import SignInForm from './auth/SignInForm.tsx'
 import { useAuth } from './auth/useAuth.ts'
 import Navbar from './components/Navbar.tsx'
 import UploadWatcher from './components/UploadWatcher.tsx'
+import { CLASSES_CLOSED, CLASSES_ENABLED } from './features.ts'
 import AptitudePage from './pages/AptitudePage.tsx'
 import AptitudeTestPage from './pages/AptitudeTestPage.tsx'
 import ClassesPage from './pages/ClassesPage.tsx'
@@ -24,6 +25,11 @@ import PracticeSetPage from './pages/PracticeSetPage.tsx'
 import SessionsPage from './pages/SessionsPage.tsx'
 import SettingsPage from './pages/SettingsPage.tsx'
 import './App.css'
+
+/** Where a class page would be, while classes aren't open (src/features.ts): an old link lands here, not on errors. */
+function ClassesClosed() {
+  return <p>{CLASSES_CLOSED}.</p>
+}
 
 function App() {
   const { user } = useAuth()
@@ -173,7 +179,7 @@ function App() {
             path="/classes"
             element={
               <SignedInOnly>
-                <ClassesPage />
+                {CLASSES_ENABLED ? <ClassesPage /> : <ClassesClosed />}
               </SignedInOnly>
             }
           />
@@ -181,7 +187,7 @@ function App() {
             path="/classes/:id"
             element={
               <SignedInOnly>
-                <ClassPage />
+                {CLASSES_ENABLED ? <ClassPage /> : <ClassesClosed />}
               </SignedInOnly>
             }
           />

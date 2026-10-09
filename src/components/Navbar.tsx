@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router'
+import { CLASSES_CLOSED, CLASSES_ENABLED } from '../features.ts'
 import { useAuth } from '../auth/useAuth.ts'
 import AccountMenu from './AccountMenu.tsx'
 import './Navbar.css'
@@ -18,7 +19,13 @@ function Navbar() {
             <NavLink to="/stats">My game</NavLink>
             <NavLink to="/sessions">Sessions</NavLink>
             <NavLink to="/practice">Practice</NavLink>
-            <NavLink to="/classes">Classes</NavLink>
+            {CLASSES_ENABLED ? (
+              <NavLink to="/classes">Classes</NavLink>
+            ) : (
+              <span className="link-disabled" aria-disabled="true" title={CLASSES_CLOSED}>
+                Classes
+              </span>
+            )}
           </nav>
         )}
       </div>

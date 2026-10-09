@@ -1,0 +1,41 @@
+/* The replay's play, speed and step buttons: the replay page's, and a practice spot's once it is answered. */
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  button,
+  select {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    min-width: 38px;
+    padding: 0 8px;
+    font: inherit;
+    font-size: 15px;
+    color: var(--text-h);
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent-border);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    &:disabled {
+      cursor: default;
+      opacity: 0.4;
+    }
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+}

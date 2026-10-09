@@ -1,11 +1,12 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState, type ReactNode } from 'react'
-import type { PracticeActionEnum, ReasonEnum, Scenario } from '../api/generated/data-contracts.ts'
+import type { Outcome, PracticeActionEnum, ReasonEnum, Scenario } from '../api/generated/data-contracts.ts'
 import { heroM, pendingDecision } from '../decision.ts'
 import { streetLabel } from '../handFormat.ts'
 import { fillAmounts, specAmount } from '../practice.ts'
 import { buildReplay } from '../replay.ts'
 import { formatUnit, type Unit } from '../table.ts'
 import ActionBar from './ActionBar.tsx'
+import HandOutcome from './HandOutcome.tsx'
 import { SpotPanel } from './DecisionPanel.tsx'
 import PokerTable from './PokerTable.tsx'
 import RangePicker from './RangePicker.tsx'
@@ -27,7 +28,8 @@ export interface SpotAnswer {
 /**
  * A practice spot as it is asked: the prompt, the table as it stood (or a toy game's setup in words), the decision
  * panel beside it in study mode, and a way to answer: a move, a choice of up to four (or keys 1 to 4), or a range on
- * the grid. Once answered, `children` (the feedback, in a set) stand where the answer was.
+ * the grid. Once answered, `children` (the feedback, in a set) stand where the answer was; and with an `outcome`, a
+ * spot from one of your hands plays on at the table from the decision to the end.
  */
 function SpotQuestion({
   scenario,
@@ -36,6 +38,7 @@ function SpotQuestion({
   fourColour,
   study,
   answered,
+  outcome,
   busy,
   onAnswer,
   children,
@@ -48,6 +51,8 @@ function SpotQuestion({
   /** Study mode: the decision panel may show. A test keeps it off. */
   study: boolean
   answered: boolean
+  /** Once answered, a spot from one of your hands: what was played at the table, and how it ended. */
+  outcome?: Outcome | null
   busy: boolean
   onAnswer: (answer: SpotAnswer) => void
   children?: ReactNode
@@ -108,28 +113,34 @@ function SpotQuestion({
       {hand && step && (
         <div className={showPanel && panel ? 'practice-spot-main with-panel' : 'practice-spot-main'}>
           <div className="practice-spot-table">
-            <PokerTable
-              step={step}
-              hand={hand}
-              labels={spec.labels}
-              unit={unit}
-              revealed={spec.revealed}
-              actor={answered || spec.question.kind !== 'action' ? undefined : hand.hero}
-              fourColour={fourColour}
-            />
-            <p className="practice-spot-log" aria-live="polite">
-              {streetLabel(step.street)} – {step.text}
-            </p>
-            <details className="practice-spot-history">
-              <summary>Hand log</summary>
-              <ol>
-                {steps.slice(1).map((past, i) => (
-                  <li key={i}>
-                    {streetLabel(past.street)} – {past.text}
-                  </li>
-                ))}
-              </ol>
-            </details>
+            {answered && outcome ? (
+              <HandOutcome outcome={outcome} labels={spec.labels} unit={unit} fourColour={fourColour} />
+            ) : (
+              <>
+                <PokerTable
+                  step={step}
+                  hand={hand}
+                  labels={spec.labels}
+                  unit={unit}
+                  revealed={spec.revealed}
+                  actor={answered || spec.question.kind !== 'action' ? undefined : hand.hero}
+                  fourColour={fourColour}
+                />
+                <p className="practice-spot-log" aria-live="polite">
+                  {streetLabel(step.street)} – {step.text}
+                </p>
+                <details className="practice-spot-history">
+                  <summary>Hand log</summary>
+                  <ol>
+                    {steps.slice(1).map((past, i) => (
+                      <li key={i}>
+                        {streetLabel(past.street)} – {past.text}
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              </>
+            )}
           </div>
           {showPanel && panel && decision && <SpotPanel decision={decision} hand={hand} m={heroM(hand)} />}
         </div>

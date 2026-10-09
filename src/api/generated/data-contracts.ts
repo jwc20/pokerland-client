@@ -868,6 +868,8 @@ export interface AttemptResult {
   grading: AttemptResultGradingEnum;
   /** The answer, shown once a spot is answered. Which fields appear depends on the question and the grading. */
   answer: Feedback;
+  /** A spot from one of your hands, My hands' or their seat's: what was played there and how it ended. */
+  outcome: Outcome | null;
   /** @format date-time */
   created: string;
 }
@@ -2460,6 +2462,14 @@ export interface OutCard {
    * * `counterfeit` - counterfeit
    */
   kind: OutCardKindEnum;
+}
+
+/** Once a spot from one of your hands is answered: the hand from the spot's seat, to the end. */
+export interface Outcome {
+  /** The spot's events up to its decision, then every one after it: the move made at the table, the cards to come, the showdown, and each player's result. */
+  hand: TableHand;
+  /** The replay step the spot asked at: the table as it stood. The next step is the move made then. */
+  decision: number;
 }
 
 export interface OutsCounts {

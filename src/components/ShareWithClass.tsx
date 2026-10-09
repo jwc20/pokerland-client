@@ -5,6 +5,7 @@ import { changes } from '../api/changes.ts'
 import { errorMessage, leagues } from '../api/client.ts'
 import type { League } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
+import { CLASSES_CLOSED, CLASSES_ENABLED } from '../features.ts'
 import './ShareWithClass.css'
 
 /**
@@ -51,9 +52,15 @@ function ShareWithClass({ hand }: { hand: number }) {
 
   return (
     <section className="share-class" aria-label="Share with a class">
-      <button type="button" className="link-button" aria-expanded={open} onClick={toggle}>
-        Share with a class
-      </button>
+      {CLASSES_ENABLED ? (
+        <button type="button" className="link-button" aria-expanded={open} onClick={toggle}>
+          Share with a class
+        </button>
+      ) : (
+        <button type="button" className="link-button link-disabled" disabled title={CLASSES_CLOSED}>
+          Share with a class
+        </button>
+      )}
       {shared && (
         <p role="status">
           Shared with <Link to={`/classes/${shared.id}`}>{shared.name}</Link>, anonymized.
