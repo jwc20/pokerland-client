@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { errorMessage, stats } from '../api/client.ts'
-import type { HandTag, StatGroup } from '../api/generated/data-contracts.ts'
+import type { HandTag, StatGroup, StatsListParams } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { formatMonth, inViewerTimeZone } from '../calendar.ts'
 import { formatBb, stakesLabel } from '../handFormat.ts'
 import { apiScope, historyParams, historyUrl, monthDays, within, type HistoryFilters } from '../historyFilters.ts'
@@ -25,7 +27,6 @@ type RakeView = 'stakes' | 'months'
 function RakeCard({ base, tags }: { base: HistoryFilters; tags?: HandTag[] }) {
   const [chosen, setChosen] = useState<RakeKind>()
   const [view, setView] = useState<RakeView>('stakes')
-  const [loaded, setLoaded] = useState<{ key: string; report?: RakeReport; error?: string }>()
 
   // A format or stakes tag already decides the kind; a game tag or none doesn't.
   const decided = base.tags.some((tag) => tag.startsWith('format:') || tag.startsWith('stakes:'))
@@ -35,34 +36,16 @@ function RakeCard({ base, tags }: { base: HistoryFilters; tags?: HandTag[] }) {
   const tournaments = base.tags.includes('format:tournament')
   const noCash = !decided && kinds.length === 0
   const key = tournaments || noCash ? '' : historyParams(scope).toString()
-
-  useEffect(() => {
-    if (!key) return
-    const query = new URLSearchParams(key)
-    const filters = apiScope(query)
-    let active = true
-    inViewerTimeZone((tz) =>
-      Promise.all((['stakes', 'month'] as const).map((group_by) => stats.statsList({ ...filters, group_by, tz }))),
-    ).then(
-      ([stakes, months]) => {
-        if (active) setLoaded({ key, report: { stakes: stakes.data, months: months.data } })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // The last filters' report stays on screen, faded, until the next one arrives.
+  const filters = apiScope(new URLSearchParams(key))
+  const query = useQuery({ ...queries.stats.report('rake', filters, () => loadRake(filters)), enabled: Boolean(key) })
+  const current = query.error ? { error: errorMessage(query.error) } : query.data && { report: query.data }
   return (
     <section className="card" aria-labelledby="my-game-rake">
       <h2 id="my-game-rake" className="card-header">
         Rake
       </h2>
-      <div className="card-body">
+      <div className={query.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
         {tournaments ? (
           <p className="card-hint">
             Tournaments charge a fee with the buy-in instead of raking each pot. Pokerland doesn't log buy-ins yet, so
@@ -101,6 +84,14 @@ function RakeCard({ base, tags }: { base: HistoryFilters; tags?: HandTag[] }) {
       </div>
     </section>
   )
+}
+
+/** Rake by stakes and by month, months counted in the viewer's time zone (or UTC if the API doesn't know it). */
+async function loadRake(filters: StatsListParams): Promise<RakeReport> {
+  const [stakes, months] = await inViewerTimeZone((tz) =>
+    Promise.all((['stakes', 'month'] as const).map((group_by) => stats.statsList({ ...filters, group_by, tz }))),
+  )
+  return { stakes: stakes.data, months: months.data }
 }
 
 function RakeReportView({

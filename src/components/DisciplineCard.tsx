@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Link } from 'react-router'
-import { errorMessage, leaks } from '../api/client.ts'
+import { errorMessage } from '../api/client.ts'
 import type { Leak } from '../api/generated/data-contracts.ts'
-import { inViewerTimeZone, monthsUpTo } from '../calendar.ts'
+import { queries } from '../api/queries.ts'
+import { monthsUpTo } from '../calendar.ts'
 import { apiScope, historyParams, historyUrl, type HistoryFilters } from '../historyFilters.ts'
 import { LEAK_INFO, leakCount, leakDetails, presetValues, SHORT_LIST, type Presets } from '../leaks.ts'
 import { enough, formatPct } from '../playerStats.ts'
@@ -20,29 +22,14 @@ const TREND_MONTHS = 12
  */
 function DisciplineCard({ base = { tags: [] }, short = false }: { base?: HistoryFilters; short?: boolean }) {
   const key = historyParams(base).toString()
-  const [loaded, setLoaded] = useState<{ key: string; checks?: Leak[]; presets?: Presets; error?: string }>()
-
-  useEffect(() => {
-    const query = new URLSearchParams(key)
-    const filters = apiScope(query)
-    let active = true
-    Promise.all([
-      inViewerTimeZone((tz) => leaks.leaksList({ ...filters, group: 'preflop', tz })),
-      leaks.leaksPresetsList(),
-    ]).then(
-      ([{ data: checks }, { data: presets }]) => {
-        if (active) setLoaded({ key, checks, presets: presetValues(presets) })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // The last filters' checks stay on screen, faded, until the next ones arrive.
+  const checksQuery = useQuery(queries.leaks.list({ ...apiScope(new URLSearchParams(key)), group: 'preflop' }))
+  const presetsQuery = useQuery(queries.leaks.presets())
+  const presets = useMemo(() => presetsQuery.data && presetValues(presetsQuery.data), [presetsQuery.data])
+  const failed = checksQuery.error ?? presetsQuery.error
+  const current = failed
+    ? { error: errorMessage(failed) }
+    : checksQuery.data && presets && { checks: checksQuery.data, presets }
   // Home's short card links here, to the full one on My game.
   useScrollToHash('discipline', !short && current?.checks !== undefined)
   return (
@@ -50,7 +37,7 @@ function DisciplineCard({ base = { tags: [] }, short = false }: { base?: History
       <h2 id="discipline-heading" className="card-header">
         Preflop discipline
       </h2>
-      <div className="card-body">
+      <div className={checksQuery.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
         {!short && (
           <p className="card-hint">
             In tournaments, most of the value lost is lost before the flop [MIT 1; MIT 4]. These are the courses'

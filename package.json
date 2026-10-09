@@ -16,6 +16,7 @@
     "generate:api": "swagger-typescript-api generate --path \"${OPENAPI_SCHEMA:-http://localhost:8000/api/schema/}\" --output src/api/generated --clean-output --modular --module-name-first-tag --extract-request-body --extract-response-body --extract-response-error --extract-request-params --type-only-imports --import-file-extension .ts --enum-style=union"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.103.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router": "^8.4.0"

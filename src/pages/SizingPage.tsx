@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from 'react-router'
-import { errorMessage, stats } from '../api/client.ts'
+import { errorMessage } from '../api/client.ts'
 import type { BetSizeEnum, SizeBucket, SizingReport, SizingStreet } from '../api/generated/data-contracts.ts'
-import { inViewerTimeZone } from '../calendar.ts'
+import { queries } from '../api/queries.ts'
 import MyGameTabs from '../components/MyGameTabs.tsx'
 import ScopeFilters from '../components/ScopeFilters.tsx'
 import { apiScope, historyUrl, type HistoryFilters } from '../historyFilters.ts'
@@ -20,25 +21,10 @@ import './SizingPage.css'
 function SizingPage() {
   const scope = useScope()
   const tags = useHandTags()
-  const [loaded, setLoaded] = useState<{ key: string; report?: SizingReport; error?: string }>()
   const { key } = scope
-
-  useEffect(() => {
-    let active = true
-    inViewerTimeZone((tz) => stats.statsSizingRetrieve({ ...apiScope(new URLSearchParams(key)), tz })).then(
-      ({ data }) => {
-        if (active) setLoaded({ key, report: data })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // The last filters' report stays on screen, faded, until the next one arrives; an upload refreshes it.
+  const query = useQuery(queries.stats.sizing(apiScope(new URLSearchParams(key))))
+  const current = query.error ? { error: errorMessage(query.error) } : query.data && { report: query.data }
   return (
     <section className="sizing">
       <header className="sizing-header">
@@ -56,7 +42,9 @@ function SizingPage() {
           {current.error}
         </p>
       ) : current?.report ? (
-        <Report report={current.report} base={scope.base} />
+        <div className={query.isPlaceholderData ? 'sizing-report is-updating' : 'sizing-report'}>
+          <Report report={current.report} base={scope.base} />
+        </div>
       ) : (
         <p>Loading…</p>
       )}

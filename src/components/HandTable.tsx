@@ -1,5 +1,8 @@
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
 import type { HandSummary } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { formatAmount, formatBb, formatDateTime, formatShare, gameLabel, handNickname, streetLabel } from '../handFormat.ts'
 import PlayingCard from './PlayingCard.tsx'
 
@@ -30,12 +33,32 @@ function HandTable({ hands, compact }: { hands: HandSummary[]; compact?: boolean
   )
 }
 
+/** How long the pointer rests on a row before its replay is fetched: long enough to pass over rows while scrolling. */
+const HOVER_MS = 150
+
+/** Fetches a hand's replay ahead of a click: on resting the pointer on its row, or focusing its link. */
+function usePrefetchReplay(id: number) {
+  const client = useQueryClient()
+  const timer = useRef<number>(undefined)
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+  const prefetch = () => void client.prefetchQuery(queries.hands.detail(id))
+  return {
+    onPointerEnter: () => {
+      window.clearTimeout(timer.current)
+      timer.current = window.setTimeout(prefetch, HOVER_MS)
+    },
+    onPointerLeave: () => window.clearTimeout(timer.current),
+    onFocus: prefetch,
+  }
+}
+
 function HandRow({ hand, compact }: { hand: HandSummary; compact?: boolean }) {
   const result = hand.hero_net > 0 ? 'win' : hand.hero_net < 0 ? 'loss' : 'even'
   const street = streetLabel(hand.final_street)
   const nickname = handNickname(hand.hero_cards)
+  const { onPointerEnter, onPointerLeave, onFocus } = usePrefetchReplay(hand.id)
   return (
-    <tr>
+    <tr onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
       <td className="nowrap">{formatDateTime(hand.played_at)}</td>
       <td>{gameLabel(hand)}</td>
       {!compact && <td>{hand.table}</td>}
@@ -64,7 +87,11 @@ function HandRow({ hand, compact }: { hand: HandSummary; compact?: boolean }) {
         )}
       </td>
       <td>
-        <Link to={`/games/${hand.id}`} aria-label={`Replay hand #${hand.hand_id}, to the ${street.toLowerCase()}`}>
+        <Link
+          to={`/games/${hand.id}`}
+          aria-label={`Replay hand #${hand.hand_id}, to the ${street.toLowerCase()}`}
+          onFocus={onFocus}
+        >
           {street}
         </Link>
       </td>

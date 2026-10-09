@@ -1,8 +1,11 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
 import type { HttpResponse } from '../api/generated/http-client.ts'
 import type { MatchState, PracticeActionEnum, ReasonEnum, WhyEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import ActionBar from '../components/ActionBar.tsx'
 import CoachRail from '../components/CoachRail.tsx'
 import { SpotPanel } from '../components/DecisionPanel.tsx'
@@ -23,25 +26,14 @@ const LOW_BANK = 15
 /** A coached match: the table, the coach's rail and the read card beside it, and your moves below. */
 function MatchPage() {
   const { id = '' } = useParams()
-  const [loaded, setLoaded] = useState<{ id: string; state?: MatchState; error?: string }>()
-
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    practice.practiceMatchesRetrieve({ id: Number(id) }).then(
-      ({ data }) => {
-        if (active) setLoaded({ id, state: data })
-      },
-      (err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  const valid = /^\d+$/.test(id)
+  // The match as the server has it on each visit, never from the cache: the table below plays on from there.
+  const query = useQuery({ ...queries.practice.match(Number(id)), enabled: valid })
+  const current: { state?: MatchState; error?: string } | undefined = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data && { state: query.data }
   return (
     <section className="match">
       <Link className="back-link" to="/practice/match/new">
@@ -61,6 +53,7 @@ function MatchPage() {
 }
 
 function Match({ initial }: { initial: MatchState }) {
+  const client = useQueryClient()
   const [state, setState] = useState(initial)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
@@ -89,6 +82,8 @@ function Match({ initial }: { initial: MatchState }) {
     setBusy(true)
     request().then(
       ({ data }) => {
+        // The end of a match moves the list of recent ones on, and the user's stage in the families it played.
+        if (data.finished && !state.finished) void changes.match(client)
         setState(data)
         setBusy(false)
         setError(undefined)

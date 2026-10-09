@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { Link, useParams } from 'react-router'
-import { errorMessage, practice } from '../api/client.ts'
+import { errorMessage } from '../api/client.ts'
 import type { Debrief, DebriefDecision, PlaybookDetail } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import PokerTable from '../components/PokerTable.tsx'
 import { ShareBar } from '../components/StatTile.tsx'
 import { STAGES } from '../coach.ts'
@@ -31,32 +33,14 @@ const PICKED = {
  */
 function MatchDebriefPage() {
   const { id = '' } = useParams()
-  const [loaded, setLoaded] = useState<{
-    id: string
-    debrief?: Debrief
-    playbook?: PlaybookDetail
-    error?: string
-  }>()
-
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    practice
-      .practiceMatchesDebriefRetrieve({ id: Number(id) })
-      .then(async ({ data }) => {
-        const { data: match } = await practice.practiceMatchesRetrieve({ id: Number(id) })
-        const { data: playbook } = await practice.practicePlaybooksRetrieve({ id: match.playbook })
-        if (active) setLoaded({ id, debrief: data, playbook })
-      })
-      .catch((err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      })
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  const valid = /^\d+$/.test(id)
+  // A finished match's debrief and its playbook never change: one fetch serves every visit.
+  const query = useQuery({ ...queries.practice.debrief(Number(id)), enabled: valid })
+  const current: { debrief?: Debrief; playbook?: PlaybookDetail; error?: string } | undefined = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data
   return (
     <section className="debrief">
       <Link className="back-link" to="/practice/match/new">

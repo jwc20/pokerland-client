@@ -1,6 +1,8 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { errorMessage, spots as spotsApi } from '../api/client.ts'
 import type { SavedSpot, SpotField } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
 import { LEAK_INFO } from '../leaks.ts'
 import { STAT_INFO } from '../playerStats.ts'
@@ -24,27 +26,9 @@ import './SpotBuilder.css'
 type Root = { all: SpotSpec[] } | { any: SpotSpec[] }
 type Path = number[]
 
-let fieldsCache: Promise<SpotField[]> | undefined
-
-/** The conditions a spot can hold and their choices, from the API, fetched once. */
+/** The conditions a spot can hold and their choices, from the API: fetched once, as they never change. */
 function useSpotFields() {
-  const [fields, setFields] = useState<SpotField[]>()
-  useEffect(() => {
-    let active = true
-    fieldsCache ??= spotsApi.spotsFieldsList().then(({ data }) => data)
-    fieldsCache.then(
-      (data) => {
-        if (active) setFields(data)
-      },
-      () => {
-        fieldsCache = undefined
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-  return fields
+  return useQuery(queries.spots.fields()).data
 }
 
 function statName(stat: string) {
@@ -88,27 +72,22 @@ function SpotBuilder({
   const root = rootOf(spec)
   const members = membersOf(root)
   const [editing, setEditing] = useState<Path>()
-  const [count, setCount] = useState<{ key: string; hands?: number; error?: string }>()
   const key = JSON.stringify(root)
 
-  // The live count, once the conditions have stopped changing for a moment.
+  // The live count, once the conditions have stopped changing for a moment; each spec's count is kept, so going
+  // back to one counts at once. Until the count for these conditions is in, it says "Counting…".
+  const [asked, setAsked] = useState(key)
   useEffect(() => {
-    let active = true
-    const timer = setTimeout(() => {
-      spotsApi.spotsCountCreate({ spec: JSON.parse(key), tz: browserTimeZone() }).then(
-        ({ data }) => {
-          if (active) setCount({ key, hands: data.hands })
-        },
-        (err) => {
-          if (active) setCount({ key, error: errorMessage(err) })
-        },
-      )
-    }, 400)
-    return () => {
-      active = false
-      clearTimeout(timer)
-    }
+    const timer = setTimeout(() => setAsked(key), 400)
+    return () => clearTimeout(timer)
   }, [key])
+  const countQuery = useQuery(queries.spots.count({ spec: JSON.parse(asked), tz: browserTimeZone() }))
+  const current =
+    asked !== key || countQuery.isPlaceholderData
+      ? undefined
+      : countQuery.error
+        ? { error: errorMessage(countQuery.error) }
+        : countQuery.data && { hands: countQuery.data.hands }
 
   function update(next: SpotSpec[]) {
     onChange('all' in root ? { all: next } : { any: next })
@@ -142,7 +121,6 @@ function SpotBuilder({
     }
   }
 
-  const current = count?.key === key ? count : undefined
   return (
     <section className="spot-builder" aria-label="Spot builder">
       <div className="spot-builder-head">
@@ -615,6 +593,7 @@ function HandsEditor({ hands, onChange }: { hands: string[]; onChange: (hands: s
 
 /** Saving the conditions as a named spot, and sharing a saved one. */
 function SaveBar({ spec, spot, onSaved }: { spec: Root; spot?: SavedSpot; onSaved: (spot: SavedSpot) => void }) {
+  const client = useQueryClient()
   const [name, setName] = useState(spot?.name ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
@@ -641,6 +620,7 @@ function SaveBar({ spec, spot, onSaved }: { spec: Root; spot?: SavedSpot; onSave
     try {
       const { data } = await spotsApi.spotsShareCreate({ id: spot.id })
       setShared(data.share_code)
+      void client.invalidateQueries({ queryKey: queries.spots.list().queryKey }) // the list carries the share code
     } catch (err) {
       setError(errorMessage(err))
     }

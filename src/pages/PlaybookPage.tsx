@@ -1,33 +1,14 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, leagues, practice } from '../api/client.ts'
-import type { Book, League, Playbook, PlaybookDetail } from '../api/generated/data-contracts.ts'
+import type { League, Playbook, PlaybookDetail } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import PlaybookCard from '../components/PlaybookCard.tsx'
 import { FAMILY_ORDER, STAGES } from '../coach.ts'
 import { LIMITS } from '../playbooks.ts'
 import './PlaybookPage.css'
-
-interface Loaded {
-  playbooks: Playbook[]
-  playbook: PlaybookDetail
-  book: Book
-  classes: League[]
-}
-
-/** A playbook's cards (the house one unless an id is given), with the user's stage in each family and how their own
- * hands kept each rule; and the playbooks they can switch to, and the classes they coach. */
-async function loadPlaybook(id?: number): Promise<Loaded> {
-  const [{ data: playbooks }, { data: classes }] = await Promise.all([
-    practice.practicePlaybooksList(),
-    leagues.leaguesList(),
-  ])
-  const chosen = id ?? (playbooks.find((playbook) => playbook.house) ?? playbooks[0]).id
-  const [{ data: playbook }, { data: book }] = await Promise.all([
-    practice.practicePlaybooksRetrieve({ id: chosen }),
-    practice.practiceHandsByTheBookRetrieve({ playbook: chosen }),
-  ])
-  return { playbooks, playbook, book, classes: classes.filter((league) => league.role === 'coach') }
-}
 
 function playbookLabel(playbook: Playbook) {
   if (playbook.house) return `${playbook.name} (house)`
@@ -46,45 +27,35 @@ function PlaybookPage() {
   const params = useParams()
   const id = params.id ? Number(params.id) : undefined
   const navigate = useNavigate()
-  const [loaded, setLoaded] = useState<Loaded>()
-  const [error, setError] = useState<string>()
-  const [reloads, setReloads] = useState(0)
+  const client = useQueryClient()
+  // The playbooks to switch to, and the classes the user coaches; then the chosen playbook (the house one unless an
+  // id is given) with the user's stage in each family, and how their own hands kept each rule.
+  const playbooksQuery = useQuery(queries.practice.playbooks())
+  const classesQuery = useQuery(queries.leagues.list())
+  const playbooks = playbooksQuery.data
+  const chosen = id ?? (playbooks?.find((playbook) => playbook.house) ?? playbooks?.[0])?.id
+  const playbookQuery = useQuery({ ...queries.practice.playbook(chosen ?? 0), enabled: chosen !== undefined })
+  const bookQuery = useQuery({ ...queries.practice.book(chosen ?? 0), enabled: chosen !== undefined })
 
-  useEffect(() => {
-    let active = true
-    loadPlaybook(id).then(
-      (data) => {
-        if (active) {
-          setLoaded(data)
-          setError(undefined)
-        }
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id, reloads])
-
-  if (error) {
+  const failed = playbooksQuery.error ?? classesQuery.error ?? playbookQuery.error ?? bookQuery.error
+  if (failed) {
     return (
       <p className="error-message" role="alert">
-        {error}
+        {errorMessage(failed)}
       </p>
     )
   }
-  if (!loaded || (id !== undefined && loaded.playbook.id !== id)) return <p>Loading…</p>
-  const { playbook, book, playbooks, classes } = loaded
+  const playbook = playbookQuery.data
+  const book = bookQuery.data
+  if (!playbooks || !classesQuery.data || !playbook || !book) return <p>Loading…</p>
+  const classes = classesQuery.data.filter((league) => league.role === 'coach')
   const byRule = new Map(book.rules.map((row) => [row.rule, row]))
   const families = [...playbook.families].sort(
     (a, b) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family),
   )
+  // A rule's hands, kept with the rest of by the book: opening a card again needn't ask again.
   const chancesOf = (rule: string) => () =>
-    practice
-      .practiceHandsByTheBookRetrieve({ playbook: playbook.id, rule })
-      .then(({ data }) => data.chances ?? [])
+    client.fetchQuery(queries.practice.book(playbook.id, rule)).then((data) => data.chances ?? [])
   const listed = playbooks.some((row) => row.id === playbook.id) ? playbooks : [playbook, ...playbooks]
 
   return (
@@ -124,9 +95,15 @@ function PlaybookPage() {
       <PlaybookActions
         playbook={playbook}
         classes={classes}
-        onCopied={(copy) => navigate(`/practice/playbook/${copy.id}/edit`)}
-        onArchived={() => navigate('/practice/playbook')}
-        onAssigned={() => setReloads((n) => n + 1)}
+        onCopied={(copy) => {
+          void changes.playbook(client)
+          navigate(`/practice/playbook/${copy.id}/edit`)
+        }}
+        onArchived={() => {
+          void changes.playbook(client)
+          navigate('/practice/playbook')
+        }}
+        onAssigned={() => void changes.playbook(client)}
       />
 
       {families.map((family) => {

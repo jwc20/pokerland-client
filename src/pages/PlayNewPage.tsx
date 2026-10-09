@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
-import type { PlayTableSummary, TableOpponentsEnum } from '../api/generated/data-contracts.ts'
+import type { TableOpponentsEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { formatDateTime } from '../handFormat.ts'
 import { STYLE_LABELS } from '../practice.ts'
 import './MatchNewPage.css'
@@ -30,27 +33,19 @@ function PlayNewPage() {
   const [seats, setSeats] = useState(6)
   const [opponents, setOpponents] = useState<TableOpponentsEnum>('mixed')
   const [stack, setStack] = useState(100)
-  const [recent, setRecent] = useState<PlayTableSummary[]>()
+  const recent = useQuery(queries.practice.tables()).data // the page works without them
+  const client = useQueryClient()
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string>()
 
-  useEffect(() => {
-    let active = true
-    practice.practiceTablesList().then(
-      ({ data }) => {
-        if (active) setRecent(data)
-      },
-      () => {}, // the page works without them
-    )
-    return () => {
-      active = false
-    }
-  }, [])
-
+  /** A new table: a POST that makes one, so it is sent each time, never shared with another request. */
   function start() {
     setStarting(true)
     practice.practiceTablesCreate({ seats, opponents, stack_bb: stack }).then(
-      ({ data }) => navigate(`/practice/play/${data.id}`),
+      ({ data }) => {
+        void changes.practiceList(client, 'tables')
+        navigate(`/practice/play/${data.id}`)
+      },
       (err) => {
         setStarting(false)
         setError(errorMessage(err))

@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { errorMessage, hands } from '../api/client.ts'
-import type { HandSummary, HandTag } from '../api/generated/data-contracts.ts'
+import { errorMessage } from '../api/client.ts'
+import type { HandTag } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { tagLabel } from '../handFormat.ts'
 import { historyUrl } from '../historyFilters.ts'
 import HandTable from './HandTable.tsx'
@@ -11,29 +12,13 @@ const RECENT = 10
 
 /** The most recent of a tag's hands, and the way to the rest. */
 function TagHands({ tag }: { tag: HandTag }) {
-  // Remembers which tag the rows are of, so the last tag's stay on screen, faded, until the next one's arrive.
-  const [loaded, setLoaded] = useState<{ key: string; rows?: HandSummary[]; error?: string }>()
-
-  useEffect(() => {
-    let active = true
-    // "all" too: with any tag the list leaves out hands sat out, as the counts do.
-    hands.handsList({ tag: [tag.key], page_size: RECENT }).then(
-      ({ data }) => {
-        if (active) setLoaded({ key: tag.key, rows: data.results })
-      },
-      (err) => {
-        if (active) setLoaded({ key: tag.key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-    // A new count means new hands, so the list is fetched again.
-  }, [tag.key, tag.hands])
-
-  const stale = loaded !== undefined && loaded.key !== tag.key
+  // "all" too: with any tag the list leaves out hands sat out, as the counts do. The last tag's rows stay on
+  // screen, faded, until the next one's arrive; an upload refreshes them (UploadWatcher).
+  const query = useQuery(queries.hands.recent({ tag: [tag.key], page_size: RECENT }))
+  const stale = query.isPlaceholderData
+  const loaded = query.error ? { error: errorMessage(query.error) } : query.data && { rows: query.data.results }
   return (
-    <section className="card tag-hands" aria-labelledby="tag-hands-heading" aria-busy={!loaded || stale}>
+    <section className="card tag-hands" aria-labelledby="tag-hands-heading" aria-busy={!query.data || stale}>
       <h2 id="tag-hands-heading" className="card-header">
         {tag.group === 'all' ? 'Recent hands' : `${tagLabel(tag)} hands`}
       </h2>

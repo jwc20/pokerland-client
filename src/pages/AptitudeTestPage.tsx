@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, practice } from '../api/client.ts'
+import { queries } from '../api/queries.ts'
 import type { TestReport, TestReportSpot, TestState } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
 import FeedbackCard from '../components/FeedbackCard.tsx'
@@ -12,38 +15,24 @@ import type { Unit } from '../table.ts'
 import { useFourColour, useUnit } from '../useUnit.ts'
 import './AptitudeTestPage.css'
 
-type Loaded = { id: string; state?: TestState; report?: TestReport; error?: string }
-
-/** A test and its report, by its id: the state as it stands, and the report once it is over. */
-async function loadTest(id: number): Promise<Pick<Loaded, 'state' | 'report'>> {
-  const { data: state } = await practice.practiceTestsNextRetrieve({ id })
-  if (!state.finished) return { state }
-  const { data: report } = await practice.practiceTestsRetrieve({ id })
-  return { state, report }
-}
-
 /** An aptitude test: one spot at a time, nothing graded until the end, then the report. */
 function AptitudeTestPage() {
   const { id = '' } = useParams()
-  const [loaded, setLoaded] = useState<Loaded>()
+  const valid = /^\d+$/.test(id)
+  const client = useQueryClient()
+  // The test as it stands on each visit, with its report once it is over (queries.practice.test).
+  const testQuery = queries.practice.test(Number(id))
+  const query = useQuery({ ...testQuery, enabled: valid })
+  const current: { state?: TestState; report?: TestReport; error?: string } | undefined = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data
 
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    loadTest(Number(id)).then(
-      (data) => {
-        if (active) setLoaded({ id, ...data })
-      },
-      (err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  function finished(report: TestReport, state: TestState) {
+    client.setQueryData(testQuery.queryKey, { state, report })
+    void changes.test(client) // the list of tests, and the ratings it moved
+  }
   return (
     <section className="aptitude-test">
       <Link className="back-link" to="/practice/test">
@@ -55,7 +44,7 @@ function AptitudeTestPage() {
         <Runner
           key={current.state.id}
           initial={current.state}
-          onFinished={(report, state) => setLoaded({ id, state, report })}
+          onFinished={finished}
         />
       ) : current?.error ? (
         <p className="error-message" role="alert">
@@ -179,6 +168,7 @@ function Report({ report }: { report: TestReport }) {
   }))
   const next = report.next
 
+  /** A set for the skill the test says to practise: a POST that makes one, so it is sent each time. */
   function practise() {
     if (!next) return
     practice.practiceSetsCreate({ kind: 'generated', skill: next.skill, tz: browserTimeZone() }).then(

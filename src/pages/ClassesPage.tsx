@@ -1,7 +1,9 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, leagues } from '../api/client.ts'
-import type { League } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import './ClassesPage.css'
 
 /**
@@ -11,27 +13,14 @@ import './ClassesPage.css'
  */
 function ClassesPage() {
   const navigate = useNavigate()
-  const [classes, setClasses] = useState<League[]>()
-  const [error, setError] = useState<string>()
+  const client = useQueryClient()
+  const query = useQuery(queries.leagues.list())
+  const classes = query.data
+  const error = query.error ? errorMessage(query.error) : undefined
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState<{ form: 'create' | 'join'; message: string }>()
-
-  useEffect(() => {
-    let active = true
-    leagues.leaguesList().then(
-      ({ data }) => {
-        if (active) setClasses(data)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [])
 
   async function submit(event: FormEvent, form: 'create' | 'join') {
     event.preventDefault()
@@ -42,6 +31,7 @@ function ClassesPage() {
         form === 'create'
           ? await leagues.leaguesCreate({ name: name.trim() })
           : await leagues.leaguesJoinCreate({ code: code.trim() })
+      void changes.league(client) // the classes, and the playbooks a joined class assigns
       navigate(`/classes/${data.id}`)
     } catch (err) {
       setFormError({ form, message: errorMessage(err) })

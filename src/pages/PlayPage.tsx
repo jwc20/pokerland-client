@@ -1,8 +1,10 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useEffectEvent, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
 import type { HttpResponse } from '../api/generated/http-client.ts'
 import type { PlayTable, PracticeActionEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import ActionBar from '../components/ActionBar.tsx'
 import { SpotPanel } from '../components/DecisionPanel.tsx'
 import PokerTable from '../components/PokerTable.tsx'
@@ -16,25 +18,14 @@ import './PlayPage.css'
 /** A Play it out table: the hand, your moves when it is your turn, and who the bots at the table are. */
 function PlayPage() {
   const { id = '' } = useParams()
-  const [loaded, setLoaded] = useState<{ id: string; table?: PlayTable; error?: string }>()
-
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    practice.practiceTablesRetrieve({ id: Number(id) }).then(
-      ({ data }) => {
-        if (active) setLoaded({ id, table: data })
-      },
-      (err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  const valid = /^\d+$/.test(id)
+  // The table as the server has it on each visit, never from the cache: the table below plays on from there.
+  const query = useQuery({ ...queries.practice.table(Number(id)), enabled: valid })
+  const current: { table?: PlayTable; error?: string } | undefined = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data && { table: query.data }
   return (
     <section className="play">
       <Link className="back-link" to="/practice/play/new">

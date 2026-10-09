@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { changes } from '../api/changes.ts'
 import { errorMessage, leagues, practice } from '../api/client.ts'
 import type {
   Assignment,
@@ -8,6 +10,7 @@ import type {
   MemberProgress,
   RuleCard,
 } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
 import CopyButton from '../components/CopyButton.tsx'
 import SkillBars from '../components/SkillBars.tsx'
@@ -28,24 +31,26 @@ function spaced(code: string) {
 function ClassPage() {
   const id = Number(useParams().id)
   const navigate = useNavigate()
-  const [league, setLeague] = useState<LeagueDetail>()
-  const [error, setError] = useState<string>()
+  const client = useQueryClient()
+  // Fetched afresh on every visit and when the tab comes back: coaches and members change a class between visits.
+  const detailQuery = queries.leagues.detail(id)
+  const query = useQuery(detailQuery)
+  const league = query.data
+  const error = query.error ? errorMessage(query.error) : undefined
   const [actionError, setActionError] = useState<string>()
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string>()
 
-  const load = useCallback(
-    () =>
-      leagues.leaguesRetrieve({ id }).then(
-        ({ data }) => setLeague(data),
-        (err) => setError(errorMessage(err)),
-      ),
-    [id],
-  )
+  /** A change answered with the class as it now stands: kept, and the list of classes refreshed for its name. */
+  function setLeague(data: LeagueDetail) {
+    client.setQueryData(detailQuery.queryKey, data)
+    void client.invalidateQueries({ queryKey: queries.leagues.list().queryKey })
+  }
 
-  useEffect(() => {
-    void load()
-  }, [load])
+  /** A change to who is in the class or what is before it: the class, its progress, the list and the playbooks. */
+  const load = async () => {
+    await changes.league(client)
+  }
 
   async function run(action: () => Promise<unknown>) {
     setBusy(true)
@@ -88,6 +93,9 @@ function ClassPage() {
     void run(async () => {
       await leagues.leaguesMeDestroy({ id })
       navigate('/classes')
+      // Not theirs to see any more: dropped rather than refreshed, which would only be refused.
+      client.removeQueries({ queryKey: detailQuery.queryKey })
+      void changes.league(client)
     })
   }
 
@@ -421,23 +429,10 @@ function MembersCard({
 
 /** The progress of the members who share it: totals only. By the book reads their hands, so it loads on request. */
 function ProgressCard({ league }: { league: LeagueDetail }) {
-  const [rows, setRows] = useState<MemberProgress[]>()
-  const [error, setError] = useState<string>()
-
-  useEffect(() => {
-    let active = true
-    leagues.leaguesProgressList({ id: league.id }).then(
-      ({ data }) => {
-        if (active) setRows(data)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [league.id, league.assignments.length])
+  // A change to the class's members or playbooks refreshes this with it (src/api/changes.ts).
+  const query = useQuery(queries.leagues.progress(league.id))
+  const rows = query.data
+  const error = query.error ? errorMessage(query.error) : undefined
 
   return (
     <section className="card" aria-labelledby="class-progress">
@@ -463,6 +458,7 @@ function ProgressCard({ league }: { league: LeagueDetail }) {
 }
 
 function MemberProgressView({ league, row }: { league: number; row: MemberProgress }) {
+  const client = useQueryClient()
   const [book, setBook] = useState<{ progress: MemberProgress; cards: Map<string, RuleCard> }>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
@@ -472,11 +468,11 @@ function MemberProgressView({ league, row }: { league: number; row: MemberProgre
     setLoading(true)
     setError(undefined)
     try {
-      const { data: progress } = await leagues.leaguesProgressRetrieve({ id: league, memberPk: row.member })
+      const progress = await client.fetchQuery(queries.leagues.memberProgress(league, row.member))
       const details = await Promise.all(
-        progress.playbooks.map((playbook) => practice.practicePlaybooksRetrieve({ id: playbook.playbook })),
+        progress.playbooks.map((playbook) => client.fetchQuery(queries.practice.playbook(playbook.playbook))),
       )
-      const cards = new Map(details.flatMap(({ data }) => data.rules.map((rule) => [`${data.id}:${rule.id}`, rule])))
+      const cards = new Map(details.flatMap((data) => data.rules.map((rule) => [`${data.id}:${rule.id}`, rule])))
       setBook({ progress, cards })
     } catch (err) {
       setError(errorMessage(err))

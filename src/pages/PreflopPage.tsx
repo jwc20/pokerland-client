@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { errorMessage, ranges as rangesApi, stats } from '../api/client.ts'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { changes } from '../api/changes.ts'
+import { errorMessage, ranges as rangesApi } from '../api/client.ts'
 import type { SavedRange, StatGroup } from '../api/generated/data-contracts.ts'
-import { inViewerTimeZone } from '../calendar.ts'
+import { queries } from '../api/queries.ts'
 import MyGameTabs from '../components/MyGameTabs.tsx'
 import RangeGrid, { RangeTable, type GridCell, type GridMode } from '../components/RangeGrid.tsx'
 import ScopeFilters from '../components/ScopeFilters.tsx'
@@ -94,32 +96,18 @@ function PreflopPage() {
   const situation = (SITUATIONS.find(([key]) => key === params.get('situation'))?.[0] ?? 'unopened') as Situation
   const position = POSITIONS.includes(params.get('position') ?? '') ? (params.get('position') as string) : ''
   const mode = (MODES.find(([key]) => key === params.get('mode'))?.[0] ?? 'actions') as GridMode
-  const [loaded, setLoaded] = useState<{ key: string; groups?: StatGroup[]; error?: string }>()
   const [reference, setReference] = useState<string>('')
   const savedRanges = useSavedRanges()
 
   const query = withConditions(apiScope(new URLSearchParams(scope.key)), conditionsOf(situation))
   const tagsWithPosition = [...(query.tag ?? []), ...(position ? [`position:${position}`] : [])]
-  const key = JSON.stringify({ ...query, tag: tagsWithPosition })
-
-  useEffect(() => {
-    const asked = JSON.parse(key) as ScopeQuery
-    let active = true
-    inViewerTimeZone((tz) => stats.statsList({ ...asked, group_by: 'combo', tz })).then(
-      ({ data }) => {
-        if (active) setLoaded({ key, groups: data })
-      },
-      (err) => {
-        if (active) setLoaded({ key, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
-  const groups = current?.groups
+  const asked: ScopeQuery = { ...query, tag: tagsWithPosition }
+  // The last filters' grid stays on screen, faded, until the next one arrives; an upload refreshes it.
+  const statsQuery = useQuery(queries.stats.groups({ ...asked, group_by: 'combo' }))
+  const current: { error?: string; groups?: StatGroup[] } = statsQuery.error
+    ? { error: errorMessage(statsQuery.error) }
+    : { groups: statsQuery.data }
+  const groups = current.groups
   const cells = useMemo(() => (groups ? cellsOf(groups, mode) : undefined), [groups, mode])
   const played = useMemo(
     () => new Set(groups?.filter((group) => group.first_actions.raise.did + group.first_actions.call.did > 0).map((g) => g.key)),
@@ -231,9 +219,9 @@ function PreflopPage() {
           {SITUATIONS.find(([key]) => key === situation)?.[1]}
           {position ? `, ${position}` : ''}
         </h2>
-        <div className="card-body">
+        <div className={statsQuery.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
           <p className="card-hint">{situationText}</p>
-          {current?.error ? (
+          {current.error ? (
             <p className="error-message" role="alert">
               {current.error}
             </p>
@@ -358,23 +346,11 @@ function Summary({
   )
 }
 
-/** The user's saved ranges, and a way to load them again. */
+/** The user's saved ranges (none to offer until they load, or if they don't), and telling the app one changed. */
 function useSavedRanges() {
-  const [ranges, setRanges] = useState<SavedRange[]>()
-  const [version, setVersion] = useState(0)
-  useEffect(() => {
-    let active = true
-    rangesApi.rangesList().then(
-      ({ data }) => {
-        if (active) setRanges(data)
-      },
-      () => {},
-    )
-    return () => {
-      active = false
-    }
-  }, [version])
-  return { ranges, reload: () => setVersion((n) => n + 1) }
+  const client = useQueryClient()
+  const ranges = useQuery(queries.ranges()).data
+  return { ranges, reload: () => changes.ranges(client) }
 }
 
 /** Building a range on the grid, or as notation, and saving it to set beside your own (FND-5). */

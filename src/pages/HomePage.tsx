@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router'
-import { errorMessage, hands } from '../api/client.ts'
-import type { HandCalendar, HandTag } from '../api/generated/data-contracts.ts'
+import { errorMessage } from '../api/client.ts'
+import { queries } from '../api/queries.ts'
 import { useAuth } from '../auth/useAuth.ts'
-import { browserTimeZone } from '../calendar.ts'
 import DisciplineCard from '../components/DisciplineCard.tsx'
 import ResultsCalendar from '../components/ResultsCalendar.tsx'
 import ReviewQueue from '../components/ReviewQueue.tsx'
@@ -15,45 +14,19 @@ import { useToday } from '../useToday.ts'
 import { formatAgo, useTrackerStatus } from '../useTrackerStatus.ts'
 import './HomePage.css'
 
-/** The days the user played on, counted in their time zone, or in UTC if the API doesn't know it. */
-async function loadCalendar() {
-  try {
-    return (await hands.handsDaysRetrieve({ tz: browserTimeZone() })).data
-  } catch (err) {
-    if (err instanceof Response && err.status === 400) return (await hands.handsDaysRetrieve({ tz: 'UTC' })).data
-    throw err
-  }
-}
-
 function HomePage() {
   const { user } = useAuth()
-  const { status, error: statusError } = useTrackerStatus()
+  const { status } = useTrackerStatus()
   const today = useToday()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [dashboard, setDashboard] = useState<{ calendar: HandCalendar; tags: HandTag[] }>()
-  const [error, setError] = useState<string | null>(null)
-
-  // Loads once the tracker status is in, then again when it counts new hands,
-  // and at midnight, when a streak can end without any.
-  const statusKnown = status !== undefined || statusError !== null
-  const handsSeen = status?.hands_seen
-  useEffect(() => {
-    if (!statusKnown) return
-    let active = true
-    Promise.all([loadCalendar(), hands.handsTagsList()]).then(
-      ([calendar, { data: tags }]) => {
-        if (!active) return
-        setDashboard({ calendar, tags })
-        setError(null)
-      },
-      (err) => {
-        if (active) setError(errorMessage(err))
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [statusKnown, handsSeen, today])
+  // The days played, kept by today's date so a streak can end at midnight without new hands; an upload refreshes
+  // both (UploadWatcher).
+  const calendarQuery = useQuery(queries.hands.days(today))
+  const tagsQuery = useQuery(queries.hands.tags())
+  const dashboard =
+    calendarQuery.data && tagsQuery.data ? { calendar: calendarQuery.data, tags: tagsQuery.data } : undefined
+  const failed = calendarQuery.error ?? tagsQuery.error
+  const error = failed ? errorMessage(failed) : null
 
   // The chosen tag is in the URL, so it survives a reload; one without hands any more falls back to all.
   const selected = searchParams.get('tag') ?? 'all'

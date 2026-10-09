@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { errorMessage, stats } from '../api/client.ts'
+import { errorMessage } from '../api/client.ts'
 import type { PurposeStat } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import { streetLabel } from '../handFormat.ts'
 import { apiScope, historyParams, type HistoryFilters } from '../historyFilters.ts'
 import { PURPOSE_LABELS } from '../notes.ts'
@@ -17,33 +18,15 @@ const BLUFFS = new Set(['bluff', 'semi_bluff'])
  */
 function PurposeCard({ base }: { base: HistoryFilters }) {
   const key = historyParams(base).toString()
-  const [loaded, setLoaded] = useState<{ key: string; rows?: PurposeStat[]; error?: string }>()
-
-  useEffect(() => {
-    const query = new URLSearchParams(key)
-    let active = true
-    stats
-      .statsPurposesList(apiScope(query))
-      .then(
-        ({ data }) => {
-          if (active) setLoaded({ key, rows: data })
-        },
-        (err) => {
-          if (active) setLoaded({ key, error: errorMessage(err) })
-        },
-      )
-    return () => {
-      active = false
-    }
-  }, [key])
-
-  const current = loaded?.key === key ? loaded : undefined
+  // A purpose saved in a replay refreshes this (src/api/changes.ts); other filters keep the last rows, faded.
+  const query = useQuery(queries.stats.purposes(apiScope(new URLSearchParams(key))))
+  const current = query.error ? { error: errorMessage(query.error) } : { rows: query.data }
   return (
     <section className="card" aria-labelledby="my-game-purposes">
       <h2 id="my-game-purposes" className="card-header">
         Why you bet
       </h2>
-      <div className="card-body">
+      <div className={query.isPlaceholderData ? 'card-body is-updating' : 'card-body'}>
         {current?.error ? (
           <p className="error-message" role="alert">
             {current.error}

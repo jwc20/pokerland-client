@@ -1,7 +1,9 @@
-import { useEffect, useEffectEvent, useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useEffectEvent, useMemo } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router'
-import { errorMessage, hands } from '../api/client.ts'
+import { errorMessage } from '../api/client.ts'
 import type { HandDetail, NotePurposeEnum } from '../api/generated/data-contracts.ts'
+import { queries } from '../api/queries.ts'
 import CopyButton from '../components/CopyButton.tsx'
 import DecisionPanel from '../components/DecisionPanel.tsx'
 import NotesPanel from '../components/NotesPanel.tsx'
@@ -18,26 +20,14 @@ import './GameReplayPage.css'
 
 function GameReplayPage() {
   const { id = '' } = useParams()
-  // Remembers which id it holds, so a different hand in the URL shows as loading.
-  const [loaded, setLoaded] = useState<{ id: string; hand?: HandDetail; error?: string }>()
-
-  useEffect(() => {
-    if (!/^\d+$/.test(id)) return
-    let active = true
-    hands.handsRetrieve({ id: Number(id) }).then(
-      ({ data }) => {
-        if (active) setLoaded({ id, hand: data })
-      },
-      (err) => {
-        if (active) setLoaded({ id, error: errorMessage(err) })
-      },
-    )
-    return () => {
-      active = false
-    }
-  }, [id])
-
-  const current = /^\d+$/.test(id) ? (loaded?.id === id ? loaded : undefined) : { id, error: 'Not found.' }
+  const valid = /^\d+$/.test(id)
+  // A stored hand never changes: one fetch, or Game History's prefetch on hovering its row, serves every visit.
+  const query = useQuery({ ...queries.hands.detail(Number(id)), enabled: valid })
+  const current = !valid
+    ? { error: 'Not found.' }
+    : query.error
+      ? { error: errorMessage(query.error) }
+      : query.data && { hand: query.data }
   return (
     <section className="replay-page">
       <Link className="replay-back" to="/games">

@@ -75,6 +75,8 @@ src/
                    cards, sparklines, the practice table, action bar and feedback card, the coach's rail and read
                    card, the playbook's card editor, sharing a hand with a class, ...
   api/client.ts    sets up the generated API classes: the base URL, cookies and token refresh
+  api/queries.ts   every query: its key, how it fetches, and how long its data stays fresh (TanStack Query)
+  api/changes.ts   what each save refreshes; api/queryClient.ts holds the cache and its retry rules
   api/generated/   generated from pokerland-api's OpenAPI schema; don't edit
   auth/            who is signed in, the sign-in form and the route guards
   calendar.ts      days as "YYYY-MM-DD" keys and the calendar grids, in UTC so a clock change never skips a day
@@ -102,8 +104,16 @@ src/
 - **Plain CSS.** Each component has its own file, with class names prefixed by the component's name. Colours come
   from the tokens in `src/index.css`, which has light and dark values for each. The results calendar's colour scales
   are tokens too, picked so colour-blind readers can tell losses from wins.
-- **Few dependencies.** There are no UI, chart, date or state libraries: React, React Router and the generated API
-  client do the work.
+- **Few dependencies.** There are no UI, chart or date libraries: React, React Router, the generated API client and
+  TanStack Query, for data from the API, do the work.
+- **Data comes through queries.** A page asks `useQuery(queries.….…)` rather than fetching in an effect, so a
+  request is shared by everything that shows it, sent once even in StrictMode, and kept by its key. Each entry in
+  `src/api/queries.ts` says how long its data stays fresh: a stored hand forever; what is worked out from your hands
+  until an upload, which `UploadWatcher` notices from the tracker status; practice and match state never, so a page
+  always plays on from the server's. A filtered list or report keeps the last results on screen, faded
+  (`is-updating`), while the next load. After a save, call the matching entry in `src/api/changes.ts`, which
+  refreshes only what that save changes. A POST that makes something (a set, a match, a table, a class) is a plain
+  call, never a query, so it is never shared or repeated. Signing in or out clears the cache.
 - **Explicit imports.** Imports include their `.ts` or `.tsx` extension, and types come in with `import type`.
 
 ## Deploying

@@ -570,3 +570,9 @@ code {
     accent-color: var(--accent);
   }
 }
+
+/* The previous filters' results, kept on screen while the new ones load (TanStack Query's placeholder data). */
+.is-updating {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
