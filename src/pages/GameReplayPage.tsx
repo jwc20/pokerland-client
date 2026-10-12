@@ -6,6 +6,7 @@ import type { HandDetail, NotePurposeEnum } from '../api/generated/data-contract
 import { queries } from '../api/queries.ts'
 import CopyButton from '../components/CopyButton.tsx'
 import DecisionPanel from '../components/DecisionPanel.tsx'
+import ExplainPanel from '../components/ExplainPanel.tsx'
 import NotesPanel from '../components/NotesPanel.tsx'
 import PlayingCard from '../components/PlayingCard.tsx'
 import ReplayControls from '../components/ReplayControls.tsx'
@@ -176,6 +177,22 @@ function Replay({ hand }: { hand: HandDetail }) {
           onSave={notes.save}
           onDelete={notes.remove}
           onSeek={player.seek}
+        />
+      )}
+
+      {hand.hero && (
+        <ExplainPanel
+          subject={{ kind: 'hand', id: hand.id }}
+          action="Explain this hand"
+          intro={
+            'Have a model explain this hand: what happened, how each of your decisions measured up against the ' +
+            'playbook, and what to work on. It uses your own API key, which stays in this browser. Hands can be ' +
+            'explained once your session is over, 30 minutes after your last hand.'
+          }
+          onStep={(index) => {
+            player.seek(index)
+            document.querySelector('.replay')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
         />
       )}
 

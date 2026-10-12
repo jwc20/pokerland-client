@@ -1,0 +1,55 @@
+.ask-why {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+
+  h4 {
+    margin: 0;
+    font-size: 17px;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  textarea {
+    font: inherit;
+    font-size: 15px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 8px 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    resize: vertical;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.ask-why-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text-h);
+}
+
+.ask-why-question {
+  font-weight: 600;
+}
+
+.ask-why-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+}

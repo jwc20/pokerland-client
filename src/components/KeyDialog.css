@@ -1,0 +1,102 @@
+.key-dialog {
+  width: min(440px, calc(100vw - 32px));
+  box-sizing: border-box;
+  padding: 20px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+
+  &::backdrop {
+    background: rgba(8, 6, 13, 0.4);
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+}
+
+.key-dialog-hint,
+.key-dialog-note {
+  font-size: 14px;
+}
+
+.key-dialog-label {
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.key-dialog-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    min-width: 0;
+    font: inherit;
+    font-size: 15px;
+    padding: 7px 10px;
+    color: var(--text-h);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+  }
+}
+
+.key-dialog-where {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+
+  legend {
+    padding: 0;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: var(--text-h);
+  }
+}
+
+.key-dialog-status {
+  font-size: 14px;
+}
+
+.key-dialog-ok {
+  color: var(--win);
+}
+
+.key-dialog-error {
+  color: var(--loss);
+}
+
+.key-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .link-button:disabled {
+    color: var(--text);
+    opacity: 0.5;
+    cursor: default;
+    text-decoration: none;
+  }
+}
+
+.key-dialog-spacer {
+  flex: 1;
+}

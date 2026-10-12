@@ -1,4 +1,5 @@
 import type { Query, QueryClient, QueryKey } from '@tanstack/react-query'
+import type { ExplanationKindEnum } from './generated/data-contracts.ts'
 import { FROM_HANDS } from './queries.ts'
 
 /**
@@ -52,4 +53,8 @@ export const changes = {
 
   /** A class joined, started, left or changed, or something put before it: classes, and the playbooks they assign. */
   league: (client: QueryClient) => refresh(client, ['leagues'], ['practice', 'playbooks', 'list']),
+
+  /** An explanation saved, rated or deleted, or a question answered: its subject's explanations, and the spend. */
+  explanation: (client: QueryClient, kind: ExplanationKindEnum, id: number) =>
+    refresh(client, ['explanations', 'of', kind, id], ['explanations', 'spend']),
 }

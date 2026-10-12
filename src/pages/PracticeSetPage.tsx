@@ -12,8 +12,10 @@ import type {
   Spot,
 } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
+import ExplainPanel from '../components/ExplainPanel.tsx'
 import FeedbackCard from '../components/FeedbackCard.tsx'
 import SpotQuestion, { type SpotAnswer } from '../components/SpotQuestion.tsx'
+import { EXPLANATIONS_ENABLED } from '../features.ts'
 import { fillAmounts, GRADE_LABELS, specAmount } from '../practice.ts'
 import type { Unit } from '../table.ts'
 import { useFourColour, useUnit } from '../useUnit.ts'
@@ -166,6 +168,7 @@ function SpotView({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string>()
   const [again, setAgain] = useState(false)
+  const [explaining, setExplaining] = useState(false)
   // A spot from one of your own hold'em hands can be played on from its decision, against bots modelled on the others.
   const playable = scenario.source === 'own_hand' && scenario.spec.hand?.game === "Hold'em No Limit"
 
@@ -246,7 +249,27 @@ function SpotView({
                   Play it out
                 </button>
               )}
+              {EXPLANATIONS_ENABLED && (
+                <button
+                  type="button"
+                  className="link-button"
+                  aria-expanded={explaining}
+                  onClick={() => setExplaining(!explaining)}
+                >
+                  {explaining ? 'Hide the explanation' : 'Ask for an explanation'}
+                </button>
+              )}
             </>
+          }
+        />
+      )}
+      {attempt && explaining && (
+        <ExplainPanel
+          subject={{ kind: 'attempt', id: attempt.id }}
+          action="Explain this spot"
+          intro={
+            'Have a model explain this spot: what it turns on, why the answer is what it is, and what yours gave ' +
+            'up. It uses your own API key, which stays in this browser.'
           }
         />
       )}

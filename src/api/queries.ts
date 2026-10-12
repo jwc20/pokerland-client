@@ -1,6 +1,7 @@
 import { infiniteQueryOptions, keepPreviousData, queryOptions } from '@tanstack/react-query'
 import { inViewerTimeZone } from '../calendar.ts'
 import {
+  explanations,
   hands,
   leagues,
   leaks,
@@ -14,6 +15,7 @@ import {
   users,
 } from './client.ts'
 import type {
+  ExplanationKindEnum,
   HandsListParams,
   LeaksListParams,
   SessionsListParams,
@@ -335,6 +337,30 @@ export const queries = {
         queryKey: ['leagues', id, 'progress', member],
         queryFn: () => data(leagues.leaguesProgressRetrieve({ id, memberPk: member })),
         staleTime: 0,
+      }),
+  },
+
+  explanations: {
+    /** The providers and models offered, with today's prices: they change with a deploy, not with the user. */
+    models: () =>
+      queryOptions({
+        queryKey: ['explanations', 'models'],
+        queryFn: () => data(explanations.explanationsModelsRetrieve()),
+        staleTime: 60 * 60_000,
+      }),
+    /** This month's explanations and what they cost, in the viewer's time zone. */
+    spend: () =>
+      queryOptions({
+        queryKey: ['explanations', 'spend'],
+        queryFn: () => inViewerTimeZone((tz) => data(explanations.explanationsSpendRetrieve({ tz }))),
+        staleTime: SETTINGS,
+      }),
+    /** A subject's explanations, newest first, with their questions: only the user's saves change them. */
+    of: (kind: ExplanationKindEnum, id: number) =>
+      queryOptions({
+        queryKey: ['explanations', 'of', kind, id],
+        queryFn: () => data(explanations.explanationsList({ [kind]: id })),
+        staleTime: SETTINGS,
       }),
   },
 }

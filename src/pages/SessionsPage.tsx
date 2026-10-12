@@ -1,11 +1,13 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { errorMessage } from '../api/client.ts'
 import type { Session } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
 import { browserTimeZone } from '../calendar.ts'
+import ExplainPanel from '../components/ExplainPanel.tsx'
 import PositionBars from '../components/PositionBars.tsx'
+import { EXPLANATIONS_ENABLED } from '../features.ts'
 import { formatBb, formatDateTime } from '../handFormat.ts'
 import { historyUrl } from '../historyFilters.ts'
 import { formatMinutes, PATTERNS, patternLabel } from '../sessions.ts'
@@ -117,6 +119,7 @@ function SessionList({ since, until }: { since: string; until: string }) {
   const loadingMore = query.isFetchingNextPage
   const next = query.hasNextPage && !query.isPlaceholderData
   const loadMore = () => void query.fetchNextPage()
+  const [explaining, setExplaining] = useState<Session>()
 
   return (
     <section className="card" aria-labelledby="sessions-list">
@@ -144,11 +147,21 @@ function SessionList({ since, until }: { since: string; until: string }) {
                   </th>
                   <th scope="col">Biggest pot</th>
                   <th scope="col">Notes</th>
+                  {EXPLANATIONS_ENABLED && (
+                    <th scope="col">
+                      <span className="visually-hidden">Explanation</span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((session) => (
-                  <SessionRow key={session.id} session={session} />
+                  <SessionRow
+                    key={session.id}
+                    session={session}
+                    explaining={explaining?.id === session.id}
+                    onExplain={() => setExplaining(explaining?.id === session.id ? undefined : session)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -164,12 +177,32 @@ function SessionList({ since, until }: { since: string; until: string }) {
             {loadingMore ? 'Loading…' : 'Load more'}
           </button>
         )}
+        {explaining && (
+          <ExplainPanel
+            key={explaining.id}
+            subject={{ kind: 'session', id: explaining.id }}
+            heading={`The session of ${formatDateTime(explaining.start)}`}
+            action="Explain this session"
+            intro={
+              'Have a model go through this session: the result against the all-in adjusted result, the hands that ' +
+              'mattered, and the checks it broke. It uses your own API key, which stays in this browser.'
+            }
+          />
+        )}
       </div>
     </section>
   )
 }
 
-function SessionRow({ session }: { session: Session }) {
+function SessionRow({
+  session,
+  explaining,
+  onExplain,
+}: {
+  session: Session
+  explaining: boolean
+  onExplain: () => void
+}) {
   const result = session.net_bb > 0 ? 'win' : session.net_bb < 0 ? 'loss' : 'even'
   const notes = [
     session.flagged > 0 && `${session.flagged} to review`,
@@ -193,6 +226,13 @@ function SessionRow({ session }: { session: Session }) {
       <td className="nowrap">{formatBb(session.ev_net_bb)}</td>
       <td className="nowrap">{formatBb(session.biggest_pot_bb, false)}</td>
       <td className="nowrap">{notes.join(', ') || '—'}</td>
+      {EXPLANATIONS_ENABLED && (
+        <td>
+          <button type="button" className="link-button" aria-expanded={explaining} onClick={onExplain}>
+            {explaining ? 'Hide' : 'Explain'}
+          </button>
+        </td>
+      )}
     </tr>
   )
 }

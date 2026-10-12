@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { errorMessage, practice } from '../api/client.ts'
 import type { PracticeProfile, PracticeSet, PracticeSkillEnum } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
@@ -10,6 +10,12 @@ import SkillBars from '../components/SkillBars.tsx'
 import { CLASSES_CLOSED, CLASSES_ENABLED } from '../features.ts'
 import { GENERATED_HINTS, GRADE_LABELS } from '../practice.ts'
 import './PracticePage.css'
+
+const SKILLS: PracticeSkillEnum[] = ['arithmetic', 'preflop', 'postflop', 'push_fold', 'hand_reading']
+
+function skillFrom(value: string | null): PracticeSkillEnum {
+  return SKILLS.find((skill) => skill === value) ?? 'arithmetic'
+}
 
 /**
  * Practice: today's short set, the modes to drill one kind of spot, and accuracy by skill with its range. Your
@@ -26,7 +32,9 @@ function PracticePage() {
   const [startError, setStartError] = useState<string>()
   const failed = profileQuery.error ?? todayQuery.error
   const error = startError ?? (failed ? errorMessage(failed) : undefined)
-  const [skill, setSkill] = useState<PracticeSkillEnum>('arithmetic')
+  // ?skill= picks the generated set's skill, as an explanation's "Practise it" link does.
+  const [params] = useSearchParams()
+  const [skill, setSkill] = useState<PracticeSkillEnum>(() => skillFrom(params.get('skill')))
   const [starting, setStarting] = useState(false)
   const [notice, setNotice] = useState<string>()
 
