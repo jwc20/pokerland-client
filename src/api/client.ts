@@ -1,4 +1,5 @@
 import { Auth } from './generated/Auth.ts'
+import { Explanations } from './generated/Explanations.ts'
 import { Hands } from './generated/Hands.ts'
 import type { ApiConfig, HttpResponse } from './generated/http-client.ts'
 import { Leagues } from './generated/Leagues.ts'
@@ -67,6 +68,8 @@ export const tournaments = new Tournaments(apiConfig)
 export const tools = new Tools(apiConfig)
 export const shares = new Shares(apiConfig)
 export const leagues = new Leagues(apiConfig)
+// Explanations: briefs and saved answers. The model calls go from the browser to the provider, never through here.
+export const explanations = new Explanations(apiConfig)
 // Shared hands' public pages, which need no sign-in.
 export const publicShares = new Public(config)
 // Only its status endpoint is for the web app; the trackers use the rest with their client token.

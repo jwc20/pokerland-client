@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { errorMessage } from '../api/client.ts'
 import type { Debrief, DebriefDecision, PlaybookDetail } from '../api/generated/data-contracts.ts'
 import { queries } from '../api/queries.ts'
+import ExplainPanel from '../components/ExplainPanel.tsx'
 import PokerTable from '../components/PokerTable.tsx'
 import { ShareBar } from '../components/StatTile.tsx'
 import { STAGES } from '../coach.ts'
+import { EXPLANATIONS_ENABLED } from '../features.ts'
 import { cardsText, formatBb, streetLabel } from '../handFormat.ts'
 import { formatPct } from '../playerStats.ts'
 import { ACTION_LABELS, DID, STYLE_LABELS } from '../practice.ts'
@@ -48,7 +50,7 @@ function MatchDebriefPage() {
       </Link>
       <h1>Debrief</h1>
       {current?.debrief && current.playbook ? (
-        <DebriefView debrief={current.debrief} playbook={current.playbook} />
+        <DebriefView matchId={Number(id)} debrief={current.debrief} playbook={current.playbook} />
       ) : current?.error ? (
         <p className="error-message" role="alert">
           {current.error}
@@ -60,7 +62,15 @@ function MatchDebriefPage() {
   )
 }
 
-function DebriefView({ debrief, playbook }: { debrief: Debrief; playbook: PlaybookDetail }) {
+function DebriefView({
+  matchId,
+  debrief,
+  playbook,
+}: {
+  matchId: number
+  debrief: Debrief
+  playbook: PlaybookDetail
+}) {
   const rules = new Map(playbook.rules.map((rule) => [rule.id, rule]))
   const { read, luck } = debrief
   return (
@@ -233,6 +243,15 @@ function DebriefView({ debrief, playbook }: { debrief: Debrief; playbook: Playbo
           </div>
         </div>
       </section>
+
+      <ExplainPanel
+        subject={{ kind: 'debrief', id: matchId }}
+        action="Explain this match"
+        intro={
+          'Have a model go through this match: the opponent revealed, the one thing to fix, the hands that show it, ' +
+          'and luck against play. It uses your own API key, which stays in this browser.'
+        }
+      />
     </>
   )
 }
@@ -252,6 +271,7 @@ function labelText(style: string, right: boolean, hand: number | null) {
 /** A decision the debrief points to: the table as it stood, what the coach would have said, and what you did. */
 function Picked({ decision, title }: { decision: DebriefDecision; title: string }) {
   const { unit } = useUnit()
+  const [explaining, setExplaining] = useState(false)
   const steps = useMemo(() => buildReplay(decision.table), [decision.table])
   const step = steps[steps.length - 1]
   const did = decision.move ? DID[decision.move.action] : 'didn’t act'
@@ -267,6 +287,27 @@ function Picked({ decision, title }: { decision: DebriefDecision; title: string 
         {decision.departure && ` You said why: ${DEPARTURES[decision.departure] ?? decision.departure}.`}
       </p>
       <p className="debrief-line">{decision.line}</p>
+      {EXPLANATIONS_ENABLED && decision.move && (
+        <button
+          type="button"
+          className="link-button debrief-why"
+          aria-expanded={explaining}
+          onClick={() => setExplaining(!explaining)}
+        >
+          {explaining ? 'Hide' : 'Why?'}
+        </button>
+      )}
+      {explaining && (
+        <ExplainPanel
+          subject={{ kind: 'decision', id: decision.id }}
+          heading="Why the coach said that"
+          action="Explain this line"
+          intro={
+            'Have a model explain the coach’s line: why the playbook says what it says here, and when it ' +
+            'wouldn’t.'
+          }
+        />
+      )}
     </article>
   )
 }

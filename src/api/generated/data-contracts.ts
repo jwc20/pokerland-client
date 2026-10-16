@@ -47,13 +47,6 @@ export type VillainKindEnum =
   | "straight_draw";
 
 /**
- * * `clear` - clear
- * * `close` - close
- * * `your_call` - your_call
- */
-export type VerdictEnum = "clear" | "close" | "your_call";
-
-/**
  * * `percent` - percent
  * * `ratio` - ratio
  * * `number` - number
@@ -97,7 +90,8 @@ export type StyleEnum = "tag" | "lag" | "station" | "rock";
  * * `preflop` - preflop
  * * `flop` - flop
  * * `turn` - turn
- * * `river` - river
+ * *
+ * `river` - river
  */
 export type StreetEnum = "preflop" | "flop" | "turn" | "river";
 
@@ -341,6 +335,20 @@ export type NewSetKindEnum =
   | "shared";
 
 /**
+ * * `anthropic` - anthropic
+ * * `openai` - openai
+ * * `google` - google
+ * * `deepseek` - deepseek
+ */
+export type ModelProviderEnum = "anthropic" | "openai" | "google" | "deepseek";
+
+/**
+ * * `user` - user
+ * * `assistant` - assistant
+ */
+export type MessageRoleEnum = "user" | "assistant";
+
+/**
  * * `coach` - Coach
  * * `member` - Member
  */
@@ -534,6 +542,43 @@ export type FamilyEnum =
 export type FacingEnum = "none" | "bet" | "raise";
 
 /**
+ * * `kept` - kept
+ * * `broke` - broke
+ * * `close` - close
+ * * `your_call` - your_call
+ * * `none` - none
+ */
+export type ExplanationVerdictEnum =
+  | "kept"
+  | "broke"
+  | "close"
+  | "your_call"
+  | "none";
+
+/**
+ * * `low` - low
+ * * `medium` - medium
+ * * `high` - high
+ */
+export type ExplanationLevelEnum = "low" | "medium" | "high";
+
+/**
+ * * `hand` - hand
+ * * `attempt` - attempt
+ * * `decision` - decision
+ * * `debrief` - debrief
+ * * `test` - test
+ * * `session` - session
+ */
+export type ExplanationKindEnum =
+  | "hand"
+  | "attempt"
+  | "decision"
+  | "debrief"
+  | "test"
+  | "session";
+
+/**
  * * `thin` - thin
  * * `strong` - strong
  */
@@ -595,6 +640,13 @@ export type AttemptResultGradingEnum =
  * * `hand` - A hand
  */
 export type AssignmentKindEnum = "playbook" | "hand";
+
+/**
+ * * `clear` - clear
+ * * `close` - close
+ * * `your_call` - your_call
+ */
+export type AdviceVerdictEnum = "clear" | "close" | "your_call";
 
 export interface Accepted {
   /**
@@ -685,7 +737,7 @@ export interface Advice {
    * * `close` - close
    * * `your_call` - your_call
    */
-  verdict: VerdictEnum;
+  verdict: AdviceVerdictEnum;
   /**
    * * `exact` - exact
    * * `rule` - rule
@@ -992,6 +1044,64 @@ export interface BookRule {
   ci_high: number | null;
 }
 
+export interface Brief {
+  /**
+   * * `hand` - hand
+   * * `attempt` - attempt
+   * * `decision` - decision
+   * * `debrief` - debrief
+   * * `test` - test
+   * * `session` - session
+   */
+  kind: ExplanationKindEnum;
+  id: number;
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  provider: ModelProviderEnum;
+  prompt_version: string;
+  /** The system prompt. */
+  instructions: string;
+  /** The subject, as JSON text: the user message. */
+  input: string;
+  /** The JSON schema the answer must match. */
+  schema: any;
+  /** A digest of all of it, sent back with the answer. */
+  hash: string;
+}
+
+/** A subject, and the provider the brief is for. */
+export interface BriefRequestRequest {
+  /**
+   * * `hand` - hand
+   * * `attempt` - attempt
+   * * `decision` - decision
+   * * `debrief` - debrief
+   * * `test` - test
+   * * `session` - session
+   */
+  kind: ExplanationKindEnum;
+  /** @min 1 */
+  id: number;
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  provider: ModelProviderEnum;
+}
+
+export interface Catalog {
+  /** @format date */
+  prices_as_of: string;
+  providers: ModelProvider[];
+  models: OfferedModel[];
+}
+
 /** The published chart a preflop spot is graded by, and the tier of it the spot is in (practice.charts). */
 export interface Chart {
   key: string;
@@ -1053,6 +1163,15 @@ export interface Config {
   max_chunk_bytes: number;
 }
 
+export interface ConversationMessage {
+  /**
+   * * `user` - user
+   * * `assistant` - assistant
+   */
+  role: MessageRoleEnum;
+  text: string;
+}
+
 /** A session that was played on a day, in part or whole. */
 export interface DaySession {
   id: number;
@@ -1085,6 +1204,8 @@ export interface Debrief {
 
 /** A decision the debrief points to: the table as it stood, and what the coach would have said. */
 export interface DebriefDecision {
+  /** The decision's id, for an explanation of the coach's line. */
+  id: number;
   /** The hand up to the decision. */
   table: TableHand;
   /** The coach's line on it. */
@@ -1189,6 +1310,156 @@ export interface EquityResult {
   exact: boolean;
   /** The opponent's holdings counted. */
   combos: number;
+}
+
+export interface Explanation {
+  id: number;
+  kind: ExplanationKindEnum;
+  /** The id of what it explains; null for a rebuilt session. */
+  subject: number | null;
+  /** @format date-time */
+  period_start?: string | null;
+  /** @format date-time */
+  period_end?: string | null;
+  /** @maxLength 24 */
+  prompt_version: string;
+  provider: ModelProviderEnum;
+  /** @maxLength 64 */
+  model: string;
+  /** @maxLength 8 */
+  effort?: string;
+  content: ExplanationContent;
+  usage: TokenUsage;
+  /** @format double */
+  cost?: number | null;
+  useful?: boolean | null;
+  /** @format date-time */
+  created: string;
+  turns: ExplanationTurn[];
+}
+
+/** An explanation as explain.schema shapes it, with the lengths the instructions ask for (and some room). */
+export interface ExplanationContent {
+  /** @maxLength 160 */
+  headline: string;
+  /** @maxLength 1200 */
+  summary: string;
+  story: ExplanationStory[];
+  decisions: ExplanationDecision[];
+  /** @maxItems 4 */
+  strengths: string[];
+  suggestions: ExplanationSuggestion[];
+  /** @maxLength 1200 */
+  luck?: string | null;
+  /** @maxItems 6 */
+  caveats: string[];
+}
+
+/** A provider's answer to a brief, to check and save. */
+export interface ExplanationCreateRequest {
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  provider: ModelProviderEnum;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  model: string;
+  /**
+   * The provider's own stop value.
+   * @minLength 1
+   * @maxLength 32
+   */
+  stop: string;
+  /** The tokens a call used, as Pokerland prices them: `input` counts only those read afresh. */
+  usage: TokenUsageRequest;
+  /**
+   * @maxLength 128
+   * @default ""
+   */
+  request_id?: string;
+  /**
+   * * `hand` - hand
+   * * `attempt` - attempt
+   * * `decision` - decision
+   * * `debrief` - debrief
+   * * `test` - test
+   * * `session` - session
+   */
+  kind: ExplanationKindEnum;
+  /** @min 1 */
+  id: number;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  brief_hash: string;
+  /** @default "medium" */
+  effort?: ExplanationLevelEnum;
+  /** The answer, parsed: explain.schema's shape. */
+  content: any;
+}
+
+export interface ExplanationDecision {
+  /** @maxLength 8 */
+  ref: string;
+  /**
+   * * `kept` - kept
+   * * `broke` - broke
+   * * `close` - close
+   * * `your_call` - your_call
+   * * `none` - none
+   */
+  verdict: ExplanationVerdictEnum;
+  /** @maxLength 1200 */
+  why: string;
+  /** @maxLength 1200 */
+  instead?: string | null;
+  /** Its step in the replay, for a hand. */
+  step: number | null;
+  street: string | null;
+  /** What the player did, in words. */
+  move: string | null;
+  /** The playbook rule's number, if any. */
+  rule: number | null;
+}
+
+export interface ExplanationStory {
+  /** @maxLength 40 */
+  label: string;
+  /** @maxLength 1200 */
+  text: string;
+}
+
+export interface ExplanationSuggestion {
+  /**
+   * * `low` - low
+   * * `medium` - medium
+   * * `high` - high
+   */
+  priority: ExplanationLevelEnum;
+  /** @maxLength 600 */
+  text: string;
+  /** @maxLength 64 */
+  practice?: string | null;
+}
+
+export interface ExplanationTurn {
+  id: number;
+  question: string;
+  answer: string;
+  provider: ModelProviderEnum;
+  /** @maxLength 64 */
+  model: string;
+  usage: TokenUsage;
+  /** @format double */
+  cost?: number | null;
+  /** @format date-time */
+  created: string;
 }
 
 /** How far the coach has handed a rule family over: 1 watch, 2 call it, 3 play then hear it, 4 solo. */
@@ -2170,6 +2441,26 @@ export interface MemberProgress {
   playbooks: PlaybookProgress[];
 }
 
+export interface ModelProvider {
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  key: ModelProviderEnum;
+  label: string;
+  company: string;
+  /** @format uri */
+  key_url: string;
+  /** @format uri */
+  terms_url: string;
+  /** The stop value the provider's API gives a finished answer. */
+  finished: string;
+  /** What the consent notice adds for this provider. */
+  notice: string;
+}
+
 /** A move as the playbook's rules read it. Amounts are chips. */
 export interface Move {
   /**
@@ -2319,6 +2610,37 @@ export interface Numbers {
   draws: string[];
   in_front: number;
   big_blind: number;
+}
+
+export interface OfferedModel {
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  provider: ModelProviderEnum;
+  id: string;
+  label: string;
+  /** The provider's default model. */
+  default: boolean;
+  /**
+   * US dollars per million tokens in, today.
+   * @format double
+   */
+  input: number;
+  /**
+   * US dollars per million tokens out, reasoning included, today.
+   * @format double
+   */
+  output: number;
+  /** Half price outside the provider's peak hours. */
+  off_peak: boolean;
+  /**
+   * About what explaining a hand costs, in US dollars.
+   * @format double
+   */
+  typical_hand: number;
 }
 
 /** A player the user has played with: their core statistics, label and the user's net against them. */
@@ -2620,6 +2942,11 @@ export interface PasswordResetRequest {
   email: string;
 }
 
+/** The player's rating of an explanation. */
+export interface PatchedExplanationUpdateRequest {
+  useful?: boolean | null;
+}
+
 /** A hand shared by a public, read-only link. */
 export interface PatchedHandShareRequest {
   /** The id of one of the user's hands. */
@@ -2816,6 +3143,8 @@ export interface PatchedUserDetailsRequest {
 
 /** A decision the debrief points to: the table as it stood, and what the coach would have said. */
 export interface PickedHand {
+  /** The decision's id, for an explanation of the coach's line. */
+  id: number;
   /** The hand up to the decision. */
   table: TableHand;
   /** The coach's line on it. */
@@ -3643,6 +3972,18 @@ export interface SkillScore {
   rating: Rating | null;
 }
 
+export interface Spend {
+  /** YYYY-MM */
+  month: string;
+  explanations: number;
+  questions: number;
+  /**
+   * About what they cost, in US dollars.
+   * @format double
+   */
+  cost: number;
+}
+
 /** A spot in a set, and the answer given to it in the set, if any. */
 export interface Spot {
   position: number;
@@ -4174,6 +4515,66 @@ export interface TokenRefreshRequest {
   refresh?: string;
 }
 
+/** The tokens a call used, as Pokerland prices them: `input` counts only those read afresh. */
+export interface TokenUsage {
+  /**
+   * Read afresh.
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  input?: number;
+  /**
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  cached_input?: number;
+  /**
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  cache_write?: number;
+  /**
+   * Reasoning included.
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  output?: number;
+}
+
+/** The tokens a call used, as Pokerland prices them: `input` counts only those read afresh. */
+export interface TokenUsageRequest {
+  /**
+   * Read afresh.
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  input?: number;
+  /**
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  cached_input?: number;
+  /**
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  cache_write?: number;
+  /**
+   * Reasoning included.
+   * @min 0
+   * @max 10000000
+   * @default 0
+   */
+  output?: number;
+}
+
 export interface TokenVerifyRequest {
   /** @minLength 1 */
   token: string;
@@ -4352,6 +4753,56 @@ export interface Truth {
   wrong: string[];
 }
 
+export interface TurnBrief {
+  /** The system prompt for a question about the explanation. */
+  instructions: string;
+  /** The conversation so far; the new question goes after it. */
+  messages: ConversationMessage[];
+  /** How many questions there are so far, sent back with the answer. */
+  after: number;
+}
+
+/** A question about an explanation, and a model's answer to it. */
+export interface TurnCreateRequest {
+  /**
+   * * `anthropic` - anthropic
+   * * `openai` - openai
+   * * `google` - google
+   * * `deepseek` - deepseek
+   */
+  provider: ModelProviderEnum;
+  /**
+   * @minLength 1
+   * @maxLength 64
+   */
+  model: string;
+  /**
+   * The provider's own stop value.
+   * @minLength 1
+   * @maxLength 32
+   */
+  stop: string;
+  /** The tokens a call used, as Pokerland prices them: `input` counts only those read afresh. */
+  usage: TokenUsageRequest;
+  /**
+   * @maxLength 128
+   * @default ""
+   */
+  request_id?: string;
+  /** @min 0 */
+  after: number;
+  /**
+   * @minLength 1
+   * @maxLength 1000
+   */
+  question: string;
+  /**
+   * @minLength 1
+   * @maxLength 8000
+   */
+  answer: string;
+}
+
 /** User model w/o password */
 export interface UserDetails {
   /** ID */
@@ -4442,6 +4893,57 @@ export type AuthUserRetrieveData = UserDetails;
 export type AuthUserUpdateData = UserDetails;
 
 export type AuthUserPartialUpdateData = UserDetails;
+
+export interface ExplanationsListParams {
+  attempt?: number;
+  debrief?: number;
+  decision?: number;
+  hand?: number;
+  session?: number;
+  test?: number;
+}
+
+export type ExplanationsListData = Explanation[];
+
+export type ExplanationsCreateData = Explanation;
+
+export interface ExplanationsPartialUpdateParams {
+  id: number;
+}
+
+export type ExplanationsPartialUpdateData = Explanation;
+
+export interface ExplanationsDestroyParams {
+  id: number;
+}
+
+export type ExplanationsDestroyData = any;
+
+export interface ExplanationsTurnsCreateParams {
+  id: number;
+}
+
+export type ExplanationsTurnsCreateData = ExplanationTurn;
+
+export interface ExplanationsTurnsBriefRetrieveParams {
+  id: number;
+}
+
+export type ExplanationsTurnsBriefRetrieveData = TurnBrief;
+
+export type ExplanationsBriefCreateData = Brief;
+
+export type ExplanationsModelsRetrieveData = Catalog;
+
+export interface ExplanationsSpendRetrieveParams {
+  /**
+   * An IANA time zone for the month; UTC if not given.
+   * @minLength 1
+   */
+  tz?: string;
+}
+
+export type ExplanationsSpendRetrieveData = Spend;
 
 export interface HandsListParams {
   /** The pagination cursor value. */

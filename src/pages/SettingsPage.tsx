@@ -3,6 +3,7 @@ import { errorMessage } from '../api/client.ts'
 import { queries } from '../api/queries.ts'
 import CoachPresets from '../components/CoachPresets.tsx'
 import CopyButton from '../components/CopyButton.tsx'
+import KeySettings from '../components/KeySettings.tsx'
 import TrackerDownloads from '../components/TrackerDownloads.tsx'
 import TrackerStatus from '../components/TrackerStatus.tsx'
 import './SettingsPage.css'
@@ -48,6 +49,8 @@ function SettingsPage() {
           <TrackerDownloads />
         </div>
       </section>
+
+      <KeySettings />
 
       <CoachPresets />
     </div>

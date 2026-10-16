@@ -1,0 +1,16 @@
+.explain-consent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid var(--accent-border);
+  border-radius: 6px;
+  background: var(--accent-bg);
+}
+
+.explain-consent-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}

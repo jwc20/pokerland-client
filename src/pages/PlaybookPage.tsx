@@ -10,6 +10,7 @@ import PlaybookCard from '../components/PlaybookCard.tsx'
 import { FAMILY_ORDER, STAGES } from '../coach.ts'
 import { CLASSES_ENABLED } from '../features.ts'
 import { LIMITS } from '../playbooks.ts'
+import { useScrollToHash } from '../useScrollToHash.ts'
 import './PlaybookPage.css'
 
 function playbookLabel(playbook: Playbook) {
@@ -39,6 +40,9 @@ function PlaybookPage() {
   const chosen = id ?? (playbooks?.find((playbook) => playbook.house) ?? playbooks?.[0])?.id
   const playbookQuery = useQuery({ ...queries.practice.playbook(chosen ?? 0), enabled: chosen !== undefined })
   const bookQuery = useQuery({ ...queries.practice.book(chosen ?? 0), enabled: chosen !== undefined })
+  // #rule-<id> lands on a rule's card once the cards are on screen, as an explanation's "Practise it" link asks.
+  const ruleHash = window.location.hash.startsWith('#rule-') ? window.location.hash.slice(1) : ''
+  useScrollToHash(ruleHash, Boolean(playbookQuery.data && bookQuery.data))
 
   const failed = playbooksQuery.error ?? classesQuery.error ?? playbookQuery.error ?? bookQuery.error
   if (failed) {

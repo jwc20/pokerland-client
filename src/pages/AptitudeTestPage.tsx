@@ -6,6 +6,7 @@ import { errorMessage, practice } from '../api/client.ts'
 import { queries } from '../api/queries.ts'
 import type { TestReport, TestReportSpot, TestState } from '../api/generated/data-contracts.ts'
 import { browserTimeZone } from '../calendar.ts'
+import ExplainPanel from '../components/ExplainPanel.tsx'
 import FeedbackCard from '../components/FeedbackCard.tsx'
 import SkillBars from '../components/SkillBars.tsx'
 import SpotQuestion, { type SpotAnswer } from '../components/SpotQuestion.tsx'
@@ -253,6 +254,15 @@ function Report({ report }: { report: TestReport }) {
           ))}
         </ol>
       </section>
+
+      <ExplainPanel
+        subject={{ kind: 'test', id: report.id }}
+        action="Explain this test"
+        intro={
+          'Have a model go through the test: what each skill’s accuracy and range say, and the spots you missed. ' +
+          'It uses your own API key, which stays in this browser.'
+        }
+      />
     </div>
   )
 }

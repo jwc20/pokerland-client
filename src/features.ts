@@ -7,3 +7,9 @@ export const CLASSES_ENABLED = import.meta.env.VITE_CLASSES_ENABLED === 'true'
 
 /** What a disabled classes link or button says on hover. */
 export const CLASSES_CLOSED = 'Classes aren’t open yet'
+
+/**
+ * Explanations written by a model with the player's own key (pokerland-llm-reports.md): on unless
+ * VITE_EXPLANATIONS_ENABLED is "false", with EXPLANATIONS_ENABLED on the API to match.
+ */
+export const EXPLANATIONS_ENABLED = import.meta.env.VITE_EXPLANATIONS_ENABLED !== 'false'

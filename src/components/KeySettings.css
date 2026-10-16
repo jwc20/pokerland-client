@@ -1,0 +1,30 @@
+.key-settings {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-h);
+  }
+  li:first-child {
+    border-top: none;
+  }
+}
+
+.key-settings-company {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.key-settings-state {
+  font-size: 14px;
+  color: var(--text);
+}
